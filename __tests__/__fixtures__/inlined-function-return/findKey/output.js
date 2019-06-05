@@ -5,7 +5,7 @@ let _value;
 for (let _key in object) {
   _value = object[_key];
 
-  if (fn(_value, _key, object)) {
+  if (_value % 2 === 0) {
     _result = _key;
     break;
   }

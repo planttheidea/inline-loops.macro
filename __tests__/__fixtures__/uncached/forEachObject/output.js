@@ -10,6 +10,8 @@ const _fn = value => {
   return isValueEven;
 };
 
+let _value;
+
 for (let _key in _iterable) {
   _value = _iterable[_key];
 

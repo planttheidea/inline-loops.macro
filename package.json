@@ -1,6 +1,9 @@
 {
   "author": "Tony Quetano",
   "babel": {
+    "plugins": [
+      "babel-plugin-macros"
+    ],
     "presets": [
       "@babel/preset-env"
     ]
@@ -17,14 +20,17 @@
     "@babel/cli": "^7.4.4",
     "@babel/core": "^7.4.5",
     "@babel/preset-env": "^7.4.5",
+    "babel-jest": "^24.8.0",
     "babel-plugin-tester": "^6.2.1",
+    "fast-equals": "^2.0.0",
     "jest": "^24.8.0"
   },
   "homepage": "https://github.com/planttheidea/inline-loops.macro#readme",
   "jest": {
     "testPathIgnorePatterns": [
       "/node_modules/",
-      "/__fixtures__/"
+      "/__fixtures__/",
+      "/__runtime__/"
     ]
   },
   "keywords": [
@@ -43,9 +49,10 @@
     "url": "git+https://github.com/planttheidea/inline-loops.macro.git"
   },
   "scripts": {
-    "test": "jest",
     "build": "babel inline-loops.macro.js -d build && cp ./index.d.ts ./build/",
-    "prepublish": "npm run build"
+    "dev": "npm run build && NODE_ENV=development webpack-dev-server --colors --progress --config=webpack/webpack.config.js",
+    "prepublish": "npm run build",
+    "test": "jest"
   },
   "typings": "./index.d.ts",
   "version": "1.0.0"

@@ -1,7 +1,5 @@
 "use strict";
 
-var _babelPluginMacros = require("babel-plugin-macros");
-
 function _toConsumableArray(arr) { return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _nonIterableSpread(); }
 
 function _nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance"); }
@@ -17,6 +15,10 @@ function _nonIterableRest() { throw new TypeError("Invalid attempt to destructur
 function _iterableToArrayLimit(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"] != null) _i["return"](); } finally { if (_d) throw _e; } } return _arr; }
 
 function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
+
+var _require = require("babel-plugin-macros"),
+    createMacro = _require.createMacro,
+    MacroError = _require.MacroError;
 
 function getDefaultResult(t, isObject) {
   return isObject ? t.objectExpression([]) : t.arrayExpression();
@@ -50,7 +52,7 @@ function getLoop(_ref) {
       isObject = _ref.isObject;
 
   if (isObject) {
-    var left = key;
+    var left = t.variableDeclaration("let", [t.variableDeclarator(key)]);
     var right = iterable;
     return t.forInStatement(left, right, body);
   }
@@ -61,11 +63,6 @@ function getLoop(_ref) {
 
   if (isDecrementing) {
     assignments = [t.variableDeclarator(key, t.binaryExpression("-", t.memberExpression(iterable, t.identifier("length")), t.numericLiteral(1)))];
-
-    if (value) {
-      assignments.push(t.variableDeclarator(value));
-    }
-
     test = t.binaryExpression(">=", key, t.numericLiteral(0));
     update = t.updateExpression("--", key, true);
   } else {
@@ -206,25 +203,46 @@ function getUid(scope, name) {
 }
 
 function insertBeforeParent(_ref2) {
-  var t = _ref2.t,
-      resultStatement = _ref2.resultStatement,
-      iterable = _ref2.iterable,
+  var fn = _ref2.fn,
       handler = _ref2.handler,
-      result = _ref2.result,
+      isObject = _ref2.isObject,
+      iterable = _ref2.iterable,
       loop = _ref2.loop,
-      path = _ref2.path;
-  var insertBefore = [iterable];
+      object = _ref2.object,
+      path = _ref2.path,
+      result = _ref2.result,
+      resultStatement = _ref2.resultStatement,
+      resultValue = _ref2.resultValue,
+      t = _ref2.t,
+      value = _ref2.value;
+  var insertBefore = [];
 
-  if (t.isCallExpression(resultStatement) && resultStatement.isFallback) {
-    insertBefore.push(handler);
+  if (!isCachedReference(t, object)) {
+    var iterableVar = t.variableDeclaration("const", [t.variableDeclarator(iterable, object)]);
+    insertBefore.push(iterableVar);
+  }
+
+  if (!isCachedReference(t, handler) && t.isCallExpression(resultStatement) && resultStatement.isFallback) {
+    var handlerVar = t.variableDeclaration("const", [t.variableDeclarator(fn, handler)]);
+    insertBefore.push(handlerVar);
   }
 
   if (result) {
-    insertBefore.push(result);
+    var resultVar = t.variableDeclaration("let", [t.variableDeclarator(result, resultValue)]);
+    insertBefore.push(resultVar);
+  }
+
+  if (isObject) {
+    var valueVar = t.variableDeclaration("let", [t.variableDeclarator(value)]);
+    insertBefore.push(valueVar);
   }
 
   insertBefore.push(loop);
   path.getStatementParent().insertBefore(insertBefore);
+}
+
+function isCachedReference(t, node) {
+  return t.isIdentifier(node);
 }
 
 function handleEvery(_ref3) {
@@ -243,13 +261,17 @@ function handleEvery(_ref3) {
       result = _getIds.result,
       value = _getIds.value;
 
-  var valueAssignment = t.expressionStatement(t.assignmentExpression("=", value, t.memberExpression(iterable, key, true)));
-  var resultStatement = getResultStatement(t, handler, fn, value, key, iterable, path);
+  var isHandlerCached = isCachedReference(t, handler);
+  var isIterableCached = isCachedReference(t, object);
+  var fnUsed = isHandlerCached ? handler : fn;
+  var iterableUsed = isIterableCached ? object : iterable;
+  var valueAssignment = t.expressionStatement(t.assignmentExpression("=", value, t.memberExpression(iterableUsed, key, true)));
+  var resultStatement = getResultStatement(t, handler, fnUsed, value, key, iterableUsed, path);
   var expr = t.ifStatement(t.unaryExpression("!", resultStatement), t.blockStatement([t.expressionStatement(t.assignmentExpression("=", result, t.booleanLiteral(false))), t.breakStatement()]));
   var loop = getLoop({
     t: t,
     body: t.blockStatement([valueAssignment, expr]),
-    iterable: iterable,
+    iterable: iterableUsed,
     key: key,
     length: length,
     isDecrementing: isDecrementing,
@@ -257,17 +279,19 @@ function handleEvery(_ref3) {
     scope: path.scope,
     value: value
   });
-  var iterableVar = t.variableDeclaration("const", [t.variableDeclarator(iterable, object)]);
-  var handlerVar = t.variableDeclaration("const", [t.variableDeclarator(fn, handler)]);
-  var resultVar = t.variableDeclaration("let", [t.variableDeclarator(result, t.booleanLiteral(true))]);
   insertBeforeParent({
-    handler: handlerVar,
-    iterable: iterableVar,
+    fn: fn,
+    handler: handler,
+    isObject: isObject,
+    iterable: iterable,
     loop: loop,
+    object: object,
     path: path,
-    result: resultVar,
+    result: result,
     resultStatement: resultStatement,
-    t: t
+    resultValue: t.booleanLiteral(true),
+    t: t,
+    value: value
   });
   path.parentPath.replaceWith(result);
 }
@@ -288,14 +312,18 @@ function handleFilter(_ref4) {
       result = _getIds2.result,
       value = _getIds2.value;
 
-  var valueAssignment = t.expressionStatement(t.assignmentExpression("=", value, t.memberExpression(iterable, key, true)));
+  var isHandlerCached = isCachedReference(t, handler);
+  var isIterableCached = isCachedReference(t, object);
+  var fnUsed = isHandlerCached ? handler : fn;
+  var iterableUsed = isIterableCached ? object : iterable;
+  var valueAssignment = t.expressionStatement(t.assignmentExpression("=", value, t.memberExpression(iterableUsed, key, true)));
   var resultAssignment = isObject ? t.assignmentExpression("=", t.memberExpression(result, key, true), value) : t.callExpression(t.memberExpression(result, t.identifier("push")), [value]);
-  var resultStatement = getResultStatement(t, handler, fn, value, key, iterable, path);
+  var resultStatement = getResultStatement(t, handler, fnUsed, value, key, iterableUsed, path);
   var expr = t.ifStatement(resultStatement, t.expressionStatement(resultAssignment));
   var loop = getLoop({
     t: t,
     body: t.blockStatement([valueAssignment, expr]),
-    iterable: iterable,
+    iterable: iterableUsed,
     key: key,
     length: length,
     value: value,
@@ -303,17 +331,19 @@ function handleFilter(_ref4) {
     isObject: isObject,
     scope: path.scope
   });
-  var iterableVar = t.variableDeclaration("const", [t.variableDeclarator(iterable, object)]);
-  var handlerVar = t.variableDeclaration("const", [t.variableDeclarator(fn, handler)]);
-  var resultVar = t.variableDeclaration("const", [t.variableDeclarator(result, getDefaultResult(t, isObject))]);
   insertBeforeParent({
-    handler: handlerVar,
-    iterable: iterableVar,
+    fn: fn,
+    handler: handler,
+    isObject: isObject,
+    iterable: iterable,
     loop: loop,
+    object: object,
     path: path,
-    result: resultVar,
+    result: result,
     resultStatement: resultStatement,
-    t: t
+    resultValue: getDefaultResult(t, isObject),
+    t: t,
+    value: value
   });
   path.parentPath.replaceWith(result);
 }
@@ -334,30 +364,36 @@ function handleFind(_ref5) {
       result = _getIds3.result,
       value = _getIds3.value;
 
-  var valueAssignment = t.expressionStatement(t.assignmentExpression("=", value, t.memberExpression(iterable, key, true)));
-  var resultStatement = getResultStatement(t, handler, fn, value, key, iterable, path);
+  var isHandlerCached = isCachedReference(t, handler);
+  var isIterableCached = isCachedReference(t, object);
+  var fnUsed = isHandlerCached ? handler : fn;
+  var iterableUsed = isIterableCached ? object : iterable;
+  var valueAssignment = t.expressionStatement(t.assignmentExpression("=", value, t.memberExpression(iterableUsed, key, true)));
+  var resultStatement = getResultStatement(t, handler, fnUsed, value, key, iterableUsed, path);
   var expr = t.ifStatement(resultStatement, t.blockStatement([t.expressionStatement(t.assignmentExpression("=", result, value)), t.breakStatement()]));
   var loop = getLoop({
     t: t,
     body: t.blockStatement([valueAssignment, expr]),
-    iterable: iterable,
+    iterable: iterableUsed,
     key: key,
     length: length,
     isDecrementing: isDecrementing,
     isObject: isObject,
-    scope: path.scope
+    scope: path.scope,
+    value: value
   });
-  var iterableVar = t.variableDeclaration("const", [t.variableDeclarator(iterable, object)]);
-  var handlerVar = t.variableDeclaration("const", [t.variableDeclarator(fn, handler)]);
-  var resultVar = t.variableDeclaration("let", [t.variableDeclarator(result)]);
   insertBeforeParent({
-    handler: handlerVar,
-    iterable: iterableVar,
+    fn: fn,
+    handler: handler,
+    isObject: isObject,
+    iterable: iterable,
     loop: loop,
+    object: object,
     path: path,
-    result: resultVar,
+    result: result,
     resultStatement: resultStatement,
-    t: t
+    t: t,
+    value: value
   });
   path.parentPath.replaceWith(result);
 }
@@ -378,30 +414,37 @@ function handleFindKey(_ref6) {
       result = _getIds4.result,
       value = _getIds4.value;
 
-  var valueAssignment = t.expressionStatement(t.assignmentExpression("=", value, t.memberExpression(iterable, key, true)));
-  var resultStatement = getResultStatement(t, handler, fn, value, key, iterable, path);
+  var isHandlerCached = isCachedReference(t, handler);
+  var isIterableCached = isCachedReference(t, object);
+  var fnUsed = isHandlerCached ? handler : fn;
+  var iterableUsed = isIterableCached ? object : iterable;
+  var valueAssignment = t.expressionStatement(t.assignmentExpression("=", value, t.memberExpression(iterableUsed, key, true)));
+  var resultStatement = getResultStatement(t, handler, fnUsed, value, key, iterableUsed, path);
   var expr = t.ifStatement(resultStatement, t.blockStatement([t.expressionStatement(t.assignmentExpression("=", result, key)), t.breakStatement()]));
   var loop = getLoop({
     t: t,
     body: t.blockStatement([valueAssignment, expr]),
-    iterable: iterable,
+    iterable: iterableUsed,
     key: key,
     length: length,
     isDecrementing: isDecrementing,
     isObject: isObject,
-    scope: path.scope
+    scope: path.scope,
+    value: value
   });
-  var iterableVar = t.variableDeclaration("const", [t.variableDeclarator(iterable, object)]);
-  var handlerVar = t.variableDeclaration("const", [t.variableDeclarator(fn, handler)]);
-  var resultVar = t.variableDeclaration("let", [t.variableDeclarator(result)]);
   insertBeforeParent({
-    handler: handlerVar,
-    iterable: iterableVar,
+    fn: fn,
+    handler: handler,
+    isObject: isObject,
+    iterable: iterable,
     loop: loop,
+    object: object,
     path: path,
-    result: resultVar,
+    result: result,
     resultStatement: resultStatement,
-    t: t
+    resultValue: isObject ? undefined : t.numericLiteral(-1),
+    t: t,
+    value: value
   });
   path.parentPath.replaceWith(result);
 }
@@ -421,13 +464,17 @@ function handleForEach(_ref7) {
       length = _getIds5.length,
       value = _getIds5.value;
 
-  var valueAssignment = t.expressionStatement(t.assignmentExpression("=", value, t.memberExpression(iterable, key, true)));
-  var resultStatement = getResultStatement(t, handler, fn, value, key, iterable, path);
+  var isHandlerCached = isCachedReference(t, handler);
+  var isIterableCached = isCachedReference(t, object);
+  var fnUsed = isHandlerCached ? handler : fn;
+  var iterableUsed = isIterableCached ? object : iterable;
+  var valueAssignment = t.expressionStatement(t.assignmentExpression("=", value, t.memberExpression(iterableUsed, key, true)));
+  var resultStatement = getResultStatement(t, handler, fnUsed, value, key, iterableUsed, path);
   var call = t.expressionStatement(resultStatement);
   var loop = getLoop({
     t: t,
     body: t.blockStatement([valueAssignment, call]),
-    iterable: iterable,
+    iterable: iterableUsed,
     key: key,
     length: length,
     isDecrementing: isDecrementing,
@@ -435,15 +482,17 @@ function handleForEach(_ref7) {
     scope: path.scope,
     value: value
   });
-  var iterableVar = t.variableDeclaration("const", [t.variableDeclarator(iterable, object)]);
-  var handlerVar = t.variableDeclaration("const", [t.variableDeclarator(fn, handler)]);
   insertBeforeParent({
-    handler: handlerVar,
-    iterable: iterableVar,
+    fn: fn,
+    handler: handler,
+    isObject: isObject,
+    iterable: iterable,
     loop: loop,
+    object: object,
     path: path,
     resultStatement: resultStatement,
-    t: t
+    t: t,
+    value: value
   });
   path.parentPath.remove();
 }
@@ -464,13 +513,17 @@ function handleMap(_ref8) {
       result = _getIds6.result,
       value = _getIds6.value;
 
-  var valueAssignment = t.expressionStatement(t.assignmentExpression("=", value, t.memberExpression(iterable, key, true)));
-  var resultStatement = getResultStatement(t, handler, fn, value, key, iterable, path);
-  var expr = t.expressionStatement(isObject ? t.assignmentExpression("=", t.memberExpression(result, key, true), resultStatement) : t.callExpression(t.memberExpression(result, t.identifier("push")), [t.callExpression(fn, [value, key, iterable])]));
+  var isHandlerCached = isCachedReference(t, handler);
+  var isIterableCached = isCachedReference(t, object);
+  var fnUsed = isHandlerCached ? handler : fn;
+  var iterableUsed = isIterableCached ? object : iterable;
+  var valueAssignment = t.expressionStatement(t.assignmentExpression("=", value, t.memberExpression(iterableUsed, key, true)));
+  var resultStatement = getResultStatement(t, handler, fnUsed, value, key, iterableUsed, path);
+  var expr = t.expressionStatement(isObject ? t.assignmentExpression("=", t.memberExpression(result, key, true), resultStatement) : t.callExpression(t.memberExpression(result, t.identifier("push")), [resultStatement]));
   var loop = getLoop({
     t: t,
     body: t.blockStatement([valueAssignment, expr]),
-    iterable: iterable,
+    iterable: iterableUsed,
     key: key,
     length: length,
     isDecrementing: isDecrementing,
@@ -478,17 +531,19 @@ function handleMap(_ref8) {
     scope: path.scope,
     value: value
   });
-  var iterableVar = t.variableDeclaration("const", [t.variableDeclarator(iterable, object)]);
-  var handlerVar = t.variableDeclaration("const", [t.variableDeclarator(fn, handler)]);
-  var resultVar = t.variableDeclaration("const", [t.variableDeclarator(result, getDefaultResult(t, isObject))]);
   insertBeforeParent({
-    handler: handlerVar,
-    iterable: iterableVar,
+    fn: fn,
+    handler: handler,
+    isObject: isObject,
+    iterable: iterable,
     loop: loop,
+    object: object,
     path: path,
-    result: resultVar,
+    result: result,
     resultStatement: resultStatement,
-    t: t
+    resultValue: getDefaultResult(t, isObject),
+    t: t,
+    value: value
   });
   path.parentPath.replaceWith(result);
 }
@@ -510,29 +565,46 @@ function handleReduce(_ref9) {
       result = _getIds7.result,
       value = _getIds7.value;
 
-  var insertBefore = [];
-  var block = [];
+  var hasInitialValue = !!initialValue;
+  var isHandlerCached = isCachedReference(t, handler);
+  var isIterableCached = isCachedReference(t, object);
+  var fnUsed = isHandlerCached ? handler : fn;
+  var iterableUsed = isIterableCached ? object : iterable;
+  var injected = [];
+  var hasInitialValueId;
 
-  if (!initialValue) {
+  if (!hasInitialValue) {
     if (isObject) {
-      var skippedKey = getUid(path.scope, "skippedKey");
-      insertBefore.push(t.variableDeclaration("const", [t.variableDeclarator(skippedKey, t.memberExpression(t.callExpression(t.memberExpression(t.identifier("Object"), t.identifier("keys")), [iterable]), t.numericLiteral(0), true))]));
-      block.push(t.ifStatement(t.binaryExpression("===", key, skippedKey), t.continueStatement()));
-      initialValue = t.memberExpression(iterable, skippedKey, true);
+      hasInitialValueId = getUid(path.scope, "hasInitialValue");
+      injected.push(t.variableDeclaration("let", [t.variableDeclarator(hasInitialValueId, t.booleanLiteral(false))]));
+    } else if (isDecrementing) {
+      injected.push(t.variableDeclaration("const", [t.variableDeclarator(length, t.memberExpression(iterableUsed, t.identifier("length")))]));
+      initialValue = t.memberExpression(iterableUsed, t.binaryExpression("-", length, t.numericLiteral(1)), true);
     } else {
-      var method = t.identifier(isDecrementing ? "pop" : "shift");
-      initialValue = t.callExpression(t.memberExpression(iterable, method), []);
+      initialValue = t.memberExpression(iterableUsed, t.numericLiteral(0), true);
     }
   }
 
-  var valueAssignment = t.expressionStatement(t.assignmentExpression("=", value, t.memberExpression(iterable, key, true)));
-  var call = t.callExpression(fn, [result, value, key, iterable]);
-  var resultAssignment = isObject ? t.assignmentExpression("=", t.memberExpression(result, key, true), call) : t.callExpression(t.memberExpression(result, t.identifier("push")), [call]);
-  block.push(valueAssignment, t.expressionStatement(resultAssignment));
+  if (isObject) {
+    injected.push(t.variableDeclaration("let", [t.variableDeclarator(value)]));
+  }
+
+  var valueAssignment = t.expressionStatement(t.assignmentExpression("=", value, t.memberExpression(iterableUsed, key, true)));
+  var call = t.callExpression(fnUsed, [result, value, key, iterableUsed]);
+  var resultAssignment = t.assignmentExpression("=", result, call);
+  var block;
+
+  if (!hasInitialValue && isObject) {
+    var ifHasInitialValue = t.ifStatement(hasInitialValueId, t.blockStatement([valueAssignment, t.expressionStatement(resultAssignment)]), t.blockStatement([t.expressionStatement(t.assignmentExpression("=", hasInitialValueId, t.booleanLiteral(true))), t.expressionStatement(t.assignmentExpression("=", result, t.memberExpression(iterableUsed, key, true)))]));
+    block = [ifHasInitialValue];
+  } else {
+    block = [valueAssignment, t.expressionStatement(resultAssignment)];
+  }
+
   var loop = getLoop({
     t: t,
     body: t.blockStatement(block),
-    iterable: iterable,
+    iterable: iterableUsed,
     key: key,
     length: length,
     isDecrementing: isDecrementing,
@@ -540,20 +612,49 @@ function handleReduce(_ref9) {
     scope: path.scope,
     value: value
   });
-  var iterableVar = t.variableDeclaration("const", [t.variableDeclarator(iterable, object)]);
-  var handlerVar = t.variableDeclaration("const", [t.variableDeclarator(fn, handler)]);
-  var resultVar = t.variableDeclaration("const", [t.variableDeclarator(result, initialValue)]);
-  path.getStatementParent().insertBefore([iterableVar].concat(insertBefore, [handlerVar, resultVar, loop]));
+
+  if (!hasInitialValue && !isObject) {
+    var keyValue = loop.init.declarations.find(function (_ref10) {
+      var id = _ref10.id;
+      return id.name === key.name;
+    });
+
+    if (isDecrementing) {
+      keyValue.init.left = length;
+      keyValue.init.right = t.numericLiteral(2);
+    } else {
+      keyValue.init = t.numericLiteral(1);
+    }
+  }
+
+  var insertBefore = [];
+
+  if (iterableUsed === iterable) {
+    var iterableVar = t.variableDeclaration("const", [t.variableDeclarator(iterable, object)]);
+    insertBefore.push(iterableVar);
+  }
+
+  insertBefore.push.apply(insertBefore, injected);
+
+  if (fnUsed === fn) {
+    var handlerVar = t.variableDeclaration("const", [t.variableDeclarator(fn, handler)]);
+    insertBefore.push(handlerVar);
+  }
+
+  var resultVar = t.variableDeclaration("let", [t.variableDeclarator(result, initialValue)]);
+  insertBefore.push(resultVar);
+  insertBefore.push(loop);
+  path.getStatementParent().insertBefore(insertBefore);
   path.parentPath.replaceWith(result);
 }
 
-function handleSome(_ref10) {
-  var t = _ref10.t,
-      path = _ref10.path,
-      object = _ref10.object,
-      handler = _ref10.handler,
-      isDecrementing = _ref10.isDecrementing,
-      isObject = _ref10.isObject;
+function handleSome(_ref11) {
+  var t = _ref11.t,
+      path = _ref11.path,
+      object = _ref11.object,
+      handler = _ref11.handler,
+      isDecrementing = _ref11.isDecrementing,
+      isObject = _ref11.isObject;
 
   var _getIds8 = getIds(path.scope),
       fn = _getIds8.fn,
@@ -563,13 +664,17 @@ function handleSome(_ref10) {
       result = _getIds8.result,
       value = _getIds8.value;
 
-  var valueAssignment = t.expressionStatement(t.assignmentExpression("=", value, t.memberExpression(iterable, key, true)));
-  var resultStatement = getResultStatement(t, handler, fn, value, key, iterable, path);
+  var isHandlerCached = isCachedReference(t, handler);
+  var isIterableCached = isCachedReference(t, object);
+  var fnUsed = isHandlerCached ? handler : fn;
+  var iterableUsed = isIterableCached ? object : iterable;
+  var valueAssignment = t.expressionStatement(t.assignmentExpression("=", value, t.memberExpression(iterableUsed, key, true)));
+  var resultStatement = getResultStatement(t, handler, fnUsed, value, key, iterableUsed, path);
   var expr = t.ifStatement(resultStatement, t.blockStatement([t.expressionStatement(t.assignmentExpression("=", result, t.booleanLiteral(true))), t.breakStatement()]));
   var loop = getLoop({
     t: t,
     body: t.blockStatement([valueAssignment, expr]),
-    iterable: iterable,
+    iterable: iterableUsed,
     key: key,
     length: length,
     isDecrementing: isDecrementing,
@@ -577,17 +682,19 @@ function handleSome(_ref10) {
     scope: path.scope,
     value: value
   });
-  var iterableVar = t.variableDeclaration("const", [t.variableDeclarator(iterable, object)]);
-  var handlerVar = t.variableDeclaration("const", [t.variableDeclarator(fn, handler)]);
-  var resultVar = t.variableDeclaration("let", [t.variableDeclarator(result, t.booleanLiteral(false))]);
   insertBeforeParent({
-    handler: handlerVar,
-    iterable: iterableVar,
+    fn: fn,
+    handler: handler,
+    isObject: isObject,
+    iterable: iterable,
     loop: loop,
+    object: object,
     path: path,
-    result: resultVar,
+    result: result,
     resultStatement: resultStatement,
-    t: t
+    resultValue: t.booleanLiteral(false),
+    t: t,
+    value: value
   });
   path.parentPath.replaceWith(result);
 }
@@ -615,16 +722,15 @@ function getCallTypes(references, method) {
   };
 }
 
-function inlineLoops(_ref11) {
-  var references = _ref11.references,
-      state = _ref11.state,
-      babel = _ref11.babel;
+function inlineLoops(_ref12) {
+  var references = _ref12.references,
+      state = _ref12.state,
+      babel = _ref12.babel;
   var t = babel.types;
   var allMethods = [];
   METHODS.forEach(function (method) {
     var _getCallTypes = getCallTypes(references, method),
         decrementingCalls = _getCallTypes.decrementingCalls,
-        decrementingObjectCalls = _getCallTypes.decrementingObjectCalls,
         incrementingCalls = _getCallTypes.incrementingCalls,
         isArrayOnly = _getCallTypes.isArrayOnly,
         isObjectOnly = _getCallTypes.isObjectOnly,
@@ -657,7 +763,7 @@ function inlineLoops(_ref11) {
       if (path.findParent(function (path) {
         return path.isConditionalExpression();
       })) {
-        throw new _babelPluginMacros.MacroError("You cannot use ".concat(name, " in a conditional expression."));
+        throw new MacroError("You cannot use ".concat(name, " in a conditional expression."));
       }
 
       var callee = path.parentPath.parent.callee;
@@ -665,27 +771,26 @@ function inlineLoops(_ref11) {
       if (callee) {
         var ancestorPath = path.parentPath;
 
-        var _loop = function _loop() {
-          if (ancestorPath.node.body) {
-            return "break";
+        while (ancestorPath) {
+          if (ancestorPath.node && ancestorPath.node.body) {
+            break;
           }
 
-          var callee = ancestorPath.node.callee;
+          if (t.isCallExpression(ancestorPath)) {
+            (function () {
+              var expression = ancestorPath.parent.expression;
+              var callee = expression ? expression.callee : ancestorPath.parent.callee;
 
-          if (allMethods.find(function (_ref12) {
-            var node = _ref12.node;
-            return node === callee;
-          })) {
-            throw new _babelPluginMacros.MacroError("You cannot nest looper methods. You should store the results of ".concat(name, " to a variable, and then call ").concat(path.parentPath.parent.callee.name, " with it."));
+              if (allMethods.find(function (_ref13) {
+                var node = _ref13.node;
+                return node === callee && node !== path.node;
+              })) {
+                throw new MacroError("You cannot nest looper methods. You should store the results of ".concat(name, " to a variable, and then call ").concat(path.parentPath.parent.callee.name, " with it."));
+              }
+            })();
           }
 
           ancestorPath = ancestorPath.parentPath;
-        };
-
-        while (ancestorPath) {
-          var _ret = _loop();
-
-          if (_ret === "break") break;
         }
       }
 
@@ -727,4 +832,4 @@ function inlineLoops(_ref11) {
   });
 }
 
-module.exports = (0, _babelPluginMacros.createMacro)(inlineLoops);
+module.exports = createMacro(inlineLoops);

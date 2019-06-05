@@ -5,6 +5,8 @@ const _iterable = {
   four: 4
 };
 
+let _value;
+
 const _fn = (agg, value, index) => {
   agg[index] = value * 2;
   return agg;

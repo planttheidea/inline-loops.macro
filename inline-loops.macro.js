@@ -1,4 +1,4 @@
-import { createMacro, MacroError } from "babel-plugin-macros";
+const { createMacro, MacroError } = require("babel-plugin-macros");
 
 function getDefaultResult(t, isObject) {
   return isObject ? t.objectExpression([]) : t.arrayExpression();
@@ -200,6 +200,7 @@ function getUid(scope, name) {
 function insertBeforeParent({
   fn,
   handler,
+  isObject,
   iterable,
   loop,
   object,
@@ -207,7 +208,8 @@ function insertBeforeParent({
   result,
   resultStatement,
   resultValue,
-  t
+  t,
+  value
 }) {
   const insertBefore = [];
 
@@ -237,6 +239,14 @@ function insertBeforeParent({
     ]);
 
     insertBefore.push(resultVar);
+  }
+
+  if (isObject) {
+    const valueVar = t.variableDeclaration("let", [
+      t.variableDeclarator(value)
+    ]);
+
+    insertBefore.push(valueVar);
   }
 
   insertBefore.push(loop);
@@ -298,6 +308,7 @@ function handleEvery({ t, path, object, handler, isDecrementing, isObject }) {
   insertBeforeParent({
     fn,
     handler,
+    isObject,
     iterable,
     loop,
     object,
@@ -305,7 +316,8 @@ function handleEvery({ t, path, object, handler, isDecrementing, isObject }) {
     result,
     resultStatement,
     resultValue: t.booleanLiteral(true),
-    t
+    t,
+    value
   });
 
   path.parentPath.replaceWith(result);
@@ -362,6 +374,7 @@ function handleFilter({ t, path, object, handler, isDecrementing, isObject }) {
   insertBeforeParent({
     fn,
     handler,
+    isObject,
     iterable,
     loop,
     object,
@@ -369,7 +382,8 @@ function handleFilter({ t, path, object, handler, isDecrementing, isObject }) {
     result,
     resultStatement,
     resultValue: getDefaultResult(t, isObject),
-    t
+    t,
+    value
   });
 
   path.parentPath.replaceWith(result);
@@ -423,13 +437,15 @@ function handleFind({ t, path, object, handler, isDecrementing, isObject }) {
   insertBeforeParent({
     fn,
     handler,
+    isObject,
     iterable,
     loop,
     object,
     path,
     result,
     resultStatement,
-    t
+    t,
+    value
   });
 
   path.parentPath.replaceWith(result);
@@ -483,6 +499,7 @@ function handleFindKey({ t, path, object, handler, isDecrementing, isObject }) {
   insertBeforeParent({
     fn,
     handler,
+    isObject,
     iterable,
     loop,
     object,
@@ -490,7 +507,8 @@ function handleFindKey({ t, path, object, handler, isDecrementing, isObject }) {
     result,
     resultStatement,
     resultValue: isObject ? undefined : t.numericLiteral(-1),
-    t
+    t,
+    value
   });
 
   path.parentPath.replaceWith(result);
@@ -538,12 +556,14 @@ function handleForEach({ t, path, object, handler, isDecrementing, isObject }) {
   insertBeforeParent({
     fn,
     handler,
+    isObject,
     iterable,
     loop,
     object,
     path,
     resultStatement,
-    t
+    t,
+    value
   });
 
   path.parentPath.remove();
@@ -582,7 +602,7 @@ function handleMap({ t, path, object, handler, isDecrementing, isObject }) {
           resultStatement
         )
       : t.callExpression(t.memberExpression(result, t.identifier("push")), [
-          t.callExpression(fnUsed, [value, key, iterableUsed])
+          resultStatement
         ])
   );
 
@@ -601,6 +621,7 @@ function handleMap({ t, path, object, handler, isDecrementing, isObject }) {
   insertBeforeParent({
     fn,
     handler,
+    isObject,
     iterable,
     loop,
     object,
@@ -608,7 +629,8 @@ function handleMap({ t, path, object, handler, isDecrementing, isObject }) {
     result,
     resultStatement,
     resultValue: getDefaultResult(t, isObject),
-    t
+    t,
+    value
   });
 
   path.parentPath.replaceWith(result);
@@ -667,6 +689,10 @@ function handleReduce({
         true
       );
     }
+  }
+
+  if (isObject) {
+    injected.push(t.variableDeclaration("let", [t.variableDeclarator(value)]));
   }
 
   const valueAssignment = t.expressionStatement(
@@ -815,6 +841,7 @@ function handleSome({ t, path, object, handler, isDecrementing, isObject }) {
   insertBeforeParent({
     fn,
     handler,
+    isObject,
     iterable,
     loop,
     object,
@@ -822,7 +849,8 @@ function handleSome({ t, path, object, handler, isDecrementing, isObject }) {
     result,
     resultStatement,
     resultValue: t.booleanLiteral(false),
-    t
+    t,
+    value
   });
 
   path.parentPath.replaceWith(result);
@@ -915,18 +943,27 @@ function inlineLoops({ references, state, babel }) {
         let ancestorPath = path.parentPath;
 
         while (ancestorPath) {
-          if (ancestorPath.node.body) {
+          if (ancestorPath.node && ancestorPath.node.body) {
             break;
           }
 
-          const callee = ancestorPath.node.callee;
+          if (t.isCallExpression(ancestorPath)) {
+            const expression = ancestorPath.parent.expression;
+            const callee = expression
+              ? expression.callee
+              : ancestorPath.parent.callee;
 
-          if (allMethods.find(({ node }) => node === callee)) {
-            throw new MacroError(
-              `You cannot nest looper methods. You should store the results of ${name} to a variable, and then call ${
-                path.parentPath.parent.callee.name
-              } with it.`
-            );
+            if (
+              allMethods.find(
+                ({ node }) => node === callee && node !== path.node
+              )
+            ) {
+              throw new MacroError(
+                `You cannot nest looper methods. You should store the results of ${name} to a variable, and then call ${
+                  path.parentPath.parent.callee.name
+                } with it.`
+              );
+            }
           }
 
           ancestorPath = ancestorPath.parentPath;

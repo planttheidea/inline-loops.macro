@@ -1,5 +1,7 @@
 let _result = true;
 
+let _value;
+
 for (let _key in object) {
   _value = object[_key];
 

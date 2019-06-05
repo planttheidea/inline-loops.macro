@@ -1,5 +1,7 @@
 let _hasInitialValue = false;
 
+let _value;
+
 let _result;
 
 for (let _key in object) {

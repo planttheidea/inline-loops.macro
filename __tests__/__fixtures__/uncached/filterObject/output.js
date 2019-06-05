@@ -12,6 +12,8 @@ const _fn = value => {
 
 let _result = {};
 
+let _value;
+
 for (let _key in _iterable) {
   _value = _iterable[_key];
   if (_fn(_value, _key, _iterable)) _result[_key] = _value;
