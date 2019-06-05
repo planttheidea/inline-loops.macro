@@ -16,7 +16,7 @@ function _iterableToArrayLimit(arr, i) { var _arr = []; var _n = true; var _d = 
 
 function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
 
-var _require = require("babel-plugin-macros"),
+var _require = require('babel-plugin-macros'),
     createMacro = _require.createMacro,
     MacroError = _require.MacroError;
 
@@ -25,12 +25,12 @@ function getDefaultResult(t, isObject) {
 }
 
 function getIds(scope) {
-  var iterable = getUid(scope, "iterable");
-  var fn = getUid(scope, "fn");
-  var result = getUid(scope, "result");
-  var key = getUid(scope, "key");
-  var length = getUid(scope, "length");
-  var value = getUid(scope, "value");
+  var iterable = getUid(scope, 'iterable');
+  var fn = getUid(scope, 'fn');
+  var result = getUid(scope, 'result');
+  var key = getUid(scope, 'key');
+  var length = getUid(scope, 'length');
+  var value = getUid(scope, 'value');
   return {
     fn: fn,
     iterable: iterable,
@@ -52,7 +52,7 @@ function getLoop(_ref) {
       isObject = _ref.isObject;
 
   if (isObject) {
-    var left = t.variableDeclaration("let", [t.variableDeclarator(key)]);
+    var left = t.variableDeclaration('let', [t.variableDeclarator(key)]);
     var right = iterable;
     return t.forInStatement(left, right, body);
   }
@@ -62,20 +62,20 @@ function getLoop(_ref) {
   var update;
 
   if (isDecrementing) {
-    assignments = [t.variableDeclarator(key, t.binaryExpression("-", t.memberExpression(iterable, t.identifier("length")), t.numericLiteral(1)))];
-    test = t.binaryExpression(">=", key, t.numericLiteral(0));
-    update = t.updateExpression("--", key, true);
+    assignments = [t.variableDeclarator(key, t.binaryExpression('-', t.memberExpression(iterable, t.identifier('length')), t.numericLiteral(1)))];
+    test = t.binaryExpression('>=', key, t.numericLiteral(0));
+    update = t.updateExpression('--', key, true);
   } else {
-    assignments = [t.variableDeclarator(key, t.numericLiteral(0)), t.variableDeclarator(length, t.memberExpression(iterable, t.identifier("length")))];
-    test = t.binaryExpression("<", key, length);
-    update = t.updateExpression("++", key, true);
+    assignments = [t.variableDeclarator(key, t.numericLiteral(0)), t.variableDeclarator(length, t.memberExpression(iterable, t.identifier('length')))];
+    test = t.binaryExpression('<', key, length);
+    update = t.updateExpression('++', key, true);
   }
 
   if (value) {
     assignments.push(t.variableDeclarator(value));
   }
 
-  return t.forStatement(t.variableDeclaration("let", assignments), test, update, body);
+  return t.forStatement(t.variableDeclaration('let', assignments), test, update, body);
 }
 
 function getResultStatement(t, handler, fn, value, key, iterable, path) {
@@ -83,6 +83,7 @@ function getResultStatement(t, handler, fn, value, key, iterable, path) {
     var body = handler.body;
 
     if (t.isBlockStatement(body)) {
+      // eslint-disable-next-line prefer-destructuring
       body = body.body;
 
       if (body.length === 1) {
@@ -218,22 +219,22 @@ function insertBeforeParent(_ref2) {
   var insertBefore = [];
 
   if (!isCachedReference(t, object)) {
-    var iterableVar = t.variableDeclaration("const", [t.variableDeclarator(iterable, object)]);
+    var iterableVar = t.variableDeclaration('const', [t.variableDeclarator(iterable, object)]);
     insertBefore.push(iterableVar);
   }
 
   if (!isCachedReference(t, handler) && t.isCallExpression(resultStatement) && resultStatement.isFallback) {
-    var handlerVar = t.variableDeclaration("const", [t.variableDeclarator(fn, handler)]);
+    var handlerVar = t.variableDeclaration('const', [t.variableDeclarator(fn, handler)]);
     insertBefore.push(handlerVar);
   }
 
   if (result) {
-    var resultVar = t.variableDeclaration("let", [t.variableDeclarator(result, resultValue)]);
+    var resultVar = t.variableDeclaration('let', [t.variableDeclarator(result, resultValue)]);
     insertBefore.push(resultVar);
   }
 
   if (isObject) {
-    var valueVar = t.variableDeclaration("let", [t.variableDeclarator(value)]);
+    var valueVar = t.variableDeclaration('let', [t.variableDeclarator(value)]);
     insertBefore.push(valueVar);
   }
 
@@ -265,9 +266,9 @@ function handleEvery(_ref3) {
   var isIterableCached = isCachedReference(t, object);
   var fnUsed = isHandlerCached ? handler : fn;
   var iterableUsed = isIterableCached ? object : iterable;
-  var valueAssignment = t.expressionStatement(t.assignmentExpression("=", value, t.memberExpression(iterableUsed, key, true)));
+  var valueAssignment = t.expressionStatement(t.assignmentExpression('=', value, t.memberExpression(iterableUsed, key, true)));
   var resultStatement = getResultStatement(t, handler, fnUsed, value, key, iterableUsed, path);
-  var expr = t.ifStatement(t.unaryExpression("!", resultStatement), t.blockStatement([t.expressionStatement(t.assignmentExpression("=", result, t.booleanLiteral(false))), t.breakStatement()]));
+  var expr = t.ifStatement(t.unaryExpression('!', resultStatement), t.blockStatement([t.expressionStatement(t.assignmentExpression('=', result, t.booleanLiteral(false))), t.breakStatement()]));
   var loop = getLoop({
     t: t,
     body: t.blockStatement([valueAssignment, expr]),
@@ -316,8 +317,8 @@ function handleFilter(_ref4) {
   var isIterableCached = isCachedReference(t, object);
   var fnUsed = isHandlerCached ? handler : fn;
   var iterableUsed = isIterableCached ? object : iterable;
-  var valueAssignment = t.expressionStatement(t.assignmentExpression("=", value, t.memberExpression(iterableUsed, key, true)));
-  var resultAssignment = isObject ? t.assignmentExpression("=", t.memberExpression(result, key, true), value) : t.callExpression(t.memberExpression(result, t.identifier("push")), [value]);
+  var valueAssignment = t.expressionStatement(t.assignmentExpression('=', value, t.memberExpression(iterableUsed, key, true)));
+  var resultAssignment = isObject ? t.assignmentExpression('=', t.memberExpression(result, key, true), value) : t.callExpression(t.memberExpression(result, t.identifier('push')), [value]);
   var resultStatement = getResultStatement(t, handler, fnUsed, value, key, iterableUsed, path);
   var expr = t.ifStatement(resultStatement, t.expressionStatement(resultAssignment));
   var loop = getLoop({
@@ -368,9 +369,9 @@ function handleFind(_ref5) {
   var isIterableCached = isCachedReference(t, object);
   var fnUsed = isHandlerCached ? handler : fn;
   var iterableUsed = isIterableCached ? object : iterable;
-  var valueAssignment = t.expressionStatement(t.assignmentExpression("=", value, t.memberExpression(iterableUsed, key, true)));
+  var valueAssignment = t.expressionStatement(t.assignmentExpression('=', value, t.memberExpression(iterableUsed, key, true)));
   var resultStatement = getResultStatement(t, handler, fnUsed, value, key, iterableUsed, path);
-  var expr = t.ifStatement(resultStatement, t.blockStatement([t.expressionStatement(t.assignmentExpression("=", result, value)), t.breakStatement()]));
+  var expr = t.ifStatement(resultStatement, t.blockStatement([t.expressionStatement(t.assignmentExpression('=', result, value)), t.breakStatement()]));
   var loop = getLoop({
     t: t,
     body: t.blockStatement([valueAssignment, expr]),
@@ -418,9 +419,9 @@ function handleFindKey(_ref6) {
   var isIterableCached = isCachedReference(t, object);
   var fnUsed = isHandlerCached ? handler : fn;
   var iterableUsed = isIterableCached ? object : iterable;
-  var valueAssignment = t.expressionStatement(t.assignmentExpression("=", value, t.memberExpression(iterableUsed, key, true)));
+  var valueAssignment = t.expressionStatement(t.assignmentExpression('=', value, t.memberExpression(iterableUsed, key, true)));
   var resultStatement = getResultStatement(t, handler, fnUsed, value, key, iterableUsed, path);
-  var expr = t.ifStatement(resultStatement, t.blockStatement([t.expressionStatement(t.assignmentExpression("=", result, key)), t.breakStatement()]));
+  var expr = t.ifStatement(resultStatement, t.blockStatement([t.expressionStatement(t.assignmentExpression('=', result, key)), t.breakStatement()]));
   var loop = getLoop({
     t: t,
     body: t.blockStatement([valueAssignment, expr]),
@@ -468,7 +469,7 @@ function handleForEach(_ref7) {
   var isIterableCached = isCachedReference(t, object);
   var fnUsed = isHandlerCached ? handler : fn;
   var iterableUsed = isIterableCached ? object : iterable;
-  var valueAssignment = t.expressionStatement(t.assignmentExpression("=", value, t.memberExpression(iterableUsed, key, true)));
+  var valueAssignment = t.expressionStatement(t.assignmentExpression('=', value, t.memberExpression(iterableUsed, key, true)));
   var resultStatement = getResultStatement(t, handler, fnUsed, value, key, iterableUsed, path);
   var call = t.expressionStatement(resultStatement);
   var loop = getLoop({
@@ -517,9 +518,9 @@ function handleMap(_ref8) {
   var isIterableCached = isCachedReference(t, object);
   var fnUsed = isHandlerCached ? handler : fn;
   var iterableUsed = isIterableCached ? object : iterable;
-  var valueAssignment = t.expressionStatement(t.assignmentExpression("=", value, t.memberExpression(iterableUsed, key, true)));
+  var valueAssignment = t.expressionStatement(t.assignmentExpression('=', value, t.memberExpression(iterableUsed, key, true)));
   var resultStatement = getResultStatement(t, handler, fnUsed, value, key, iterableUsed, path);
-  var expr = t.expressionStatement(isObject ? t.assignmentExpression("=", t.memberExpression(result, key, true), resultStatement) : t.callExpression(t.memberExpression(result, t.identifier("push")), [resultStatement]));
+  var expr = t.expressionStatement(isObject ? t.assignmentExpression('=', t.memberExpression(result, key, true), resultStatement) : t.callExpression(t.memberExpression(result, t.identifier('push')), [resultStatement]));
   var loop = getLoop({
     t: t,
     body: t.blockStatement([valueAssignment, expr]),
@@ -575,27 +576,27 @@ function handleReduce(_ref9) {
 
   if (!hasInitialValue) {
     if (isObject) {
-      hasInitialValueId = getUid(path.scope, "hasInitialValue");
-      injected.push(t.variableDeclaration("let", [t.variableDeclarator(hasInitialValueId, t.booleanLiteral(false))]));
+      hasInitialValueId = getUid(path.scope, 'hasInitialValue');
+      injected.push(t.variableDeclaration('let', [t.variableDeclarator(hasInitialValueId, t.booleanLiteral(false))]));
     } else if (isDecrementing) {
-      injected.push(t.variableDeclaration("const", [t.variableDeclarator(length, t.memberExpression(iterableUsed, t.identifier("length")))]));
-      initialValue = t.memberExpression(iterableUsed, t.binaryExpression("-", length, t.numericLiteral(1)), true);
+      injected.push(t.variableDeclaration('const', [t.variableDeclarator(length, t.memberExpression(iterableUsed, t.identifier('length')))]));
+      initialValue = t.memberExpression(iterableUsed, t.binaryExpression('-', length, t.numericLiteral(1)), true);
     } else {
       initialValue = t.memberExpression(iterableUsed, t.numericLiteral(0), true);
     }
   }
 
   if (isObject) {
-    injected.push(t.variableDeclaration("let", [t.variableDeclarator(value)]));
+    injected.push(t.variableDeclaration('let', [t.variableDeclarator(value)]));
   }
 
-  var valueAssignment = t.expressionStatement(t.assignmentExpression("=", value, t.memberExpression(iterableUsed, key, true)));
+  var valueAssignment = t.expressionStatement(t.assignmentExpression('=', value, t.memberExpression(iterableUsed, key, true)));
   var call = t.callExpression(fnUsed, [result, value, key, iterableUsed]);
-  var resultAssignment = t.assignmentExpression("=", result, call);
+  var resultAssignment = t.assignmentExpression('=', result, call);
   var block;
 
   if (!hasInitialValue && isObject) {
-    var ifHasInitialValue = t.ifStatement(hasInitialValueId, t.blockStatement([valueAssignment, t.expressionStatement(resultAssignment)]), t.blockStatement([t.expressionStatement(t.assignmentExpression("=", hasInitialValueId, t.booleanLiteral(true))), t.expressionStatement(t.assignmentExpression("=", result, t.memberExpression(iterableUsed, key, true)))]));
+    var ifHasInitialValue = t.ifStatement(hasInitialValueId, t.blockStatement([valueAssignment, t.expressionStatement(resultAssignment)]), t.blockStatement([t.expressionStatement(t.assignmentExpression('=', hasInitialValueId, t.booleanLiteral(true))), t.expressionStatement(t.assignmentExpression('=', result, t.memberExpression(iterableUsed, key, true)))]));
     block = [ifHasInitialValue];
   } else {
     block = [valueAssignment, t.expressionStatement(resultAssignment)];
@@ -630,18 +631,18 @@ function handleReduce(_ref9) {
   var insertBefore = [];
 
   if (iterableUsed === iterable) {
-    var iterableVar = t.variableDeclaration("const", [t.variableDeclarator(iterable, object)]);
+    var iterableVar = t.variableDeclaration('const', [t.variableDeclarator(iterable, object)]);
     insertBefore.push(iterableVar);
   }
 
   insertBefore.push.apply(insertBefore, injected);
 
   if (fnUsed === fn) {
-    var handlerVar = t.variableDeclaration("const", [t.variableDeclarator(fn, handler)]);
+    var handlerVar = t.variableDeclaration('const', [t.variableDeclarator(fn, handler)]);
     insertBefore.push(handlerVar);
   }
 
-  var resultVar = t.variableDeclaration("let", [t.variableDeclarator(result, initialValue)]);
+  var resultVar = t.variableDeclaration('let', [t.variableDeclarator(result, initialValue)]);
   insertBefore.push(resultVar);
   insertBefore.push(loop);
   path.getStatementParent().insertBefore(insertBefore);
@@ -668,9 +669,9 @@ function handleSome(_ref11) {
   var isIterableCached = isCachedReference(t, object);
   var fnUsed = isHandlerCached ? handler : fn;
   var iterableUsed = isIterableCached ? object : iterable;
-  var valueAssignment = t.expressionStatement(t.assignmentExpression("=", value, t.memberExpression(iterableUsed, key, true)));
+  var valueAssignment = t.expressionStatement(t.assignmentExpression('=', value, t.memberExpression(iterableUsed, key, true)));
   var resultStatement = getResultStatement(t, handler, fnUsed, value, key, iterableUsed, path);
-  var expr = t.ifStatement(resultStatement, t.blockStatement([t.expressionStatement(t.assignmentExpression("=", result, t.booleanLiteral(true))), t.breakStatement()]));
+  var expr = t.ifStatement(resultStatement, t.blockStatement([t.expressionStatement(t.assignmentExpression('=', result, t.booleanLiteral(true))), t.breakStatement()]));
   var loop = getLoop({
     t: t,
     body: t.blockStatement([valueAssignment, expr]),
@@ -699,9 +700,9 @@ function handleSome(_ref11) {
   path.parentPath.replaceWith(result);
 }
 
-var METHODS = ["every", "filter", "find", "findIndex", "findKey", "forEach", "map", "reduce", "some"];
-var ARRAY_ONLY_METHODS = ["findIndex"];
-var OBJECT_ONLY_METHODS = ["findKey"];
+var METHODS = ['every', 'filter', 'find', 'findIndex', 'findKey', 'forEach', 'map', 'reduce', 'some'];
+var ARRAY_ONLY_METHODS = ['findIndex'];
+var OBJECT_ONLY_METHODS = ['findKey'];
 
 function getCallTypes(references, method) {
   var isArrayOnly = ARRAY_ONLY_METHODS.includes(method);
@@ -724,7 +725,6 @@ function getCallTypes(references, method) {
 
 function inlineLoops(_ref12) {
   var references = _ref12.references,
-      state = _ref12.state,
       babel = _ref12.babel;
   var t = babel.types;
   var allMethods = [];
@@ -744,7 +744,7 @@ function inlineLoops(_ref12) {
       return allMethods.push.apply(allMethods, _toConsumableArray(objectCalls));
     }
 
-    allMethods.push.apply(allMethods, _toConsumableArray(incrementingCalls).concat(_toConsumableArray(decrementingCalls), _toConsumableArray(objectCalls)));
+    return allMethods.push.apply(allMethods, _toConsumableArray(incrementingCalls).concat(_toConsumableArray(decrementingCalls), _toConsumableArray(objectCalls)));
   });
   var handlers = {
     every: handleEvery,
@@ -759,9 +759,9 @@ function inlineLoops(_ref12) {
   };
 
   function createHandler(name, transform, isDecrementing, isObject) {
-    return function (path) {
-      if (path.findParent(function (path) {
-        return path.isConditionalExpression();
+    return function _transform(path) {
+      if (path.findParent(function (_path) {
+        return _path.isConditionalExpression();
       })) {
         throw new MacroError("You cannot use ".concat(name, " in a conditional expression."));
       }
@@ -779,11 +779,11 @@ function inlineLoops(_ref12) {
           if (t.isCallExpression(ancestorPath)) {
             (function () {
               var expression = ancestorPath.parent.expression;
-              var callee = expression ? expression.callee : ancestorPath.parent.callee;
+              var caller = expression ? expression.callee : ancestorPath.parent.callee;
 
               if (allMethods.find(function (_ref13) {
                 var node = _ref13.node;
-                return node === callee && node !== path.node;
+                return node === caller && node !== path.node;
               })) {
                 throw new MacroError("You cannot nest looper methods. You should store the results of ".concat(name, " to a variable, and then call ").concat(path.parentPath.parent.callee.name, " with it."));
               }

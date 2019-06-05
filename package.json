@@ -20,8 +20,12 @@
     "@babel/cli": "^7.4.4",
     "@babel/core": "^7.4.5",
     "@babel/preset-env": "^7.4.5",
+    "babel-eslint": "^10.0.1",
     "babel-jest": "^24.8.0",
     "babel-plugin-tester": "^6.2.1",
+    "eslint": "^5.16.0",
+    "eslint-config-airbnb-base": "^13.1.0",
+    "eslint-plugin-import": "^2.17.3",
     "fast-equals": "^2.0.0",
     "jest": "^24.8.0"
   },
@@ -51,6 +55,8 @@
   "scripts": {
     "build": "babel inline-loops.macro.js -d build && cp ./index.d.ts ./build/",
     "dev": "npm run build && NODE_ENV=development webpack-dev-server --colors --progress --config=webpack/webpack.config.js",
+    "lint": "eslint ./inline-loops.macro.js",
+    "lint:fix": "npm run lint -- --fix",
     "prepublish": "npm run build",
     "test": "jest"
   },

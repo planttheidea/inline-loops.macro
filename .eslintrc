@@ -1,0 +1,15 @@
+{
+  "extends": ["airbnb-base"],
+  "parser": "babel-eslint",
+  "parserOptions": {
+    "ecmaVersion": 2019,
+    "sourceType": "module"
+  },
+  "rules": {
+    "no-param-reassign": "off",
+    "no-shadow": "off",
+    "no-use-before-define": "off",
+
+    "import/order": "off"
+  }
+}
