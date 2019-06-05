@@ -20,6 +20,7 @@
     "@babel/cli": "^7.4.4",
     "@babel/core": "^7.4.5",
     "@babel/preset-env": "^7.4.5",
+    "@types/jest": "^24.0.13",
     "babel-eslint": "^10.0.1",
     "babel-jest": "^24.8.0",
     "babel-plugin-tester": "^6.2.1",
@@ -27,7 +28,8 @@
     "eslint-config-airbnb-base": "^13.1.0",
     "eslint-plugin-import": "^2.17.3",
     "fast-equals": "^2.0.0",
-    "jest": "^24.8.0"
+    "jest": "^24.8.0",
+    "ts-jest": "^24.0.2"
   },
   "homepage": "https://github.com/planttheidea/inline-loops.macro#readme",
   "jest": {
@@ -35,7 +37,10 @@
       "/node_modules/",
       "/__fixtures__/",
       "/__runtime__/"
-    ]
+    ],
+    "transform": {
+      "^.+\\.tsx?$": "ts-jest"
+    }
   },
   "keywords": [
     "babel-macros",
@@ -54,12 +59,11 @@
   },
   "scripts": {
     "build": "babel inline-loops.macro.js -d build && cp ./index.d.ts ./build/",
-    "dev": "npm run build && NODE_ENV=development webpack-dev-server --colors --progress --config=webpack/webpack.config.js",
     "lint": "eslint ./inline-loops.macro.js",
     "lint:fix": "npm run lint -- --fix",
-    "prepublish": "npm run build",
+    "prepublishOnly": "npm run lint && npm run test && npm run build",
     "test": "jest"
   },
   "typings": "./index.d.ts",
-  "version": "1.0.0"
+  "version": "0.1.0"
 }
