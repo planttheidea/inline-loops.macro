@@ -1,0 +1,52 @@
+{
+  "author": "Tony Quetano",
+  "babel": {
+    "presets": [
+      "@babel/preset-env"
+    ]
+  },
+  "bugs": {
+    "url": "https://github.com/planttheidea/inline-loops.macro/issues"
+  },
+  "dependencies": {
+    "@babel/types": "^7.0.0",
+    "babel-plugin-macros": "^2.0.0"
+  },
+  "description": "Macros that will inline loops for arrays an objects",
+  "devDependencies": {
+    "@babel/cli": "^7.4.4",
+    "@babel/core": "^7.4.5",
+    "@babel/preset-env": "^7.4.5",
+    "babel-plugin-tester": "^6.2.1",
+    "jest": "^24.8.0"
+  },
+  "homepage": "https://github.com/planttheidea/inline-loops.macro#readme",
+  "jest": {
+    "testPathIgnorePatterns": [
+      "/node_modules/",
+      "/__fixtures__/"
+    ]
+  },
+  "keywords": [
+    "babel-macros",
+    "babel-plugin-macros",
+    "babel",
+    "inline",
+    "loops",
+    "inline-loops"
+  ],
+  "license": "MIT",
+  "main": "build/inline-loops.macro.js",
+  "name": "inline-loops.macro",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/planttheidea/inline-loops.macro.git"
+  },
+  "scripts": {
+    "test": "jest",
+    "build": "babel inline-loops.macro.js -d build && cp ./index.d.ts ./build/",
+    "prepublish": "npm run build"
+  },
+  "typings": "./index.d.ts",
+  "version": "1.0.0"
+}
