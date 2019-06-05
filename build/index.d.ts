@@ -12,8 +12,8 @@ type ObjectIterable = Dictionary<any>;
 /**
  * the handlers for the iterables, specific to type
  */
-type ArrayHandler = (value?: any[], index?: number, array?: ArrayIterable) => any;
-type ObjectHandler = (value?: any[], key?: string, object?: ObjectIterable) => any;
+type ArrayHandler = (value?: any, index?: number, array?: ArrayIterable) => any;
+type ObjectHandler = (value?: any, key?: string, object?: ObjectIterable) => any;
 
 /**
  * available exports
