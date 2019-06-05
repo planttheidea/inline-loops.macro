@@ -1,6 +1,6 @@
 let _result = true;
 
-for (let _key = array.length - 1, _value; _key >= 0; --_key) {
+for (let _key = 0, _length = array.length, _value; _key < _length; ++_key) {
   _value = array[_key];
 
   if (!(_value % 2 === 0)) {

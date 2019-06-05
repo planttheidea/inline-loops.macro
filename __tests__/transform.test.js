@@ -10,6 +10,27 @@ pluginTester({
 });
 
 pluginTester({
+  title: "Inlined function references (arrow expreasion)",
+  plugin,
+  fixtures: path.join(__dirname, "__fixtures__", "inlined-arrow-expression"),
+  filename: __filename
+});
+
+pluginTester({
+  title: "Inlined function references (arrow return)",
+  plugin,
+  fixtures: path.join(__dirname, "__fixtures__", "inlined-arrow-return"),
+  filename: __filename
+});
+
+pluginTester({
+  title: "Inlined function references (function return)",
+  plugin,
+  fixtures: path.join(__dirname, "__fixtures__", "inlined-function-return"),
+  filename: __filename
+});
+
+pluginTester({
   title: "Uncached references",
   plugin,
   fixtures: path.join(__dirname, "__fixtures__", "uncached"),
