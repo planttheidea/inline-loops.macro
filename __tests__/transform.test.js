@@ -36,3 +36,10 @@ pluginTester({
   fixtures: path.join(__dirname, "__fixtures__", "uncached"),
   filename: __filename
 });
+
+pluginTester({
+  title: "Nested references",
+  plugin,
+  fixtures: path.join(__dirname, "__fixtures__", "nested"),
+  filename: __filename
+});
