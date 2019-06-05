@@ -62,6 +62,8 @@
     "lint": "eslint ./inline-loops.macro.js",
     "lint:fix": "npm run lint -- --fix",
     "prepublishOnly": "npm run lint && npm run test && npm run build",
+    "release": "release-it",
+    "release:beta": "release-it --config=.release-it.beta.json",
     "test": "jest"
   },
   "typings": "./index.d.ts",
