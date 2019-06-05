@@ -9,6 +9,7 @@
     "no-param-reassign": "off",
     "no-plusplus": "off",
     "no-shadow": "off",
+    "no-underscore-dangle": "off",
     "no-use-before-define": "off",
 
     "import/order": "off"

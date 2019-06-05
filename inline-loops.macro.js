@@ -948,6 +948,10 @@ function inlineLoops({ references, babel }) {
     return allMethods.push(...incrementingCalls, ...decrementingCalls, ...objectCalls);
   });
 
+  allMethods.forEach((method) => {
+    method.node.__inlineLoopsMacro = true;
+  });
+
   const handlers = {
     every: handleEvery,
     filter: handleFilter,
@@ -971,24 +975,17 @@ function inlineLoops({ references, babel }) {
       const { callee } = path.parentPath.parent;
 
       if (callee) {
-        let ancestorPath = path.parentPath;
-
-        while (ancestorPath) {
-          if (ancestorPath.node && ancestorPath.node.body) {
-            break;
-          }
-
+        const ancestry = path.parentPath.getAncestry();
+  
+        for (let index = 0; index < ancestry.length; index++) {
+          const ancestorPath = ancestry[index];
+          
           if (t.isCallExpression(ancestorPath)) {
-            const { expression } = ancestorPath.parent;
-            const caller = expression
-              ? expression.callee
-              : ancestorPath.parent.callee;
+            const callee = ancestorPath.node
+              ? ancestorPath.node.callee
+              : ancestorPath.parent.expression.callee;
 
-            if (
-              allMethods.find(
-                ({ node }) => node === caller && node !== path.node,
-              )
-            ) {
+            if (callee !== path.node && callee.__inlineLoopsMacro) {
               throw new MacroError(
                 `You cannot nest looper methods. You should store the results of ${name} to a variable, and then call ${
                   path.parentPath.parent.callee.name
@@ -996,8 +993,6 @@ function inlineLoops({ references, babel }) {
               );
             }
           }
-
-          ancestorPath = ancestorPath.parentPath;
         }
       }
 
