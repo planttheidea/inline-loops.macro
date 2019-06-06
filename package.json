@@ -58,13 +58,16 @@
     "url": "git+https://github.com/planttheidea/inline-loops.macro.git"
   },
   "scripts": {
-    "build": "babel inline-loops.macro.js -d build && cp ./index.d.ts ./build/",
+    "build": "babel inline-loops.macro.js -d build",
+    "copy:types": "cp ./index.d.ts ./build/",
+    "dist": "npm run build && npm run copy:types",
     "lint": "eslint ./inline-loops.macro.js",
     "lint:fix": "npm run lint -- --fix",
-    "prepublishOnly": "npm run lint && npm run test && npm run build",
+    "prepublishOnly": "npm run lint && npm run test && npm run dist",
     "release": "release-it",
     "release:beta": "release-it --config=.release-it.beta.json",
-    "test": "jest"
+    "test": "jest",
+    "test:watch": "npm run test -- --watch"
   },
   "typings": "./index.d.ts",
   "version": "1.0.0-beta.1"

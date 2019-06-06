@@ -713,12 +713,33 @@ function getCallTypes(references, method) {
   var decrementingCalls = references[decrementingMethod] || [];
   var objectCalls = references[objectMethod] || [];
   return {
-    decrementingCalls: decrementingCalls,
+    decrementingCalls: decrementingCalls.map(function (path) {
+      return {
+        method: decrementingMethod,
+        path: path,
+        sourceMethod: method,
+        type: 'decrementing'
+      };
+    }),
     decrementingMethod: decrementingMethod,
-    incrementingCalls: incrementingCalls,
+    incrementingCalls: incrementingCalls.map(function (path) {
+      return {
+        method: method,
+        path: path,
+        sourceMethod: method,
+        type: 'incrementing'
+      };
+    }),
     isArrayOnly: isArrayOnly,
     isObjectOnly: isObjectOnly,
-    objectCalls: objectCalls,
+    objectCalls: objectCalls.map(function (path) {
+      return {
+        method: objectMethod,
+        path: path,
+        sourceMethod: method,
+        type: 'object'
+      };
+    }),
     objectMethod: objectMethod
   };
 }
@@ -746,6 +767,51 @@ function inlineLoops(_ref12) {
 
     return allMethods.push.apply(allMethods, _toConsumableArray(incrementingCalls).concat(_toConsumableArray(decrementingCalls), _toConsumableArray(objectCalls)));
   });
+  allMethods.forEach(function (_ref13) {
+    var path = _ref13.path;
+    path.node.__inlineLoopsMacro = true;
+  });
+  allMethods.sort(function (_ref14, _ref15) {
+    var a = _ref14.path;
+    var b = _ref15.path;
+    var aContainer = a.container;
+    var bContainer = b.container;
+
+    if (aContainer.arguments) {
+      var _aContainer$arguments = _slicedToArray(aContainer.arguments, 1),
+          iterable = _aContainer$arguments[0];
+
+      if (t.isCallExpression(iterable) && iterable.callee.__inlineLoopsMacro) {
+        return 1;
+      }
+    }
+
+    if (bContainer.arguments) {
+      var _bContainer$arguments = _slicedToArray(bContainer.arguments, 1),
+          _iterable = _bContainer$arguments[0];
+
+      if (t.isCallExpression(_iterable) && _iterable.callee.__inlineLoopsMacro) {
+        return -1;
+      }
+    }
+
+    var aStart = a.node.loc.start;
+    var bStart = b.node.loc.start;
+
+    if (bStart.line > aStart.line) {
+      return -1;
+    }
+
+    if (aStart.line > bStart.line) {
+      return 1;
+    }
+
+    if (bStart.column > aStart.column) {
+      return -1;
+    }
+
+    return 1;
+  });
   var handlers = {
     every: handleEvery,
     filter: handleFilter,
@@ -758,7 +824,7 @@ function inlineLoops(_ref12) {
     some: handleSome
   };
 
-  function createHandler(name, transform, isDecrementing, isObject) {
+  function createTransformer(name, transform, isDecrementing, isObject) {
     return function _transform(path) {
       if (path.findParent(function (_path) {
         return _path.isConditionalExpression();
@@ -766,38 +832,27 @@ function inlineLoops(_ref12) {
         throw new MacroError("You cannot use ".concat(name, " in a conditional expression."));
       }
 
-      var callee = path.parentPath.parent.callee;
+      var args = path.parent.arguments;
 
-      if (callee) {
-        var ancestorPath = path.parentPath;
-
-        while (ancestorPath) {
-          if (ancestorPath.node && ancestorPath.node.body) {
-            break;
-          }
-
-          if (t.isCallExpression(ancestorPath)) {
-            (function () {
-              var expression = ancestorPath.parent.expression;
-              var caller = expression ? expression.callee : ancestorPath.parent.callee;
-
-              if (allMethods.find(function (_ref13) {
-                var node = _ref13.node;
-                return node === caller && node !== path.node;
-              })) {
-                throw new MacroError("You cannot nest looper methods. You should store the results of ".concat(name, " to a variable, and then call ").concat(path.parentPath.parent.callee.name, " with it."));
-              }
-            })();
-          }
-
-          ancestorPath = ancestorPath.parentPath;
-        }
+      if (args.some(function (arg) {
+        return t.isSpreadElement(arg);
+      })) {
+        throw new MacroError('You cannot use spread arguments with the macro, please declare the arguments explicitly.');
       }
 
-      var _path$parent$argument = _slicedToArray(path.parent.arguments, 3),
-          object = _path$parent$argument[0],
-          handler = _path$parent$argument[1],
-          initialValue = _path$parent$argument[2];
+      var _args = _slicedToArray(args, 3),
+          object = _args[0],
+          handler = _args[1],
+          initialValue = _args[2];
+
+      var isHandlerMacro = allMethods.find(function (_ref16) {
+        var methodPath = _ref16.path;
+        return methodPath.node !== path.node && handler === methodPath.node;
+      });
+
+      if (isHandlerMacro) {
+        throw new MacroError('You cannot use the macro directly as a handler, please wrap it in a function call.');
+      }
 
       transform({
         t: t,
@@ -811,24 +866,15 @@ function inlineLoops(_ref12) {
     };
   }
 
-  METHODS.forEach(function (method) {
-    var _getCallTypes2 = getCallTypes(references, method),
-        decrementingCalls = _getCallTypes2.decrementingCalls,
-        decrementingMethod = _getCallTypes2.decrementingMethod,
-        incrementingCalls = _getCallTypes2.incrementingCalls,
-        isArrayOnly = _getCallTypes2.isArrayOnly,
-        isObjectOnly = _getCallTypes2.isObjectOnly,
-        objectCalls = _getCallTypes2.objectCalls,
-        objectMethod = _getCallTypes2.objectMethod;
-
-    if (!isObjectOnly) {
-      incrementingCalls.forEach(createHandler(method, handlers[method]));
-      decrementingCalls.forEach(createHandler(decrementingMethod, handlers[method], true));
-    }
-
-    if (!isArrayOnly) {
-      objectCalls.forEach(createHandler(objectMethod, handlers[method], false, true));
-    }
+  allMethods.forEach(function (_ref17) {
+    var method = _ref17.method,
+        path = _ref17.path,
+        sourceMethod = _ref17.sourceMethod,
+        type = _ref17.type;
+    var isDecrementing = type === 'decrementing';
+    var isObject = type === 'object';
+    var handler = createTransformer(method, handlers[sourceMethod], isDecrementing, isObject);
+    handler(path);
   });
 }
 
