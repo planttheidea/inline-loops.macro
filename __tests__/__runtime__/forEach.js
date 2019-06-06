@@ -1,15 +1,16 @@
-const {
-  forEach,
-  forEachObject,
-  forEachRight
-} = require("../../src/inline-loops.macro");
+/* eslint-disable */
 
-const { deepEqual: isEqual } = require("fast-equals");
+const { forEach, forEachObject, forEachRight } = require('../../src/inline-loops.macro');
 
 const ARRAY = [1, 2, 3, 4, 5, 6];
-const OBJECT = { one: 1, two: 2, three: 3, four: 4, five: 5, six: 6 };
-
-const isEven = value => value % 2 === 0;
+const OBJECT = {
+  one: 1,
+  two: 2,
+  three: 3,
+  four: 4,
+  five: 5,
+  six: 6,
+};
 
 module.exports = {
   cached: {
@@ -20,7 +21,7 @@ module.exports = {
         forEachRight(ARRAY, spy);
 
         return spy.mock.calls.length === 6;
-      })()
+      })(),
     },
     object: {
       true: (() => {
@@ -29,7 +30,7 @@ module.exports = {
         forEachObject(OBJECT, spy);
 
         return spy.mock.calls.length === 6;
-      })()
+      })(),
     },
     standard: {
       true: (() => {
@@ -38,8 +39,8 @@ module.exports = {
         forEach(ARRAY, spy);
 
         return spy.mock.calls.length === 6;
-      })()
-    }
+      })(),
+    },
   },
   inlinedArrowExpression: {
     decrementing: {
@@ -49,7 +50,7 @@ module.exports = {
         forEachRight(ARRAY, () => count++);
 
         return count === 6;
-      })()
+      })(),
     },
     object: {
       true: (() => {
@@ -58,7 +59,7 @@ module.exports = {
         forEachObject(OBJECT, () => count++);
 
         return count === 6;
-      })()
+      })(),
     },
     standard: {
       true: (() => {
@@ -67,8 +68,8 @@ module.exports = {
         forEach(ARRAY, () => count++);
 
         return count === 6;
-      })()
-    }
+      })(),
+    },
   },
   inlinedArrowReturn: {
     decrementing: {
@@ -80,7 +81,7 @@ module.exports = {
         });
 
         return count === 6;
-      })()
+      })(),
     },
     object: {
       true: (() => {
@@ -91,7 +92,7 @@ module.exports = {
         });
 
         return count === 6;
-      })()
+      })(),
     },
     standard: {
       true: (() => {
@@ -102,8 +103,8 @@ module.exports = {
         });
 
         return count === 6;
-      })()
-    }
+      })(),
+    },
   },
   inlinedFunctionReturn: {
     decrementing: {
@@ -115,7 +116,7 @@ module.exports = {
         });
 
         return count === 6;
-      })()
+      })(),
     },
     object: {
       true: (() => {
@@ -126,7 +127,7 @@ module.exports = {
         });
 
         return count === 6;
-      })()
+      })(),
     },
     standard: {
       true: (() => {
@@ -137,8 +138,8 @@ module.exports = {
         });
 
         return count === 6;
-      })()
-    }
+      })(),
+    },
   },
   uncached: {
     decrementing: {
@@ -150,7 +151,7 @@ module.exports = {
         });
 
         return count === 6;
-      })()
+      })(),
     },
     object: {
       true: (() => {
@@ -161,7 +162,7 @@ module.exports = {
         });
 
         return count === 6;
-      })()
+      })(),
     },
     standard: {
       true: (() => {
@@ -172,7 +173,7 @@ module.exports = {
         });
 
         return count === 6;
-      })()
-    }
-  }
+      })(),
+    },
+  },
 };

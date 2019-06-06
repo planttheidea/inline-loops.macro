@@ -1,3 +1,5 @@
+/* eslint-disable */
+
 const { every, everyObject, everyRight } = require('../../src/inline-loops.macro');
 
 const ARRAY = [1, 2, 3, 4, 5, 6];
@@ -45,30 +47,54 @@ module.exports = {
   },
   inlinedArrowReturn: {
     decrementing: {
-      false: everyRight(ARRAY, value => value % 2 === 0),
-      true: everyRight(ARRAY, value => value > 0),
+      false: everyRight(ARRAY, value => {
+        return value % 2 === 0;
+      }),
+      true: everyRight(ARRAY, value => {
+        return value > 0;
+      }),
     },
     object: {
-      false: everyObject(OBJECT, value => value % 2 === 0),
-      true: everyObject(OBJECT, value => value > 0),
+      false: everyObject(OBJECT, value => {
+        return value % 2 === 0;
+      }),
+      true: everyObject(OBJECT, value => {
+        return value > 0;
+      }),
     },
     standard: {
-      false: every(ARRAY, value => value % 2 === 0),
-      true: every(ARRAY, value => value > 0),
+      false: every(ARRAY, value => {
+        return value % 2 === 0;
+      }),
+      true: every(ARRAY, value => {
+        return value > 0;
+      }),
     },
   },
   inlinedFunctionReturn: {
     decrementing: {
-      false: everyRight(ARRAY, value => value % 2 === 0),
-      true: everyRight(ARRAY, value => value > 0),
+      false: everyRight(ARRAY, function(value) {
+        return value % 2 === 0;
+      }),
+      true: everyRight(ARRAY, function(value) {
+        return value > 0;
+      }),
     },
     object: {
-      false: everyObject(OBJECT, value => value % 2 === 0),
-      true: everyObject(OBJECT, value => value > 0),
+      false: everyObject(OBJECT, function(value) {
+        return value % 2 === 0;
+      }),
+      true: everyObject(OBJECT, function(value) {
+        return value > 0;
+      }),
     },
     standard: {
-      false: every(ARRAY, value => value % 2 === 0),
-      true: every(ARRAY, value => value > 0),
+      false: every(ARRAY, function(value) {
+        return value % 2 === 0;
+      }),
+      true: every(ARRAY, function(value) {
+        return value > 0;
+      }),
     },
   },
   nested: {
@@ -79,36 +105,36 @@ module.exports = {
   },
   uncached: {
     decrementing: {
-      false: everyRight([].concat(ARRAY), (value) => {
+      false: everyRight([].concat(ARRAY), value => {
         const isEven = value % 2 === 0;
 
         return isEven;
       }),
-      true: everyRight([].concat(ARRAY), (value) => {
+      true: everyRight([].concat(ARRAY), value => {
         const isPositive = value > 0;
 
         return isPositive;
       }),
     },
     object: {
-      false: everyObject(Object.assign({}, OBJECT), (value) => {
+      false: everyObject(Object.assign({}, OBJECT), value => {
         const isEven = value % 2 === 0;
 
         return isEven;
       }),
-      true: everyObject(Object.assign({}, OBJECT), (value) => {
+      true: everyObject(Object.assign({}, OBJECT), value => {
         const isPositive = value > 0;
 
         return isPositive;
       }),
     },
     standard: {
-      false: every([].concat(ARRAY), (value) => {
+      false: every([].concat(ARRAY), value => {
         const isEven = value % 2 === 0;
 
         return isEven;
       }),
-      true: every([].concat(ARRAY), (value) => {
+      true: every([].concat(ARRAY), value => {
         const isPositive = value > 0;
 
         return isPositive;

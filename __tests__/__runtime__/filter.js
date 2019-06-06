@@ -1,10 +1,17 @@
+/* eslint-disable */
+
 const { filter, filterObject, filterRight } = require('../../src/inline-loops.macro');
 
 const { deepEqual: isEqual } = require('fast-equals');
 
 const ARRAY = [1, 2, 3, 4, 5, 6];
 const OBJECT = {
-  one: 1, two: 2, three: 3, four: 4, five: 5, six: 6,
+  one: 1,
+  two: 2,
+  three: 3,
+  four: 4,
+  five: 5,
+  six: 6,
 };
 
 const isEven = value => value % 2 === 0;
@@ -56,31 +63,43 @@ module.exports = {
   inlinedArrowReturn: {
     decrementing: {
       false: isEqual(
-        filterRight(ARRAY, value => value % 2 === 0),
+        filterRight(ARRAY, value => {
+          return value % 2 === 0;
+        }),
         BAD_DECREMENTING_ARRAY_RESULT,
       ),
       true: isEqual(
-        filterRight(ARRAY, value => value % 2 === 0),
+        filterRight(ARRAY, value => {
+          return value % 2 === 0;
+        }),
         DECREMENTING_ARRAY_RESULT,
       ),
     },
     object: {
       false: isEqual(
-        filterObject(OBJECT, value => value % 2 === 0),
+        filterObject(OBJECT, value => {
+          return value % 2 === 0;
+        }),
         BAD_OBJECT_RESULT,
       ),
       true: isEqual(
-        filterObject(OBJECT, value => value % 2 === 0),
+        filterObject(OBJECT, value => {
+          return value % 2 === 0;
+        }),
         OBJECT_RESULT,
       ),
     },
     standard: {
       false: isEqual(
-        filter(ARRAY, value => value % 2 === 0),
+        filter(ARRAY, value => {
+          return value % 2 === 0;
+        }),
         BAD_ARRAY_RESULT,
       ),
       true: isEqual(
-        filter(ARRAY, value => value % 2 === 0),
+        filter(ARRAY, value => {
+          return value % 2 === 0;
+        }),
         ARRAY_RESULT,
       ),
     },
@@ -88,31 +107,43 @@ module.exports = {
   inlinedFunctionReturn: {
     decrementing: {
       false: isEqual(
-        filterRight(ARRAY, value => value % 2 === 0),
+        filterRight(ARRAY, function(value) {
+          return value % 2 === 0;
+        }),
         BAD_DECREMENTING_ARRAY_RESULT,
       ),
       true: isEqual(
-        filterRight(ARRAY, value => value % 2 === 0),
+        filterRight(ARRAY, function(value) {
+          return value % 2 === 0;
+        }),
         DECREMENTING_ARRAY_RESULT,
       ),
     },
     object: {
       false: isEqual(
-        filterObject(OBJECT, value => value % 2 === 0),
+        filterObject(OBJECT, function(value) {
+          return value % 2 === 0;
+        }),
         BAD_OBJECT_RESULT,
       ),
       true: isEqual(
-        filterObject(OBJECT, value => value % 2 === 0),
+        filterObject(OBJECT, function(value) {
+          return value % 2 === 0;
+        }),
         OBJECT_RESULT,
       ),
     },
     standard: {
       false: isEqual(
-        filter(ARRAY, value => value % 2 === 0),
+        filter(ARRAY, function(value) {
+          return value % 2 === 0;
+        }),
         BAD_ARRAY_RESULT,
       ),
       true: isEqual(
-        filter(ARRAY, value => value % 2 === 0),
+        filter(ARRAY, function(value) {
+          return value % 2 === 0;
+        }),
         ARRAY_RESULT,
       ),
     },
@@ -120,7 +151,7 @@ module.exports = {
   uncached: {
     decrementing: {
       false: isEqual(
-        filterRight([].concat(ARRAY), (value) => {
+        filterRight([].concat(ARRAY), value => {
           const isEven = value % 2 === 0;
 
           return isEven;
@@ -128,7 +159,7 @@ module.exports = {
         BAD_DECREMENTING_ARRAY_RESULT,
       ),
       true: isEqual(
-        filterRight([].concat(ARRAY), (value) => {
+        filterRight([].concat(ARRAY), value => {
           const isEven = value % 2 === 0;
 
           return isEven;
@@ -138,7 +169,7 @@ module.exports = {
     },
     object: {
       false: isEqual(
-        filterObject(Object.assign({}, OBJECT), (value) => {
+        filterObject(Object.assign({}, OBJECT), value => {
           const isEven = value % 2 === 0;
 
           return isEven;
@@ -146,7 +177,7 @@ module.exports = {
         BAD_OBJECT_RESULT,
       ),
       true: isEqual(
-        filterObject(Object.assign({}, OBJECT), (value) => {
+        filterObject(Object.assign({}, OBJECT), value => {
           const isEven = value % 2 === 0;
 
           return isEven;
@@ -156,7 +187,7 @@ module.exports = {
     },
     standard: {
       false: isEqual(
-        filter([].concat(ARRAY), (value) => {
+        filter([].concat(ARRAY), value => {
           const isEven = value % 2 === 0;
 
           return isEven;
@@ -164,7 +195,7 @@ module.exports = {
         BAD_ARRAY_RESULT,
       ),
       true: isEqual(
-        filter([].concat(ARRAY), (value) => {
+        filter([].concat(ARRAY), value => {
           const isEven = value % 2 === 0;
 
           return isEven;

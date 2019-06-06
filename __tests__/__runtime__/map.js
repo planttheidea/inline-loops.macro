@@ -1,9 +1,18 @@
-const { map, mapObject, mapRight } = require("../../src/inline-loops.macro");
+/* eslint-disable */
 
-const { deepEqual: isEqual } = require("fast-equals");
+const { map, mapObject, mapRight } = require('../../src/inline-loops.macro');
+
+const { deepEqual: isEqual } = require('fast-equals');
 
 const ARRAY = [1, 2, 3, 4, 5, 6];
-const OBJECT = { one: 1, two: 2, three: 3, four: 4, five: 5, six: 6 };
+const OBJECT = {
+  one: 1,
+  two: 2,
+  three: 3,
+  four: 4,
+  five: 5,
+  six: 6,
+};
 
 const isEven = value => value % 2 === 0;
 
@@ -24,39 +33,30 @@ module.exports = {
   cached: {
     decrementing: {
       false: isEqual(mapRight(ARRAY, isEven), BAD_DECREMENTING_ARRAY_RESULT),
-      true: isEqual(mapRight(ARRAY, isEven), DECREMENTING_ARRAY_RESULT)
+      true: isEqual(mapRight(ARRAY, isEven), DECREMENTING_ARRAY_RESULT),
     },
     object: {
       false: isEqual(mapObject(OBJECT, isEven), BAD_OBJECT_RESULT),
-      true: isEqual(mapObject(OBJECT, isEven), OBJECT_RESULT)
+      true: isEqual(mapObject(OBJECT, isEven), OBJECT_RESULT),
     },
     standard: {
       false: isEqual(map(ARRAY, isEven), BAD_ARRAY_RESULT),
-      true: isEqual(map(ARRAY, isEven), ARRAY_RESULT)
-    }
+      true: isEqual(map(ARRAY, isEven), ARRAY_RESULT),
+    },
   },
   inlinedArrowExpression: {
     decrementing: {
-      false: isEqual(
-        mapRight(ARRAY, value => value % 2 === 0),
-        BAD_DECREMENTING_ARRAY_RESULT
-      ),
-      true: isEqual(
-        mapRight(ARRAY, value => value % 2 === 0),
-        DECREMENTING_ARRAY_RESULT
-      )
+      false: isEqual(mapRight(ARRAY, value => value % 2 === 0), BAD_DECREMENTING_ARRAY_RESULT),
+      true: isEqual(mapRight(ARRAY, value => value % 2 === 0), DECREMENTING_ARRAY_RESULT),
     },
     object: {
-      false: isEqual(
-        mapObject(OBJECT, value => value % 2 === 0),
-        BAD_OBJECT_RESULT
-      ),
-      true: isEqual(mapObject(OBJECT, value => value % 2 === 0), OBJECT_RESULT)
+      false: isEqual(mapObject(OBJECT, value => value % 2 === 0), BAD_OBJECT_RESULT),
+      true: isEqual(mapObject(OBJECT, value => value % 2 === 0), OBJECT_RESULT),
     },
     standard: {
       false: isEqual(map(ARRAY, value => value % 2 === 0), BAD_ARRAY_RESULT),
-      true: isEqual(map(ARRAY, value => value % 2 === 0), ARRAY_RESULT)
-    }
+      true: isEqual(map(ARRAY, value => value % 2 === 0), ARRAY_RESULT),
+    },
   },
   inlinedArrowReturn: {
     decrementing: {
@@ -64,43 +64,43 @@ module.exports = {
         mapRight(ARRAY, value => {
           return value % 2 === 0;
         }),
-        BAD_DECREMENTING_ARRAY_RESULT
+        BAD_DECREMENTING_ARRAY_RESULT,
       ),
       true: isEqual(
         mapRight(ARRAY, value => {
           return value % 2 === 0;
         }),
-        DECREMENTING_ARRAY_RESULT
-      )
+        DECREMENTING_ARRAY_RESULT,
+      ),
     },
     object: {
       false: isEqual(
         mapObject(OBJECT, value => {
           return value % 2 === 0;
         }),
-        BAD_OBJECT_RESULT
+        BAD_OBJECT_RESULT,
       ),
       true: isEqual(
         mapObject(OBJECT, value => {
           return value % 2 === 0;
         }),
-        OBJECT_RESULT
-      )
+        OBJECT_RESULT,
+      ),
     },
     standard: {
       false: isEqual(
         map(ARRAY, value => {
           return value % 2 === 0;
         }),
-        BAD_ARRAY_RESULT
+        BAD_ARRAY_RESULT,
       ),
       true: isEqual(
         map(ARRAY, value => {
           return value % 2 === 0;
         }),
-        ARRAY_RESULT
-      )
-    }
+        ARRAY_RESULT,
+      ),
+    },
   },
   inlinedFunctionReturn: {
     decrementing: {
@@ -108,43 +108,43 @@ module.exports = {
         mapRight(ARRAY, function(value) {
           return value % 2 === 0;
         }),
-        BAD_DECREMENTING_ARRAY_RESULT
+        BAD_DECREMENTING_ARRAY_RESULT,
       ),
       true: isEqual(
         mapRight(ARRAY, function(value) {
           return value % 2 === 0;
         }),
-        DECREMENTING_ARRAY_RESULT
-      )
+        DECREMENTING_ARRAY_RESULT,
+      ),
     },
     object: {
       false: isEqual(
         mapObject(OBJECT, function(value) {
           return value % 2 === 0;
         }),
-        BAD_OBJECT_RESULT
+        BAD_OBJECT_RESULT,
       ),
       true: isEqual(
         mapObject(OBJECT, function(value) {
           return value % 2 === 0;
         }),
-        OBJECT_RESULT
-      )
+        OBJECT_RESULT,
+      ),
     },
     standard: {
       false: isEqual(
         map(ARRAY, function(value) {
           return value % 2 === 0;
         }),
-        BAD_ARRAY_RESULT
+        BAD_ARRAY_RESULT,
       ),
       true: isEqual(
         map(ARRAY, function(value) {
           return value % 2 === 0;
         }),
-        ARRAY_RESULT
-      )
-    }
+        ARRAY_RESULT,
+      ),
+    },
   },
   uncached: {
     decrementing: {
@@ -154,7 +154,7 @@ module.exports = {
 
           return isEven;
         }),
-        BAD_DECREMENTING_ARRAY_RESULT
+        BAD_DECREMENTING_ARRAY_RESULT,
       ),
       true: isEqual(
         mapRight([].concat(ARRAY), value => {
@@ -162,8 +162,8 @@ module.exports = {
 
           return isEven;
         }),
-        DECREMENTING_ARRAY_RESULT
-      )
+        DECREMENTING_ARRAY_RESULT,
+      ),
     },
     object: {
       false: isEqual(
@@ -172,7 +172,7 @@ module.exports = {
 
           return isEven;
         }),
-        BAD_OBJECT_RESULT
+        BAD_OBJECT_RESULT,
       ),
       true: isEqual(
         mapObject(Object.assign({}, OBJECT), value => {
@@ -180,8 +180,8 @@ module.exports = {
 
           return isEven;
         }),
-        OBJECT_RESULT
-      )
+        OBJECT_RESULT,
+      ),
     },
     standard: {
       false: isEqual(
@@ -190,7 +190,7 @@ module.exports = {
 
           return isEven;
         }),
-        BAD_ARRAY_RESULT
+        BAD_ARRAY_RESULT,
       ),
       true: isEqual(
         map([].concat(ARRAY), value => {
@@ -198,8 +198,8 @@ module.exports = {
 
           return isEven;
         }),
-        ARRAY_RESULT
-      )
-    }
-  }
+        ARRAY_RESULT,
+      ),
+    },
+  },
 };
