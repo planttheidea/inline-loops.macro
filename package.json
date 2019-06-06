@@ -67,7 +67,7 @@
     "release": "release-it",
     "release:beta": "release-it --config=.release-it.beta.json",
     "test": "jest",
-    "test:watch": "npm run dist && npm run test -- --watch"
+    "test:watch": "npm run test -- --watch"
   },
   "typings": "./index.d.ts",
   "version": "1.0.1"
