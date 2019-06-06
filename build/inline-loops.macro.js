@@ -24,21 +24,13 @@ function getDefaultResult(t, isObject) {
   return isObject ? t.objectExpression([]) : t.arrayExpression();
 }
 
+var ID_TYPES = ['fn', 'iterable', 'key', 'length', 'result', 'value'];
+
 function getIds(scope) {
-  var iterable = getUid(scope, 'iterable');
-  var fn = getUid(scope, 'fn');
-  var result = getUid(scope, 'result');
-  var key = getUid(scope, 'key');
-  var length = getUid(scope, 'length');
-  var value = getUid(scope, 'value');
-  return {
-    fn: fn,
-    iterable: iterable,
-    key: key,
-    length: length,
-    result: result,
-    value: value
-  };
+  return ID_TYPES.reduce(function (ids, type) {
+    ids[type] = getUid(scope, type);
+    return ids;
+  }, {});
 }
 
 function getLoop(_ref) {
@@ -195,7 +187,7 @@ function getResultStatement(t, handler, fn, value, key, iterable, path) {
   }
 
   var callExpression = t.callExpression(fn, [value, key, iterable]);
-  callExpression.isFallback = true;
+  callExpression.__inlineLoopsMacroFallback = true;
   return callExpression;
 }
 
@@ -223,7 +215,7 @@ function insertBeforeParent(_ref2) {
     insertBefore.push(iterableVar);
   }
 
-  if (!isCachedReference(t, handler) && t.isCallExpression(resultStatement) && resultStatement.isFallback) {
+  if (!isCachedReference(t, handler) && t.isCallExpression(resultStatement) && resultStatement.__inlineLoopsMacroFallback) {
     var handlerVar = t.variableDeclaration('const', [t.variableDeclarator(fn, handler)]);
     insertBefore.push(handlerVar);
   }

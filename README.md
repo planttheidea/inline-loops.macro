@@ -196,7 +196,7 @@ Most of the operations follow the same naming conventions:
 - `{method}Right` (decrementing array)
 - `{method}Object` (object)
 
-The exception to this is `findIndex` / `findKey` (which are specific to arrays) and `findKey` (which is specific to objects). The rationale should be obvious (arrays only have indices, objects only have keys), but because it is the only exception to the rule I wanted to call it out.
+The exception to this is `findIndex` / `findIndexRight` (which are specific to arrays) and `findKey` (which is specific to objects). The rationale should be obvious (arrays only have indices, objects only have keys), but because it is the only exception to the rule I wanted to call it out.
 
 ## Development
 
