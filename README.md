@@ -206,7 +206,7 @@ Standard stuff, clone the repo and `npm install` dependencies. The npm scripts a
 - `copy:types` => copies `index.d.ts` to `build`
 - `dist` => runs `build` and `copy:types`
 - `lint` => runs ESLint against all files in the `src` folder
-- `lint:fix` => runs `lint``, fixing any errors if possible
+- `lint:fix` => runs `lint`, fixing any errors if possible
 - `prepublishOnly` => run `lint`, `test`, `test:coverage`, and `dist`
 - `release` => release new version (expects globally-installed `release-it`)
 - `release:beta` => release new beta version (expects globally-installed `release-it`)
