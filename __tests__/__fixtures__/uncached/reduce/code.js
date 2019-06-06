@@ -1,4 +1,4 @@
-import { reduce } from "../../../../inline-loops.macro";
+import { reduce } from "../../../../src/inline-loops.macro";
 
 const doubledValues = reduce(
   [1, 2, 3, 4],

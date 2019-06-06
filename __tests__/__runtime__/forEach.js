@@ -2,7 +2,7 @@ const {
   forEach,
   forEachObject,
   forEachRight
-} = require("../../inline-loops.macro");
+} = require("../../src/inline-loops.macro");
 
 const { deepEqual: isEqual } = require("fast-equals");
 

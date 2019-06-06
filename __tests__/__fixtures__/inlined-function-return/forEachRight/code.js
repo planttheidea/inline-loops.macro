@@ -1,4 +1,4 @@
-import { forEachRight } from "../../../../inline-loops.macro";
+import { forEachRight } from "../../../../src/inline-loops.macro";
 
 forEachRight(array, function(value) {
   console.log(value);

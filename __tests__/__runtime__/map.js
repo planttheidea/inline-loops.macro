@@ -1,4 +1,4 @@
-const { map, mapObject, mapRight } = require("../../inline-loops.macro");
+const { map, mapObject, mapRight } = require("../../src/inline-loops.macro");
 
 const { deepEqual: isEqual } = require("fast-equals");
 

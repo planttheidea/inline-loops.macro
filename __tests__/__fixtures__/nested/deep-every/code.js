@@ -1,4 +1,4 @@
-import { every } from "../../../../inline-loops.macro";
+import { every } from "../../../../src/inline-loops.macro";
 
 if (
   `${every(array, value => value > 0)}|${every(

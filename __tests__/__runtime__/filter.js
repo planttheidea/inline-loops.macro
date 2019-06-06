@@ -1,4 +1,4 @@
-const { filter, filterObject, filterRight } = require('../../inline-loops.macro');
+const { filter, filterObject, filterRight } = require('../../src/inline-loops.macro');
 
 const { deepEqual: isEqual } = require('fast-equals');
 

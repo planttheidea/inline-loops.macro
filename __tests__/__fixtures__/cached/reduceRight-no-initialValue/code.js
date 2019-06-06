@@ -1,3 +1,3 @@
-import { reduceRight } from "../../../../inline-loops.macro";
+import { reduceRight } from "../../../../src/inline-loops.macro";
 
 const doubledValues = reduceRight(array, fn);

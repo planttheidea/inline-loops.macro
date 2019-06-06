@@ -1,4 +1,4 @@
-import { every } from "../../../../inline-loops.macro";
+import { every } from "../../../../src/inline-loops.macro";
 
 const areAllEven = every([1, 2, 3, 4], value => {
   const isValueEven = value % 2 === 0;

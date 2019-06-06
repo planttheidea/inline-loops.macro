@@ -1,4 +1,4 @@
-import { map, reduce, someObject } from '../../../../inline-loops.macro';
+import { map, reduce, someObject } from '../../../../src/inline-loops.macro';
 
 if (
   someObject(

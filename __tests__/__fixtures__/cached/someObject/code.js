@@ -1,3 +1,3 @@
-import { someObject } from "../../../../inline-loops.macro";
+import { someObject } from "../../../../src/inline-loops.macro";
 
 const areAnyEven = someObject(object, fn);

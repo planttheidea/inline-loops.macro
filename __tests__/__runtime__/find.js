@@ -1,4 +1,4 @@
-const { find, findObject, findRight } = require("../../inline-loops.macro");
+const { find, findObject, findRight } = require("../../src/inline-loops.macro");
 
 const { deepEqual: isEqual } = require("fast-equals");
 

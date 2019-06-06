@@ -1,4 +1,4 @@
-const { every, everyObject, everyRight } = require('../../inline-loops.macro');
+const { every, everyObject, everyRight } = require('../../src/inline-loops.macro');
 
 const ARRAY = [1, 2, 3, 4, 5, 6];
 const OBJECT = {
