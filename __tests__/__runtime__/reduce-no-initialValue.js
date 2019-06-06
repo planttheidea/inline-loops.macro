@@ -41,6 +41,72 @@ module.exports = {
       true: isEqual(reduce(ARRAY, isEven), ARRAY_RESULT)
     }
   },
+  inlinedArrowExpression: {
+    decrementing: {
+      false: isEqual(reduceRight(ARRAY, (total, value) => value % 2 === 0 ? total + value : total), BAD_DECREMENTING_ARRAY_RESULT),
+      true: isEqual(reduceRight(ARRAY, (total, value) => value % 2 === 0 ? total + value : total), DECREMENTING_ARRAY_RESULT),
+    },
+    object: {
+      false: isEqual(reduceObject(OBJECT, (total, value) => value % 2 === 0 ? total + value : total), BAD_OBJECT_RESULT),
+      true: isEqual(reduceObject(OBJECT, (total, value) => value % 2 === 0 ? total + value : total), OBJECT_RESULT),
+    },
+    standard: {
+      false: isEqual(reduce(ARRAY, (total, value) => value % 2 === 0 ? total + value : total), BAD_ARRAY_RESULT),
+      true: isEqual(reduce(ARRAY, (total, value) => value % 2 === 0 ? total + value : total), ARRAY_RESULT),
+    },
+  },
+  inlinedArrowReturn: {
+    decrementing: {
+      false: isEqual(reduceRight(ARRAY, (total, value) => {
+        return value % 2 === 0 ? total + value : total;
+      }), BAD_DECREMENTING_ARRAY_RESULT),
+      true: isEqual(reduceRight(ARRAY, (total, value) => {
+        return value % 2 === 0 ? total + value : total;
+      }), DECREMENTING_ARRAY_RESULT),
+    },
+    object: {
+      false: isEqual(reduceObject(OBJECT, (total, value) => {
+        return value % 2 === 0 ? total + value : total;
+      }), BAD_OBJECT_RESULT),
+      true: isEqual(reduceObject(OBJECT, (total, value) => {
+        return value % 2 === 0 ? total + value : total;
+      }), OBJECT_RESULT),
+    },
+    standard: {
+      false: isEqual(reduce(ARRAY, (total, value) => {
+        return value % 2 === 0 ? total + value : total;
+      }), BAD_ARRAY_RESULT),
+      true: isEqual(reduce(ARRAY, (total, value) => {
+        return value % 2 === 0 ? total + value : total;
+      }), ARRAY_RESULT),
+    },
+  },
+  inlinedFunctionReturn: {
+    decrementing: {
+      false: isEqual(reduceRight(ARRAY, function(total, value)  {
+        return value % 2 === 0 ? total + value : total;
+      }), BAD_DECREMENTING_ARRAY_RESULT),
+      true: isEqual(reduceRight(ARRAY, function(total, value)  {
+        return value % 2 === 0 ? total + value : total;
+      }), DECREMENTING_ARRAY_RESULT),
+    },
+    object: {
+      false: isEqual(reduceObject(OBJECT, function(total, value)  {
+        return value % 2 === 0 ? total + value : total;
+      }), BAD_OBJECT_RESULT),
+      true: isEqual(reduceObject(OBJECT, function(total, value)  {
+        return value % 2 === 0 ? total + value : total;
+      }), OBJECT_RESULT),
+    },
+    standard: {
+      false: isEqual(reduce(ARRAY, (total, value) => {
+        return value % 2 === 0 ? total + value : total;
+      }), BAD_ARRAY_RESULT),
+      true: isEqual(reduce(ARRAY, (total, value) => {
+        return value % 2 === 0 ? total + value : total;
+      }), ARRAY_RESULT),
+    },
+  },
   uncached: {
     decrementing: {
       false: isEqual(
