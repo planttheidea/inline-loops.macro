@@ -172,7 +172,6 @@ If you need to incorporate this, you can do it one of two ways:
 **Add filtering (iterates twice, but arguably cleaner semantics)**
 
 ```javascript
-// this
 const raw = mapObject(object, (value, key) => object.hasOwnProperty(key) ? value * 2 : null);
 const doubled = filterObject(raw, value => value !== null);
 ```
