@@ -1,3 +1,3 @@
-import { everyRight } from "../../../../inline-loops.macro";
+import { everyRight } from "../../../../src/inline-loops.macro";
 
 const areAllEven = everyRight(array, fn);

@@ -1,3 +1,3 @@
-import { filter } from "../../../../inline-loops.macro";
+import { filter } from "../../../../src/inline-loops.macro";
 
 const onlyEven = filter(array, fn);

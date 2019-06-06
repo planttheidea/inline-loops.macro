@@ -51,19 +51,19 @@
     "inline-loops"
   ],
   "license": "MIT",
-  "main": "build/inline-loops.macro.js",
+  "main": "dist/inline-loops.macro.js",
   "name": "inline-loops.macro",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/planttheidea/inline-loops.macro.git"
   },
   "scripts": {
-    "build": "babel inline-loops.macro.js -d build",
-    "copy:types": "cp ./index.d.ts ./build/",
+    "build": "babel src --out-dir dist",
+    "copy:types": "cp ./index.d.ts ./dist/",
     "dist": "npm run build && npm run copy:types",
-    "lint": "eslint ./inline-loops.macro.js",
+    "lint": "eslint src",
     "lint:fix": "npm run lint -- --fix",
-    "prepublishOnly": "npm run lint && npm run test && npm run dist",
+    "prepublishOnly": "npm run lint && npm run dist && npm run test",
     "release": "release-it",
     "release:beta": "release-it --config=.release-it.beta.json",
     "test": "jest",

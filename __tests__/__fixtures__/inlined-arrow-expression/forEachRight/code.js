@@ -1,3 +1,3 @@
-import { forEachRight } from "../../../../inline-loops.macro";
+import { forEachRight } from "../../../../src/inline-loops.macro";
 
 forEachRight(array, value => console.log(value));

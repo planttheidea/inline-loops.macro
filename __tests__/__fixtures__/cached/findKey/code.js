@@ -1,3 +1,3 @@
-import { findKey } from "../../../../inline-loops.macro";
+import { findKey } from "../../../../src/inline-loops.macro";
 
 const firstEven = findKey(object, fn);

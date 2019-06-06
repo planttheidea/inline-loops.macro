@@ -33,7 +33,7 @@ function contrivedExample(array) {
     const doubleObject = reduce(doubled, (object, value) => ({ 
       ...object, 
       [value]: value 
-    });
+    }, {});
 
     if (someObject(doubleObject, (value) => value > 100)) {
         console.log('I am large!');

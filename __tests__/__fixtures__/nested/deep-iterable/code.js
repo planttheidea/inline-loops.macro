@@ -1,3 +1,3 @@
-import { forEach, map } from '../../../../inline-loops.macro';
+import { forEach, map } from '../../../../src/inline-loops.macro';
 
 forEach(map(array, cachedFn), otherFn);
