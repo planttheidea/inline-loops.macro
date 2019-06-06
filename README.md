@@ -96,29 +96,7 @@ Notice that there is no reference to the original function, because it used the 
 
 There are a few limitations for this macro to be aware of:
 
-1. Nested macro calls are not allowed
-
-Due to the static analysis operations not following the same order as normal runtime operations, this macro will fail if the result of one macro call is passed as the iterable directly inside of another macro call. In this situation, you should store each operation to a variable and operate on that variable.
-
-```javascript
-// this will fail
-const foo = map(filter(array, filterFn), mapFn);
-
-// do this instead
-const filtered = filter(array, filterfn);
-const foo = map(filtered, mapFn);
-```
-
-If you are doing nested operations in your handler, this does not apply.
-
-```javascript
-// this is fine
-const onlyStringTuples = filter(array, (value) => {
-  return value.length === 2 && every(value, (v) => typeof v === 'string');
-})
-```
-
-2. `*Object` methods do not perform `hasOwnProperty` check
+1. `*Object` methods do not perform `hasOwnProperty` check
 
 The object methods will do operations in `for-in` loop, but will not guard via a `hasOwnProperty` check. For example:
 

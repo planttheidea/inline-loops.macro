@@ -2,8 +2,14 @@ const { every, everyObject, everyRight } = require('../../inline-loops.macro');
 
 const ARRAY = [1, 2, 3, 4, 5, 6];
 const OBJECT = {
-  one: 1, two: 2, three: 3, four: 4, five: 5, six: 6,
+  one: 1,
+  two: 2,
+  three: 3,
+  four: 4,
+  five: 5,
+  six: 6,
 };
+const NESTED_ARRAY = [ARRAY, ARRAY];
 
 const isEven = value => value % 2 === 0;
 const isPositive = value => value > 0;
@@ -63,6 +69,12 @@ module.exports = {
     standard: {
       false: every(ARRAY, value => value % 2 === 0),
       true: every(ARRAY, value => value > 0),
+    },
+  },
+  nested: {
+    standard: {
+      false: every(NESTED_ARRAY, array => every(array, isEven)),
+      true: every(NESTED_ARRAY, array => every(array, isPositive)),
     },
   },
   uncached: {

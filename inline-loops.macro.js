@@ -913,12 +913,27 @@ function getCallTypes(references, method) {
   const objectCalls = references[objectMethod] || [];
 
   return {
-    decrementingCalls,
+    decrementingCalls: decrementingCalls.map(path => ({
+      method: decrementingMethod,
+      path,
+      sourceMethod: method,
+      type: 'decrementing',
+    })),
     decrementingMethod,
-    incrementingCalls,
+    incrementingCalls: incrementingCalls.map(path => ({
+      method,
+      path,
+      sourceMethod: method,
+      type: 'incrementing',
+    })),
     isArrayOnly,
     isObjectOnly,
-    objectCalls,
+    objectCalls: objectCalls.map(path => ({
+      method: objectMethod,
+      path,
+      sourceMethod: method,
+      type: 'object',
+    })),
     objectMethod,
   };
 }
@@ -948,8 +963,46 @@ function inlineLoops({ references, babel }) {
     return allMethods.push(...incrementingCalls, ...decrementingCalls, ...objectCalls);
   });
 
-  allMethods.forEach((method) => {
-    method.node.__inlineLoopsMacro = true;
+  allMethods.forEach(({ path }) => {
+    path.node.__inlineLoopsMacro = true;
+  });
+
+  allMethods.sort(({ path: a }, { path: b }) => {
+    const aStart = a.node.loc.start;
+    const bStart = b.node.loc.start;
+
+    if (bStart.line > aStart.line) {
+      return -1;
+    }
+
+    if (aStart.line > bStart.line) {
+      return 1;
+    }
+
+    const aContainer = a.container;
+    const bContainer = b.container;
+
+    if (aContainer.arguments) {
+      const [iterable] = aContainer.arguments;
+
+      if (t.isCallExpression(iterable) && iterable.callee.__inlineLoopsMacro) {
+        return 1;
+      }
+    }
+
+    if (bContainer.arguments) {
+      const [iterable] = bContainer.arguments;
+
+      if (t.isCallExpression(iterable) && iterable.callee.__inlineLoopsMacro) {
+        return -1;
+      }
+    }
+
+    if (bStart.column > aStart.column) {
+      return -1;
+    }
+
+    return 1;
   });
 
   const handlers = {
@@ -964,39 +1017,26 @@ function inlineLoops({ references, babel }) {
     some: handleSome,
   };
 
-  function createHandler(name, transform, isDecrementing, isObject) {
+  function createTransformer(name, transform, isDecrementing, isObject) {
     return function _transform(path) {
       if (path.findParent(_path => _path.isConditionalExpression())) {
         throw new MacroError(
           `You cannot use ${name} in a conditional expression.`,
         );
+      } const args = path.parent.arguments;
+
+      if (args.some(arg => t.isSpreadElement(arg))) {
+        throw new MacroError('You cannot use spread arguments with the macro, please declare the arguments explicitly.');
       }
 
-      const { callee } = path.parentPath.parent;
+      const [object, handler, initialValue] = args;
+      const isHandlerMacro = allMethods.find(
+        ({ path: methodPath }) => methodPath.node !== path.node && handler === methodPath.node,
+      );
 
-      if (callee) {
-        const ancestry = path.parentPath.getAncestry();
-  
-        for (let index = 0; index < ancestry.length; index++) {
-          const ancestorPath = ancestry[index];
-          
-          if (t.isCallExpression(ancestorPath)) {
-            const callee = ancestorPath.node
-              ? ancestorPath.node.callee
-              : ancestorPath.parent.expression.callee;
-
-            if (callee !== path.node && callee.__inlineLoopsMacro) {
-              throw new MacroError(
-                `You cannot nest looper methods. You should store the results of ${name} to a variable, and then call ${
-                  path.parentPath.parent.callee.name
-                } with it.`,
-              );
-            }
-          }
-        }
+      if (isHandlerMacro) {
+        throw new MacroError('You cannot use the macro directly as a handler, please wrap it in a function call.');
       }
-
-      const [object, handler, initialValue] = path.parent.arguments;
 
       transform({
         t,
@@ -1010,29 +1050,20 @@ function inlineLoops({ references, babel }) {
     };
   }
 
-  METHODS.forEach((method) => {
-    const {
-      decrementingCalls,
-      decrementingMethod,
-      incrementingCalls,
-      isArrayOnly,
-      isObjectOnly,
-      objectCalls,
-      objectMethod,
-    } = getCallTypes(references, method);
+  allMethods.forEach(({
+    method, path, sourceMethod, type,
+  }) => {
+    const isDecrementing = type === 'decrementing';
+    const isObject = type === 'object';
 
-    if (!isObjectOnly) {
-      incrementingCalls.forEach(createHandler(method, handlers[method]));
-      decrementingCalls.forEach(
-        createHandler(decrementingMethod, handlers[method], true),
-      );
-    }
+    const handler = createTransformer(
+      method,
+      handlers[sourceMethod],
+      isDecrementing,
+      isObject,
+    );
 
-    if (!isArrayOnly) {
-      objectCalls.forEach(
-        createHandler(objectMethod, handlers[method], false, true),
-      );
-    }
+    handler(path);
   });
 }
 

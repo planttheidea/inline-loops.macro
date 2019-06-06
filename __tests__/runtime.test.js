@@ -1,16 +1,18 @@
-const { transformFileSync } = require("@babel/core");
-const fs = require("fs");
-const path = require("path");
+/* eslint-disable */
 
-const TRANSFORM_OPTIONS = require("../package.json").babel;
+const { transformFileSync } = require('@babel/core');
+const fs = require('fs');
+const path = require('path');
 
-const TEST_FILES = path.join(__dirname, "__runtime__");
+const TRANSFORM_OPTIONS = require('../package.json').babel;
+
+const TEST_FILES = path.join(__dirname, '__runtime__');
 const TRANSFORMED_FILES = fs.readdirSync(TEST_FILES).reduce((tests, file) => {
   const filename = path.join(TEST_FILES, file);
-  const fn = file.replace(".js", "");
+  const fn = file.replace('.js', '');
 
-  if (fn.startsWith("error-")) {
-    test(`if ${fn.replace("error-", "").replace("-", " ")} will throw an error`, () => {
+  if (fn.startsWith('error-')) {
+    test(`if ${fn.replace('error-', '').replace('-', ' ')} will throw an error`, () => {
       expect(() => transformFileSync(filename, TRANSFORM_OPTIONS)).toThrow();
     });
 
@@ -24,10 +26,10 @@ const TRANSFORMED_FILES = fs.readdirSync(TEST_FILES).reduce((tests, file) => {
   return tests;
 }, {});
 
-describe("runtime tests", () => {
+describe('runtime tests', () => {
   for (const fn in TRANSFORMED_FILES) {
-    if (fn === "errors") {
-      console.log("foo");
+    if (fn === 'errors') {
+      console.log('foo');
 
       continue;
     }
