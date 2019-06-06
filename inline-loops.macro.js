@@ -970,46 +970,46 @@ function inlineLoops({ references, babel }) {
   allMethods.sort(({ path: a }, { path: b }) => {
     const aContainer = a.container;
     const bContainer = b.container;
-    
+
     if (aContainer.arguments) {
       const [iterableA] = aContainer.arguments;
 
       if (
-        t.isCallExpression(iterableA) 
+        t.isCallExpression(iterableA)
         && iterableA.callee.__inlineLoopsMacro
         && iterableA.callee === b.node
       ) {
         return 1;
       }
     }
-    
+
     if (bContainer.arguments) {
       const [iterableB] = bContainer.arguments;
 
       if (
-        t.isCallExpression(iterableB) 
+        t.isCallExpression(iterableB)
         && iterableB.callee.__inlineLoopsMacro
         && iterableB.callee === a.node
       ) {
         return -1;
       }
     }
-    
+
     const aStart = a.node.loc.start;
     const bStart = b.node.loc.start;
-    
+
     if (bStart.line > aStart.line) {
       return -1;
     }
-    
+
     if (aStart.line > bStart.line) {
       return 1;
     }
-    
+
     if (bStart.column > aStart.column) {
       return -1;
     }
-    
+
     return 1;
   });
 

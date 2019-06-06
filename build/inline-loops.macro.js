@@ -779,18 +779,18 @@ function inlineLoops(_ref12) {
 
     if (aContainer.arguments) {
       var _aContainer$arguments = _slicedToArray(aContainer.arguments, 1),
-          iterable = _aContainer$arguments[0];
+          iterableA = _aContainer$arguments[0];
 
-      if (t.isCallExpression(iterable) && iterable.callee.__inlineLoopsMacro) {
+      if (t.isCallExpression(iterableA) && iterableA.callee.__inlineLoopsMacro && iterableA.callee === b.node) {
         return 1;
       }
     }
 
     if (bContainer.arguments) {
       var _bContainer$arguments = _slicedToArray(bContainer.arguments, 1),
-          _iterable = _bContainer$arguments[0];
+          iterableB = _bContainer$arguments[0];
 
-      if (t.isCallExpression(_iterable) && _iterable.callee.__inlineLoopsMacro) {
+      if (t.isCallExpression(iterableB) && iterableB.callee.__inlineLoopsMacro && iterableB.callee === a.node) {
         return -1;
       }
     }
