@@ -15,7 +15,7 @@
     "@babel/types": "^7.0.0",
     "babel-plugin-macros": "^2.0.0"
   },
-  "description": "Macros that will inline loops for arrays an objects",
+  "description": "Macros that will inline loops for arrays and objects",
   "devDependencies": {
     "@babel/cli": "^7.4.4",
     "@babel/core": "^7.4.5",
