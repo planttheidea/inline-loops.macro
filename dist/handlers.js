@@ -284,7 +284,7 @@ function handleMap(_ref6) {
   var iterableUsed = isIterableCached ? object : iterable;
   var valueAssignment = t.expressionStatement(t.assignmentExpression('=', value, t.memberExpression(iterableUsed, key, true)));
   var resultStatement = getResultStatement(t, handler, fnUsed, value, key, iterableUsed, path);
-  var expr = t.expressionStatement(isObject ? t.assignmentExpression('=', t.memberExpression(result, key, true), resultStatement) : t.callExpression(t.memberExpression(result, t.identifier('push')), [resultStatement]));
+  var expr = t.expressionStatement(isDecrementing ? t.assignmentExpression('=', t.memberExpression(result, t.memberExpression(result, t.identifier('length')), true), resultStatement) : t.assignmentExpression('=', t.memberExpression(result, key, true), resultStatement));
   var loop = getLoop({
     t: t,
     body: t.blockStatement([valueAssignment, expr]),

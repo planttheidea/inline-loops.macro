@@ -13,7 +13,7 @@ for (let _key = 0, _length = array.length, _value; _key < _length; ++_key) {
     }
   }
 
-  _result.push(_result2);
+  _result[_key] = _result2;
 }
 
 const allStrings = _result;
