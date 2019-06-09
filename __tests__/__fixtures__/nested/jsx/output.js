@@ -6,10 +6,9 @@ function List(props) {
 
   for (let _key = 0, _length = _iterable.length, _value; _key < _length; ++_key) {
     _value = _iterable[_key];
-
-    _result.push(React.createElement("li", {
+    _result[_key] = React.createElement("li", {
       key: _value.id
-    }, _value.value));
+    }, _value.value);
   }
 
   return React.createElement("ul", null, _result);

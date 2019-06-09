@@ -17,7 +17,7 @@ pluginTester({
   fixtures: path.join(__dirname, '__fixtures__', 'inlined-arrow-expression'),
   filename: __filename,
   plugin,
-  title: 'Inlined function references (arrow expreasion)',
+  title: 'Inlined function references (arrow expression)',
 });
 
 pluginTester({

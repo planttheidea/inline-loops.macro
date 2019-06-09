@@ -23,27 +23,13 @@ function handleEvery({
   const iterableUsed = isIterableCached ? object : iterable;
 
   const valueAssignment = t.expressionStatement(
-    t.assignmentExpression(
-      '=',
-      value,
-      t.memberExpression(iterableUsed, key, true),
-    ),
+    t.assignmentExpression('=', value, t.memberExpression(iterableUsed, key, true)),
   );
-  const resultStatement = getResultStatement(
-    t,
-    handler,
-    fnUsed,
-    value,
-    key,
-    iterableUsed,
-    path,
-  );
+  const resultStatement = getResultStatement(t, handler, fnUsed, value, key, iterableUsed, path);
   const expr = t.ifStatement(
     t.unaryExpression('!', resultStatement),
     t.blockStatement([
-      t.expressionStatement(
-        t.assignmentExpression('=', result, t.booleanLiteral(false)),
-      ),
+      t.expressionStatement(t.assignmentExpression('=', result, t.booleanLiteral(false))),
       t.breakStatement(),
     ]),
   );
@@ -92,31 +78,14 @@ function handleFilter({
   const iterableUsed = isIterableCached ? object : iterable;
 
   const valueAssignment = t.expressionStatement(
-    t.assignmentExpression(
-      '=',
-      value,
-      t.memberExpression(iterableUsed, key, true),
-    ),
+    t.assignmentExpression('=', value, t.memberExpression(iterableUsed, key, true)),
   );
   const resultAssignment = isObject
     ? t.assignmentExpression('=', t.memberExpression(result, key, true), value)
-    : t.callExpression(t.memberExpression(result, t.identifier('push')), [
-      value,
-    ]);
+    : t.callExpression(t.memberExpression(result, t.identifier('push')), [value]);
 
-  const resultStatement = getResultStatement(
-    t,
-    handler,
-    fnUsed,
-    value,
-    key,
-    iterableUsed,
-    path,
-  );
-  const expr = t.ifStatement(
-    resultStatement,
-    t.expressionStatement(resultAssignment),
-  );
+  const resultStatement = getResultStatement(t, handler, fnUsed, value, key, iterableUsed, path);
+  const expr = t.ifStatement(resultStatement, t.expressionStatement(resultAssignment));
 
   const loop = getLoop({
     t,
@@ -162,21 +131,9 @@ function handleFind({
   const iterableUsed = isIterableCached ? object : iterable;
 
   const valueAssignment = t.expressionStatement(
-    t.assignmentExpression(
-      '=',
-      value,
-      t.memberExpression(iterableUsed, key, true),
-    ),
+    t.assignmentExpression('=', value, t.memberExpression(iterableUsed, key, true)),
   );
-  const resultStatement = getResultStatement(
-    t,
-    handler,
-    fnUsed,
-    value,
-    key,
-    iterableUsed,
-    path,
-  );
+  const resultStatement = getResultStatement(t, handler, fnUsed, value, key, iterableUsed, path);
   const expr = t.ifStatement(
     resultStatement,
     t.blockStatement([
@@ -228,21 +185,9 @@ function handleFindKey({
   const iterableUsed = isIterableCached ? object : iterable;
 
   const valueAssignment = t.expressionStatement(
-    t.assignmentExpression(
-      '=',
-      value,
-      t.memberExpression(iterableUsed, key, true),
-    ),
+    t.assignmentExpression('=', value, t.memberExpression(iterableUsed, key, true)),
   );
-  const resultStatement = getResultStatement(
-    t,
-    handler,
-    fnUsed,
-    value,
-    key,
-    iterableUsed,
-    path,
-  );
+  const resultStatement = getResultStatement(t, handler, fnUsed, value, key, iterableUsed, path);
   const expr = t.ifStatement(
     resultStatement,
     t.blockStatement([
@@ -295,21 +240,9 @@ function handleForEach({
   const iterableUsed = isIterableCached ? object : iterable;
 
   const valueAssignment = t.expressionStatement(
-    t.assignmentExpression(
-      '=',
-      value,
-      t.memberExpression(iterableUsed, key, true),
-    ),
+    t.assignmentExpression('=', value, t.memberExpression(iterableUsed, key, true)),
   );
-  const resultStatement = getResultStatement(
-    t,
-    handler,
-    fnUsed,
-    value,
-    key,
-    iterableUsed,
-    path,
-  );
+  const resultStatement = getResultStatement(t, handler, fnUsed, value, key, iterableUsed, path);
   const call = t.expressionStatement(resultStatement);
 
   const loop = getLoop({
@@ -354,31 +287,17 @@ function handleMap({
   const iterableUsed = isIterableCached ? object : iterable;
 
   const valueAssignment = t.expressionStatement(
-    t.assignmentExpression(
-      '=',
-      value,
-      t.memberExpression(iterableUsed, key, true),
-    ),
+    t.assignmentExpression('=', value, t.memberExpression(iterableUsed, key, true)),
   );
-  const resultStatement = getResultStatement(
-    t,
-    handler,
-    fnUsed,
-    value,
-    key,
-    iterableUsed,
-    path,
-  );
+  const resultStatement = getResultStatement(t, handler, fnUsed, value, key, iterableUsed, path);
   const expr = t.expressionStatement(
-    isObject
+    isDecrementing
       ? t.assignmentExpression(
         '=',
-        t.memberExpression(result, key, true),
+        t.memberExpression(result, t.memberExpression(result, t.identifier('length')), true),
         resultStatement,
       )
-      : t.callExpression(t.memberExpression(result, t.identifier('push')), [
-        resultStatement,
-      ]),
+      : t.assignmentExpression('=', t.memberExpression(result, key, true), resultStatement),
   );
 
   const loop = getLoop({
@@ -412,13 +331,7 @@ function handleMap({
 }
 
 function handleReduce({
-  t,
-  path,
-  object,
-  handler,
-  initialValue,
-  isDecrementing,
-  isObject,
+  t, path, object, handler, initialValue, isDecrementing, isObject,
 }) {
   const {
     fn, iterable, key, length, result, value,
@@ -447,10 +360,7 @@ function handleReduce({
     } else if (isDecrementing) {
       injected.push(
         t.variableDeclaration('const', [
-          t.variableDeclarator(
-            length,
-            t.memberExpression(iterableUsed, t.identifier('length')),
-          ),
+          t.variableDeclarator(length, t.memberExpression(iterableUsed, t.identifier('length'))),
         ]),
       );
 
@@ -460,11 +370,7 @@ function handleReduce({
         true,
       );
     } else {
-      initialValue = t.memberExpression(
-        iterableUsed,
-        t.numericLiteral(0),
-        true,
-      );
+      initialValue = t.memberExpression(iterableUsed, t.numericLiteral(0), true);
     }
   }
 
@@ -473,11 +379,7 @@ function handleReduce({
   }
 
   const valueAssignment = t.expressionStatement(
-    t.assignmentExpression(
-      '=',
-      value,
-      t.memberExpression(iterableUsed, key, true),
-    ),
+    t.assignmentExpression('=', value, t.memberExpression(iterableUsed, key, true)),
   );
   const resultStatement = getReduceResultStatement(
     t,
@@ -496,20 +398,13 @@ function handleReduce({
   if (!hasInitialValue && isObject) {
     const ifHasInitialValue = t.ifStatement(
       hasInitialValueId,
-      t.blockStatement([
-        valueAssignment,
-        t.expressionStatement(resultAssignment),
-      ]),
+      t.blockStatement([valueAssignment, t.expressionStatement(resultAssignment)]),
       t.blockStatement([
         t.expressionStatement(
           t.assignmentExpression('=', hasInitialValueId, t.booleanLiteral(true)),
         ),
         t.expressionStatement(
-          t.assignmentExpression(
-            '=',
-            result,
-            t.memberExpression(iterableUsed, key, true),
-          ),
+          t.assignmentExpression('=', result, t.memberExpression(iterableUsed, key, true)),
         ),
       ]),
     );
@@ -532,9 +427,7 @@ function handleReduce({
   });
 
   if (!hasInitialValue && !isObject) {
-    const keyValue = loop.init.declarations.find(
-      ({ id }) => id.name === key.name,
-    );
+    const keyValue = loop.init.declarations.find(({ id }) => id.name === key.name);
 
     if (isDecrementing) {
       keyValue.init.left = length;
@@ -547,9 +440,7 @@ function handleReduce({
   const insertBefore = [];
 
   if (iterableUsed === iterable) {
-    const iterableVar = t.variableDeclaration('const', [
-      t.variableDeclarator(iterable, object),
-    ]);
+    const iterableVar = t.variableDeclaration('const', [t.variableDeclarator(iterable, object)]);
 
     insertBefore.push(iterableVar);
   }
@@ -557,16 +448,12 @@ function handleReduce({
   insertBefore.push(...injected);
 
   if (fnUsed === fn && resultStatement.__inlineLoopsMacroFallback) {
-    const handlerVar = t.variableDeclaration('const', [
-      t.variableDeclarator(fn, handler),
-    ]);
+    const handlerVar = t.variableDeclaration('const', [t.variableDeclarator(fn, handler)]);
 
     insertBefore.push(handlerVar);
   }
 
-  const resultVar = t.variableDeclaration('let', [
-    t.variableDeclarator(result, initialValue),
-  ]);
+  const resultVar = t.variableDeclaration('let', [t.variableDeclarator(result, initialValue)]);
 
   insertBefore.push(resultVar);
 
@@ -591,27 +478,13 @@ function handleSome({
   const iterableUsed = isIterableCached ? object : iterable;
 
   const valueAssignment = t.expressionStatement(
-    t.assignmentExpression(
-      '=',
-      value,
-      t.memberExpression(iterableUsed, key, true),
-    ),
+    t.assignmentExpression('=', value, t.memberExpression(iterableUsed, key, true)),
   );
-  const resultStatement = getResultStatement(
-    t,
-    handler,
-    fnUsed,
-    value,
-    key,
-    iterableUsed,
-    path,
-  );
+  const resultStatement = getResultStatement(t, handler, fnUsed, value, key, iterableUsed, path);
   const expr = t.ifStatement(
     resultStatement,
     t.blockStatement([
-      t.expressionStatement(
-        t.assignmentExpression('=', result, t.booleanLiteral(true)),
-      ),
+      t.expressionStatement(t.assignmentExpression('=', result, t.booleanLiteral(true))),
       t.breakStatement(),
     ]),
   );
