@@ -43,8 +43,8 @@ pluginTester({
 
 pluginTester({
   babelOptions: BABEL_OPTIONS,
-  fixtures: path.join(__dirname, '__fixtures__', 'nested'),
+  fixtures: path.join(__dirname, '__fixtures__', 'complex'),
   filename: __filename,
   plugin,
-  title: 'Nested references',
+  title: 'Complex references',
 });
