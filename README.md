@@ -30,9 +30,9 @@ import { map, reduce, someObject } from 'inline-loops.macro';
 
 function contrivedExample(array) {
     const doubled = map(array, (value) => value * 2);
-    const doubleObject = reduce(doubled, (object, value) => ({ 
-      ...object, 
-      [value]: value 
+    const doubleObject = reduce(doubled, (object, value) => ({
+      ...object,
+      [value]: value
     }, {});
 
     if (someObject(doubleObject, (value) => value > 100)) {
@@ -55,6 +55,9 @@ function contrivedExample(array) {
 - `findIndex` ([MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/findIndex))
   - `findIndexRight` => same as `findIndex`, but iterating in reverse
   - `findKey` => same as `findIndex` but iterating over objects intead of arrays
+- `flatMap` ([MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/flatMap))
+  - `flatMapRight` => same as `findIndex`, but iterating in reverse
+  - There is no object method, as the use cases and expected results are not clearly defined, nor is the expected outcome obvious
 - `forEach` ([MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/forEach))
   - `forEachRight` => same as `forEach`, but iterating in reverse
   - `forEachObject` => same as `forEach` but iterating over objects intead of arrays
@@ -110,8 +113,8 @@ Notice that there is no reference to the original function, because it used the 
 
 ```javascript
 // this
-const isAllTuples = every(array, tuple => 
-  every(tuple, (value) => Array.isArray(value) && value.length === 2)
+const isAllTuples = every(array, tuple =>
+  every(tuple, value => Array.isArray(value) && value.length === 2),
 );
 
 // becomes this
@@ -122,7 +125,11 @@ for (let _key = 0, _length = array.length, _value; _key < _length; ++_key) {
 
   let _result2 = true;
 
-  for (let _key2 = 0, _length2 = _value.length, _value2; _key2 < _length2; ++_key2) {
+  for (
+    let _key2 = 0, _length2 = _value.length, _value2;
+    _key2 < _length2;
+    ++_key2
+  ) {
     _value2 = _value[_key2];
 
     if (!(Array.isArray(_value2) && _value2.length === 2)) {
@@ -130,7 +137,7 @@ for (let _key = 0, _length = array.length, _value; _key < _length; ++_key) {
       break;
     }
   }
-  
+
   if (!_result2) {
     _result = false;
     break;
@@ -172,7 +179,9 @@ If you need to incorporate this, you can do it one of two ways:
 **Add filtering (iterates twice, but arguably cleaner semantics)**
 
 ```javascript
-const raw = mapObject(object, (value, key) => object.hasOwnProperty(key) ? value * 2 : null);
+const raw = mapObject(object, (value, key) =>
+  object.hasOwnProperty(key) ? value * 2 : null,
+);
 const doubled = filterObject(raw, value => value !== null);
 ```
 
