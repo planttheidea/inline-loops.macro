@@ -226,6 +226,60 @@ function handleFindKey({
   path.parentPath.replaceWith(result);
 }
 
+function handleFlatMap({
+  t, path, object, handler, isDecrementing, isObject,
+}) {
+  const {
+    fn, iterable, key, length, result, value,
+  } = getIds(path.scope);
+
+  const isHandlerCached = isCachedReference(t, handler);
+  const isIterableCached = isCachedReference(t, object);
+
+  const fnUsed = isHandlerCached ? handler : fn;
+  const iterableUsed = isIterableCached ? object : iterable;
+
+  const valueAssignment = t.expressionStatement(
+    t.assignmentExpression('=', value, t.memberExpression(iterableUsed, key, true)),
+  );
+  const resultStatement = getResultStatement(t, handler, fnUsed, value, key, iterableUsed, path);
+  const expr = t.expressionStatement(
+    t.callExpression(
+      t.memberExpression(t.memberExpression(result, t.identifier('push')), t.identifier('apply')),
+      [result, resultStatement],
+    ),
+  );
+
+  const loop = getLoop({
+    t,
+    body: t.blockStatement([valueAssignment, expr]),
+    iterable: iterableUsed,
+    key,
+    length,
+    isDecrementing,
+    isObject,
+    scope: path.scope,
+    value,
+  });
+
+  insertBeforeParent({
+    fn,
+    handler,
+    isObject,
+    iterable,
+    loop,
+    object,
+    path,
+    result,
+    resultStatement,
+    resultValue: getDefaultResult(t, isObject),
+    t,
+    value,
+  });
+
+  path.parentPath.replaceWith(result);
+}
+
 function handleForEach({
   t, path, object, handler, isDecrementing, isObject,
 }) {
@@ -524,6 +578,7 @@ module.exports = {
   handleFilter,
   handleFind,
   handleFindKey,
+  handleFlatMap,
   handleForEach,
   handleMap,
   handleReduce,

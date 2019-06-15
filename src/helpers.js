@@ -85,7 +85,7 @@ function getReduceResultStatement(t, handler, fn, result, value, key, iterable, 
       // eslint-disable-next-line prefer-destructuring
       body = body.body;
 
-      if (body.length === 1) {
+      if (body.length === 1 && handler.params.every(param => t.isIdentifier(param))) {
         const [r, v, k, i] = handler.params;
         const node = body[0];
 
@@ -153,7 +153,7 @@ function getResultStatement(t, handler, fn, value, key, iterable, path) {
       // eslint-disable-next-line prefer-destructuring
       body = body.body;
 
-      if (body.length === 1) {
+      if (body.length === 1 && handler.params.every(param => t.isIdentifier(param))) {
         const [v, k, i] = handler.params;
         const node = body[0];
 

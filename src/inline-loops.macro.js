@@ -5,6 +5,7 @@ const {
   handleFilter,
   handleFind,
   handleFindKey,
+  handleFlatMap,
   handleForEach,
   handleMap,
   handleReduce,
@@ -17,12 +18,13 @@ const METHODS = [
   'find',
   'findIndex',
   'findKey',
+  'flatMap',
   'forEach',
   'map',
   'reduce',
   'some',
 ];
-const ARRAY_ONLY_METHODS = ['findIndex'];
+const ARRAY_ONLY_METHODS = ['findIndex', 'flatMap'];
 const OBJECT_ONLY_METHODS = ['findKey'];
 
 function getCallTypes(references, method) {
@@ -143,6 +145,7 @@ function inlineLoops({ references, babel }) {
     find: handleFind,
     findIndex: handleFindKey,
     findKey: handleFindKey,
+    flatMap: handleFlatMap,
     forEach: handleForEach,
     map: handleMap,
     reduce: handleReduce,
