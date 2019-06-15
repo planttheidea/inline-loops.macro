@@ -58,7 +58,27 @@ function getLoop({
 }
 
 function getReduceResultStatement(t, handler, fn, result, value, key, iterable, path) {
-  if (t.isArrowFunctionExpression(handler)) {
+  function createRename(r, v, k, i) {
+    return function rename(_path) {
+      if (r) {
+        _path.scope.rename(r.name, result.name);
+      }
+
+      if (v) {
+        _path.scope.rename(v.name, value.name);
+      }
+
+      if (k) {
+        _path.scope.rename(k.name, key.name);
+      }
+
+      if (i) {
+        _path.scope.rename(i.name, iterable.name);
+      }
+    };
+  }
+
+  if (t.isArrowFunctionExpression(handler) || t.isFunctionExpression(handler)) {
     let { body } = handler;
 
     if (t.isBlockStatement(body)) {
@@ -67,28 +87,17 @@ function getReduceResultStatement(t, handler, fn, result, value, key, iterable, 
 
       if (body.length === 1) {
         const [r, v, k, i] = handler.params;
-        const { parentPath } = path;
         const node = body[0];
 
-        parentPath.traverse({
-          ArrowFunctionExpression(_path) {
-            if (r) {
-              _path.scope.rename(r.name, result.name);
-            }
-
-            if (v) {
-              _path.scope.rename(v.name, value.name);
-            }
-
-            if (k) {
-              _path.scope.rename(k.name, key.name);
-            }
-
-            if (i) {
-              _path.scope.rename(i.name, iterable.name);
-            }
-          },
-        });
+        if (t.isArrowFunctionExpression(handler)) {
+          path.parentPath.traverse({
+            ArrowFunctionExpression: createRename(r, v, k, i),
+          });
+        } else {
+          path.parentPath.traverse({
+            FunctionExpression: createRename(r, v, k, i),
+          });
+        }
 
         if (t.isExpression(node)) {
           return node;
@@ -102,75 +111,14 @@ function getReduceResultStatement(t, handler, fn, result, value, key, iterable, 
           return node.argument;
         }
       }
-    } else {
+    } else if (t.isExpression(body)) {
       const [r, v, k, i] = handler.params;
-      const { parentPath } = path;
 
-      parentPath.traverse({
-        ArrowFunctionExpression(_path) {
-          if (r) {
-            _path.scope.rename(r.name, result.name);
-          }
-
-          if (v) {
-            _path.scope.rename(v.name, value.name);
-          }
-
-          if (k) {
-            _path.scope.rename(k.name, key.name);
-          }
-
-          if (i) {
-            _path.scope.rename(i.name, iterable.name);
-          }
-        },
+      path.parentPath.traverse({
+        ArrowFunctionExpression: createRename(r, v, k, i),
       });
 
-      if (t.isExpression(body)) {
-        return body;
-      }
-    }
-  }
-
-  if (t.isFunctionExpression(handler)) {
-    const { body } = handler.body;
-
-    if (body.length === 1) {
-      const [r, v, k, i] = handler.params;
-      const { parentPath } = path;
-      const node = body[0];
-
-      parentPath.traverse({
-        FunctionExpression(_path) {
-          if (r) {
-            _path.scope.rename(r.name, result.name);
-          }
-
-          if (v) {
-            _path.scope.rename(v.name, value.name);
-          }
-
-          if (k) {
-            _path.scope.rename(k.name, key.name);
-          }
-
-          if (i) {
-            _path.scope.rename(i.name, iterable.name);
-          }
-        },
-      });
-
-      if (t.isExpression(node)) {
-        return node;
-      }
-
-      if (t.isExpressionStatement(node)) {
-        return node.expression;
-      }
-
-      if (t.isReturnStatement(node)) {
-        return node.argument;
-      }
+      return body;
     }
   }
 
@@ -182,7 +130,23 @@ function getReduceResultStatement(t, handler, fn, result, value, key, iterable, 
 }
 
 function getResultStatement(t, handler, fn, value, key, iterable, path) {
-  if (t.isArrowFunctionExpression(handler)) {
+  function createRename(v, k, i) {
+    return function rename(_path) {
+      if (v) {
+        _path.scope.rename(v.name, value.name);
+      }
+
+      if (k) {
+        _path.scope.rename(k.name, key.name);
+      }
+
+      if (i) {
+        _path.scope.rename(i.name, iterable.name);
+      }
+    };
+  }
+
+  if (t.isArrowFunctionExpression(handler) || t.isFunctionExpression(handler)) {
     let { body } = handler;
 
     if (t.isBlockStatement(body)) {
@@ -191,24 +155,17 @@ function getResultStatement(t, handler, fn, value, key, iterable, path) {
 
       if (body.length === 1) {
         const [v, k, i] = handler.params;
-        const { parentPath } = path;
         const node = body[0];
 
-        parentPath.traverse({
-          ArrowFunctionExpression(_path) {
-            if (v) {
-              _path.scope.rename(v.name, value.name);
-            }
-
-            if (k) {
-              _path.scope.rename(k.name, key.name);
-            }
-
-            if (i) {
-              _path.scope.rename(i.name, iterable.name);
-            }
-          },
-        });
+        if (t.isArrowFunctionExpression(handler)) {
+          path.parentPath.traverse({
+            ArrowFunctionExpression: createRename(v, k, i),
+          });
+        } else {
+          path.parentPath.traverse({
+            FunctionExpression: createRename(v, k, i),
+          });
+        }
 
         if (t.isExpression(node)) {
           return node;
@@ -222,67 +179,14 @@ function getResultStatement(t, handler, fn, value, key, iterable, path) {
           return node.argument;
         }
       }
-    } else {
+    } else if (t.isExpression(body)) {
       const [v, k, i] = handler.params;
-      const { parentPath } = path;
 
-      parentPath.traverse({
-        ArrowFunctionExpression(_path) {
-          if (v) {
-            _path.scope.rename(v.name, value.name);
-          }
-
-          if (k) {
-            _path.scope.rename(k.name, key.name);
-          }
-
-          if (i) {
-            _path.scope.rename(i.name, iterable.name);
-          }
-        },
+      path.parentPath.traverse({
+        ArrowFunctionExpression: createRename(v, k, i),
       });
 
-      if (t.isExpression(body)) {
-        return body;
-      }
-    }
-  }
-
-  if (t.isFunctionExpression(handler)) {
-    const { body } = handler.body;
-
-    if (body.length === 1) {
-      const [v, k, i] = handler.params;
-      const { parentPath } = path;
-      const node = body[0];
-
-      parentPath.traverse({
-        FunctionExpression(_path) {
-          if (v) {
-            _path.scope.rename(v.name, value.name);
-          }
-
-          if (k) {
-            _path.scope.rename(k.name, key.name);
-          }
-
-          if (i) {
-            _path.scope.rename(i.name, iterable.name);
-          }
-        },
-      });
-
-      if (t.isExpression(node)) {
-        return node;
-      }
-
-      if (t.isExpressionStatement(node)) {
-        return node.expression;
-      }
-
-      if (t.isReturnStatement(node)) {
-        return node.argument;
-      }
+      return body;
     }
   }
 

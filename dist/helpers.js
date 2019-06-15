@@ -1,12 +1,8 @@
 "use strict";
 
-function _slicedToArray(arr, i) { return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _nonIterableRest(); }
+var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
 
-function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance"); }
-
-function _iterableToArrayLimit(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"] != null) _i["return"](); } finally { if (_d) throw _e; } } return _arr; }
-
-function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
+var _slicedToArray2 = _interopRequireDefault(require("@babel/runtime/helpers/slicedToArray"));
 
 function getDefaultResult(t, isObject) {
   return isObject ? t.objectExpression([]) : t.arrayExpression();
@@ -59,7 +55,27 @@ function getLoop(_ref) {
 }
 
 function getReduceResultStatement(t, handler, fn, result, value, key, iterable, path) {
-  if (t.isArrowFunctionExpression(handler)) {
+  function createRename(r, v, k, i) {
+    return function rename(_path) {
+      if (r) {
+        _path.scope.rename(r.name, result.name);
+      }
+
+      if (v) {
+        _path.scope.rename(v.name, value.name);
+      }
+
+      if (k) {
+        _path.scope.rename(k.name, key.name);
+      }
+
+      if (i) {
+        _path.scope.rename(i.name, iterable.name);
+      }
+    };
+  }
+
+  if (t.isArrowFunctionExpression(handler) || t.isFunctionExpression(handler)) {
     var body = handler.body;
 
     if (t.isBlockStatement(body)) {
@@ -67,33 +83,23 @@ function getReduceResultStatement(t, handler, fn, result, value, key, iterable, 
       body = body.body;
 
       if (body.length === 1) {
-        var _handler$params = _slicedToArray(handler.params, 4),
+        var _handler$params = (0, _slicedToArray2["default"])(handler.params, 4),
             r = _handler$params[0],
             v = _handler$params[1],
             k = _handler$params[2],
             i = _handler$params[3];
 
-        var parentPath = path.parentPath;
         var node = body[0];
-        parentPath.traverse({
-          ArrowFunctionExpression: function ArrowFunctionExpression(_path) {
-            if (r) {
-              _path.scope.rename(r.name, result.name);
-            }
 
-            if (v) {
-              _path.scope.rename(v.name, value.name);
-            }
-
-            if (k) {
-              _path.scope.rename(k.name, key.name);
-            }
-
-            if (i) {
-              _path.scope.rename(i.name, iterable.name);
-            }
-          }
-        });
+        if (t.isArrowFunctionExpression(handler)) {
+          path.parentPath.traverse({
+            ArrowFunctionExpression: createRename(r, v, k, i)
+          });
+        } else {
+          path.parentPath.traverse({
+            FunctionExpression: createRename(r, v, k, i)
+          });
+        }
 
         if (t.isExpression(node)) {
           return node;
@@ -107,85 +113,17 @@ function getReduceResultStatement(t, handler, fn, result, value, key, iterable, 
           return node.argument;
         }
       }
-    } else {
-      var _handler$params2 = _slicedToArray(handler.params, 4),
+    } else if (t.isExpression(body)) {
+      var _handler$params2 = (0, _slicedToArray2["default"])(handler.params, 4),
           _r = _handler$params2[0],
           _v = _handler$params2[1],
           _k = _handler$params2[2],
-          _i2 = _handler$params2[3];
+          _i = _handler$params2[3];
 
-      var _parentPath = path.parentPath;
-
-      _parentPath.traverse({
-        ArrowFunctionExpression: function ArrowFunctionExpression(_path) {
-          if (_r) {
-            _path.scope.rename(_r.name, result.name);
-          }
-
-          if (_v) {
-            _path.scope.rename(_v.name, value.name);
-          }
-
-          if (_k) {
-            _path.scope.rename(_k.name, key.name);
-          }
-
-          if (_i2) {
-            _path.scope.rename(_i2.name, iterable.name);
-          }
-        }
+      path.parentPath.traverse({
+        ArrowFunctionExpression: createRename(_r, _v, _k, _i)
       });
-
-      if (t.isExpression(body)) {
-        return body;
-      }
-    }
-  }
-
-  if (t.isFunctionExpression(handler)) {
-    var _body = handler.body.body;
-
-    if (_body.length === 1) {
-      var _handler$params3 = _slicedToArray(handler.params, 4),
-          _r2 = _handler$params3[0],
-          _v2 = _handler$params3[1],
-          _k2 = _handler$params3[2],
-          _i3 = _handler$params3[3];
-
-      var _parentPath2 = path.parentPath;
-      var _node = _body[0];
-
-      _parentPath2.traverse({
-        FunctionExpression: function FunctionExpression(_path) {
-          if (_r2) {
-            _path.scope.rename(_r2.name, result.name);
-          }
-
-          if (_v2) {
-            _path.scope.rename(_v2.name, value.name);
-          }
-
-          if (_k2) {
-            _path.scope.rename(_k2.name, key.name);
-          }
-
-          if (_i3) {
-            _path.scope.rename(_i3.name, iterable.name);
-          }
-        }
-      });
-
-      if (t.isExpression(_node)) {
-        return _node;
-      }
-
-      if (t.isExpressionStatement(_node)) {
-        return _node.expression;
-      }
-
-      if (t.isReturnStatement(_node)) {
-        return _node.argument;
-      }
+      return body;
     }
   }
 
@@ -195,7 +133,23 @@ function getReduceResultStatement(t, handler, fn, result, value, key, iterable, 
 }
 
 function getResultStatement(t, handler, fn, value, key, iterable, path) {
-  if (t.isArrowFunctionExpression(handler)) {
+  function createRename(v, k, i) {
+    return function rename(_path) {
+      if (v) {
+        _path.scope.rename(v.name, value.name);
+      }
+
+      if (k) {
+        _path.scope.rename(k.name, key.name);
+      }
+
+      if (i) {
+        _path.scope.rename(i.name, iterable.name);
+      }
+    };
+  }
+
+  if (t.isArrowFunctionExpression(handler) || t.isFunctionExpression(handler)) {
     var body = handler.body;
 
     if (t.isBlockStatement(body)) {
@@ -203,28 +157,22 @@ function getResultStatement(t, handler, fn, value, key, iterable, path) {
       body = body.body;
 
       if (body.length === 1) {
-        var _handler$params4 = _slicedToArray(handler.params, 3),
-            v = _handler$params4[0],
-            k = _handler$params4[1],
-            i = _handler$params4[2];
+        var _handler$params3 = (0, _slicedToArray2["default"])(handler.params, 3),
+            v = _handler$params3[0],
+            k = _handler$params3[1],
+            i = _handler$params3[2];
 
-        var parentPath = path.parentPath;
         var node = body[0];
-        parentPath.traverse({
-          ArrowFunctionExpression: function ArrowFunctionExpression(_path) {
-            if (v) {
-              _path.scope.rename(v.name, value.name);
-            }
 
-            if (k) {
-              _path.scope.rename(k.name, key.name);
-            }
-
-            if (i) {
-              _path.scope.rename(i.name, iterable.name);
-            }
-          }
-        });
+        if (t.isArrowFunctionExpression(handler)) {
+          path.parentPath.traverse({
+            ArrowFunctionExpression: createRename(v, k, i)
+          });
+        } else {
+          path.parentPath.traverse({
+            FunctionExpression: createRename(v, k, i)
+          });
+        }
 
         if (t.isExpression(node)) {
           return node;
@@ -238,75 +186,16 @@ function getResultStatement(t, handler, fn, value, key, iterable, path) {
           return node.argument;
         }
       }
-    } else {
-      var _handler$params5 = _slicedToArray(handler.params, 3),
-          _v3 = _handler$params5[0],
-          _k3 = _handler$params5[1],
-          _i4 = _handler$params5[2];
+    } else if (t.isExpression(body)) {
+      var _handler$params4 = (0, _slicedToArray2["default"])(handler.params, 3),
+          _v2 = _handler$params4[0],
+          _k2 = _handler$params4[1],
+          _i2 = _handler$params4[2];
 
-      var _parentPath3 = path.parentPath;
-
-      _parentPath3.traverse({
-        ArrowFunctionExpression: function ArrowFunctionExpression(_path) {
-          if (_v3) {
-            _path.scope.rename(_v3.name, value.name);
-          }
-
-          if (_k3) {
-            _path.scope.rename(_k3.name, key.name);
-          }
-
-          if (_i4) {
-            _path.scope.rename(_i4.name, iterable.name);
-          }
-        }
+      path.parentPath.traverse({
+        ArrowFunctionExpression: createRename(_v2, _k2, _i2)
       });
-
-      if (t.isExpression(body)) {
-        return body;
-      }
-    }
-  }
-
-  if (t.isFunctionExpression(handler)) {
-    var _body2 = handler.body.body;
-
-    if (_body2.length === 1) {
-      var _handler$params6 = _slicedToArray(handler.params, 3),
-          _v4 = _handler$params6[0],
-          _k4 = _handler$params6[1],
-          _i5 = _handler$params6[2];
-
-      var _parentPath4 = path.parentPath;
-      var _node2 = _body2[0];
-
-      _parentPath4.traverse({
-        FunctionExpression: function FunctionExpression(_path) {
-          if (_v4) {
-            _path.scope.rename(_v4.name, value.name);
-          }
-
-          if (_k4) {
-            _path.scope.rename(_k4.name, key.name);
-          }
-
-          if (_i5) {
-            _path.scope.rename(_i5.name, iterable.name);
-          }
-        }
-      });
-
-      if (t.isExpression(_node2)) {
-        return _node2;
-      }
-
-      if (t.isExpressionStatement(_node2)) {
-        return _node2.expression;
-      }
-
-      if (t.isReturnStatement(_node2)) {
-        return _node2.argument;
-      }
+      return body;
     }
   }
 

@@ -2,7 +2,17 @@
   "author": "Tony Quetano",
   "babel": {
     "plugins": [
-      "babel-plugin-macros"
+      "babel-plugin-macros",
+      [
+        "@babel/plugin-transform-runtime",
+        {
+          "absoluteRuntime": false,
+          "corejs": false,
+          "helpers": true,
+          "regenerator": false,
+          "useESModules": false
+        }
+      ]
     ],
     "presets": [
       "@babel/preset-env"
@@ -19,6 +29,8 @@
   "devDependencies": {
     "@babel/cli": "^7.4.4",
     "@babel/core": "^7.4.5",
+    "@babel/plugin-external-helpers": "^7.2.0",
+    "@babel/plugin-transform-runtime": "^7.4.4",
     "@babel/preset-env": "^7.4.5",
     "@babel/preset-react": "^7.0.0",
     "@types/jest": "^24.0.13",
@@ -31,6 +43,24 @@
     "fast-equals": "^2.0.0",
     "jest": "^24.8.0",
     "ts-jest": "^24.0.2"
+  },
+  "eslintConfig": {
+    "extends": [
+      "airbnb-base"
+    ],
+    "parser": "babel-eslint",
+    "parserOptions": {
+      "ecmaVersion": 2019,
+      "sourceType": "module"
+    },
+    "rules": {
+      "no-param-reassign": "off",
+      "no-plusplus": "off",
+      "no-shadow": "off",
+      "no-underscore-dangle": "off",
+      "no-use-before-define": "off",
+      "import/order": "off"
+    }
   },
   "homepage": "https://github.com/planttheidea/inline-loops.macro#readme",
   "jest": {
