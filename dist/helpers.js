@@ -82,7 +82,9 @@ function getReduceResultStatement(t, handler, fn, result, value, key, iterable, 
       // eslint-disable-next-line prefer-destructuring
       body = body.body;
 
-      if (body.length === 1) {
+      if (body.length === 1 && handler.params.every(function (param) {
+        return t.isIdentifier(param);
+      })) {
         var _handler$params = (0, _slicedToArray2["default"])(handler.params, 4),
             r = _handler$params[0],
             v = _handler$params[1],
@@ -156,7 +158,9 @@ function getResultStatement(t, handler, fn, value, key, iterable, path) {
       // eslint-disable-next-line prefer-destructuring
       body = body.body;
 
-      if (body.length === 1) {
+      if (body.length === 1 && handler.params.every(function (param) {
+        return t.isIdentifier(param);
+      })) {
         var _handler$params3 = (0, _slicedToArray2["default"])(handler.params, 3),
             v = _handler$params3[0],
             k = _handler$params3[1],

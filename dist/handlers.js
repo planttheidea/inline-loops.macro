@@ -214,7 +214,7 @@ function handleFindKey(_ref4) {
   path.parentPath.replaceWith(result);
 }
 
-function handleForEach(_ref5) {
+function handleFlatMap(_ref5) {
   var t = _ref5.t,
       path = _ref5.path,
       object = _ref5.object,
@@ -227,7 +227,58 @@ function handleForEach(_ref5) {
       iterable = _getIds5.iterable,
       key = _getIds5.key,
       length = _getIds5.length,
+      result = _getIds5.result,
       value = _getIds5.value;
+
+  var isHandlerCached = isCachedReference(t, handler);
+  var isIterableCached = isCachedReference(t, object);
+  var fnUsed = isHandlerCached ? handler : fn;
+  var iterableUsed = isIterableCached ? object : iterable;
+  var valueAssignment = t.expressionStatement(t.assignmentExpression('=', value, t.memberExpression(iterableUsed, key, true)));
+  var resultStatement = getResultStatement(t, handler, fnUsed, value, key, iterableUsed, path);
+  var expr = t.expressionStatement(t.callExpression(t.memberExpression(t.memberExpression(result, t.identifier('push')), t.identifier('apply')), [result, resultStatement]));
+  var loop = getLoop({
+    t: t,
+    body: t.blockStatement([valueAssignment, expr]),
+    iterable: iterableUsed,
+    key: key,
+    length: length,
+    isDecrementing: isDecrementing,
+    isObject: isObject,
+    scope: path.scope,
+    value: value
+  });
+  insertBeforeParent({
+    fn: fn,
+    handler: handler,
+    isObject: isObject,
+    iterable: iterable,
+    loop: loop,
+    object: object,
+    path: path,
+    result: result,
+    resultStatement: resultStatement,
+    resultValue: getDefaultResult(t, isObject),
+    t: t,
+    value: value
+  });
+  path.parentPath.replaceWith(result);
+}
+
+function handleForEach(_ref6) {
+  var t = _ref6.t,
+      path = _ref6.path,
+      object = _ref6.object,
+      handler = _ref6.handler,
+      isDecrementing = _ref6.isDecrementing,
+      isObject = _ref6.isObject;
+
+  var _getIds6 = getIds(path.scope),
+      fn = _getIds6.fn,
+      iterable = _getIds6.iterable,
+      key = _getIds6.key,
+      length = _getIds6.length,
+      value = _getIds6.value;
 
   var isHandlerCached = isCachedReference(t, handler);
   var isIterableCached = isCachedReference(t, object);
@@ -262,21 +313,21 @@ function handleForEach(_ref5) {
   path.parentPath.remove();
 }
 
-function handleMap(_ref6) {
-  var t = _ref6.t,
-      path = _ref6.path,
-      object = _ref6.object,
-      handler = _ref6.handler,
-      isDecrementing = _ref6.isDecrementing,
-      isObject = _ref6.isObject;
+function handleMap(_ref7) {
+  var t = _ref7.t,
+      path = _ref7.path,
+      object = _ref7.object,
+      handler = _ref7.handler,
+      isDecrementing = _ref7.isDecrementing,
+      isObject = _ref7.isObject;
 
-  var _getIds6 = getIds(path.scope),
-      fn = _getIds6.fn,
-      iterable = _getIds6.iterable,
-      key = _getIds6.key,
-      length = _getIds6.length,
-      result = _getIds6.result,
-      value = _getIds6.value;
+  var _getIds7 = getIds(path.scope),
+      fn = _getIds7.fn,
+      iterable = _getIds7.iterable,
+      key = _getIds7.key,
+      length = _getIds7.length,
+      result = _getIds7.result,
+      value = _getIds7.value;
 
   var isHandlerCached = isCachedReference(t, handler);
   var isIterableCached = isCachedReference(t, object);
@@ -313,22 +364,22 @@ function handleMap(_ref6) {
   path.parentPath.replaceWith(result);
 }
 
-function handleReduce(_ref7) {
-  var t = _ref7.t,
-      path = _ref7.path,
-      object = _ref7.object,
-      handler = _ref7.handler,
-      initialValue = _ref7.initialValue,
-      isDecrementing = _ref7.isDecrementing,
-      isObject = _ref7.isObject;
+function handleReduce(_ref8) {
+  var t = _ref8.t,
+      path = _ref8.path,
+      object = _ref8.object,
+      handler = _ref8.handler,
+      initialValue = _ref8.initialValue,
+      isDecrementing = _ref8.isDecrementing,
+      isObject = _ref8.isObject;
 
-  var _getIds7 = getIds(path.scope),
-      fn = _getIds7.fn,
-      iterable = _getIds7.iterable,
-      key = _getIds7.key,
-      length = _getIds7.length,
-      result = _getIds7.result,
-      value = _getIds7.value;
+  var _getIds8 = getIds(path.scope),
+      fn = _getIds8.fn,
+      iterable = _getIds8.iterable,
+      key = _getIds8.key,
+      length = _getIds8.length,
+      result = _getIds8.result,
+      value = _getIds8.value;
 
   var hasInitialValue = !!initialValue;
   var isHandlerCached = isCachedReference(t, handler);
@@ -379,8 +430,8 @@ function handleReduce(_ref7) {
   });
 
   if (!hasInitialValue && !isObject) {
-    var keyValue = loop.init.declarations.find(function (_ref8) {
-      var id = _ref8.id;
+    var keyValue = loop.init.declarations.find(function (_ref9) {
+      var id = _ref9.id;
       return id.name === key.name;
     });
 
@@ -413,21 +464,21 @@ function handleReduce(_ref7) {
   path.parentPath.replaceWith(result);
 }
 
-function handleSome(_ref9) {
-  var t = _ref9.t,
-      path = _ref9.path,
-      object = _ref9.object,
-      handler = _ref9.handler,
-      isDecrementing = _ref9.isDecrementing,
-      isObject = _ref9.isObject;
+function handleSome(_ref10) {
+  var t = _ref10.t,
+      path = _ref10.path,
+      object = _ref10.object,
+      handler = _ref10.handler,
+      isDecrementing = _ref10.isDecrementing,
+      isObject = _ref10.isObject;
 
-  var _getIds8 = getIds(path.scope),
-      fn = _getIds8.fn,
-      iterable = _getIds8.iterable,
-      key = _getIds8.key,
-      length = _getIds8.length,
-      result = _getIds8.result,
-      value = _getIds8.value;
+  var _getIds9 = getIds(path.scope),
+      fn = _getIds9.fn,
+      iterable = _getIds9.iterable,
+      key = _getIds9.key,
+      length = _getIds9.length,
+      result = _getIds9.result,
+      value = _getIds9.value;
 
   var isHandlerCached = isCachedReference(t, handler);
   var isIterableCached = isCachedReference(t, object);
@@ -469,6 +520,7 @@ module.exports = {
   handleFilter: handleFilter,
   handleFind: handleFind,
   handleFindKey: handleFindKey,
+  handleFlatMap: handleFlatMap,
   handleForEach: handleForEach,
   handleMap: handleMap,
   handleReduce: handleReduce,

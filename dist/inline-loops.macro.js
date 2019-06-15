@@ -15,13 +15,14 @@ var _require2 = require('./handlers'),
     handleFilter = _require2.handleFilter,
     handleFind = _require2.handleFind,
     handleFindKey = _require2.handleFindKey,
+    handleFlatMap = _require2.handleFlatMap,
     handleForEach = _require2.handleForEach,
     handleMap = _require2.handleMap,
     handleReduce = _require2.handleReduce,
     handleSome = _require2.handleSome;
 
-var METHODS = ['every', 'filter', 'find', 'findIndex', 'findKey', 'forEach', 'map', 'reduce', 'some'];
-var ARRAY_ONLY_METHODS = ['findIndex'];
+var METHODS = ['every', 'filter', 'find', 'findIndex', 'findKey', 'flatMap', 'forEach', 'map', 'reduce', 'some'];
+var ARRAY_ONLY_METHODS = ['findIndex', 'flatMap'];
 var OBJECT_ONLY_METHODS = ['findKey'];
 
 function getCallTypes(references, method) {
@@ -138,6 +139,7 @@ function inlineLoops(_ref) {
     find: handleFind,
     findIndex: handleFindKey,
     findKey: handleFindKey,
+    flatMap: handleFlatMap,
     forEach: handleForEach,
     map: handleMap,
     reduce: handleReduce,
