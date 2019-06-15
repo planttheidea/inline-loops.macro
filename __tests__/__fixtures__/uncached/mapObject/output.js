@@ -4,19 +4,14 @@ const _iterable = {
   three: 3,
   four: 4
 };
-
-const _fn = value => {
-  const doubled = value * 2;
-  return doubled;
-};
-
 let _result = {};
 
 let _value;
 
 for (let _key in _iterable) {
   _value = _iterable[_key];
-  _result[_key] = _fn(_value, _key, _iterable);
+  const doubled = _value * 2;
+  _result[_key] = doubled;
 }
 
 const doubledValues = _result;

@@ -8,17 +8,12 @@ let _hasInitialValue = false;
 
 let _value;
 
-const _fn = (agg, value, index) => {
-  agg[index] = value * 2;
-  return agg;
-};
-
 let _result;
 
 for (let _key in _iterable) {
   if (_hasInitialValue) {
     _value = _iterable[_key];
-    _result = _fn(_result, _value, _key, _iterable);
+    _result[_key] = _value * 2;
   } else {
     _hasInitialValue = true;
     _result = _iterable[_key];

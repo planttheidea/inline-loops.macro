@@ -1,10 +1,10 @@
 const {
-  getBody,
   getDefaultResult,
   getIds,
+  getInjectedValues,
   getLoop,
   getUid,
-  getResultStatement,
+  getResultApplication,
   insertBeforeParent,
   isCachedReference,
 } = require('./helpers');
@@ -22,8 +22,8 @@ function handleEvery({
   const fnUsed = isHandlerCached ? handler : fn;
   const iterableUsed = isIterableCached ? object : iterable;
 
-  const resultStatement = getResultStatement(t, handler, fnUsed, value, key, iterableUsed, path);
-  const body = getBody(t, {
+  const { body, resultStatement } = getInjectedValues(t, path, {
+    fn: fnUsed,
     getResult(resultStatement) {
       return t.ifStatement(
         t.unaryExpression('!', resultStatement),
@@ -33,9 +33,9 @@ function handleEvery({
         ]),
       );
     },
+    handler,
     iterable: iterableUsed,
     key,
-    resultStatement,
     value,
   });
 
@@ -82,8 +82,8 @@ function handleFilter({
   const fnUsed = isHandlerCached ? handler : fn;
   const iterableUsed = isIterableCached ? object : iterable;
 
-  const resultStatement = getResultStatement(t, handler, fnUsed, value, key, iterableUsed, path);
-  const body = getBody(t, {
+  const { body, resultStatement } = getInjectedValues(t, path, {
+    fn: fnUsed,
     getResult(resultStatement) {
       return t.ifStatement(
         resultStatement,
@@ -94,9 +94,9 @@ function handleFilter({
         ),
       );
     },
+    handler,
     iterable: iterableUsed,
     key,
-    resultStatement,
     value,
   });
 
@@ -143,8 +143,8 @@ function handleFind({
   const fnUsed = isHandlerCached ? handler : fn;
   const iterableUsed = isIterableCached ? object : iterable;
 
-  const resultStatement = getResultStatement(t, handler, fnUsed, value, key, iterableUsed, path);
-  const body = getBody(t, {
+  const { body, resultStatement } = getInjectedValues(t, path, {
+    fn: fnUsed,
     getResult(resultStatement) {
       return t.ifStatement(
         resultStatement,
@@ -154,9 +154,9 @@ function handleFind({
         ]),
       );
     },
+    handler,
     iterable: iterableUsed,
     key,
-    resultStatement,
     value,
   });
 
@@ -202,8 +202,8 @@ function handleFindKey({
   const fnUsed = isHandlerCached ? handler : fn;
   const iterableUsed = isIterableCached ? object : iterable;
 
-  const resultStatement = getResultStatement(t, handler, fnUsed, value, key, iterableUsed, path);
-  const body = getBody(t, {
+  const { body, resultStatement } = getInjectedValues(t, path, {
+    fn: fnUsed,
     getResult(resultStatement) {
       return t.ifStatement(
         resultStatement,
@@ -213,9 +213,9 @@ function handleFindKey({
         ]),
       );
     },
+    handler,
     iterable: iterableUsed,
     key,
-    resultStatement,
     value,
   });
 
@@ -262,8 +262,8 @@ function handleFlatMap({
   const fnUsed = isHandlerCached ? handler : fn;
   const iterableUsed = isIterableCached ? object : iterable;
 
-  const resultStatement = getResultStatement(t, handler, fnUsed, value, key, iterableUsed, path);
-  const body = getBody(t, {
+  const { body, resultStatement } = getInjectedValues(t, path, {
+    fn: fnUsed,
     getResult(resultStatement) {
       return t.expressionStatement(
         t.callExpression(
@@ -275,9 +275,9 @@ function handleFlatMap({
         ),
       );
     },
+    handler,
     iterable: iterableUsed,
     key,
-    resultStatement,
     value,
   });
 
@@ -324,14 +324,16 @@ function handleForEach({
   const fnUsed = isHandlerCached ? handler : fn;
   const iterableUsed = isIterableCached ? object : iterable;
 
-  const resultStatement = getResultStatement(t, handler, fnUsed, value, key, iterableUsed, path);
-  const body = getBody(t, {
+  const { body, resultStatement } = getInjectedValues(t, path, {
+    fn: fnUsed,
     getResult(resultStatement) {
-      return t.expressionStatement(resultStatement);
+      return t.isExpression(resultStatement)
+        ? t.expressionStatement(resultStatement)
+        : resultStatement;
     },
+    handler,
     iterable: iterableUsed,
     key,
-    resultStatement,
     value,
   });
 
@@ -376,8 +378,8 @@ function handleMap({
   const fnUsed = isHandlerCached ? handler : fn;
   const iterableUsed = isIterableCached ? object : iterable;
 
-  const resultStatement = getResultStatement(t, handler, fnUsed, value, key, iterableUsed, path);
-  const body = getBody(t, {
+  const { body, resultStatement } = getInjectedValues(t, path, {
+    fn: fnUsed,
     getResult(resultStatement) {
       return t.expressionStatement(
         isDecrementing
@@ -389,9 +391,9 @@ function handleMap({
           : t.assignmentExpression('=', t.memberExpression(result, key, true), resultStatement),
       );
     },
+    handler,
     iterable: iterableUsed,
     key,
-    resultStatement,
     value,
   });
 
@@ -476,7 +478,7 @@ function handleReduce({
   const valueAssignment = t.expressionStatement(
     t.assignmentExpression('=', value, t.memberExpression(iterableUsed, key, true)),
   );
-  const resultStatement = getResultStatement(
+  const resultApplication = getResultApplication(
     t,
     handler,
     fnUsed,
@@ -486,14 +488,23 @@ function handleReduce({
     path,
     result,
   );
+
+  const resultStatement = resultApplication.pop();
+
   const resultAssignment = t.assignmentExpression('=', result, resultStatement);
 
   let block;
 
   if (!hasInitialValue && isObject) {
+    const mainBlock = [valueAssignment, ...resultApplication];
+
+    if (resultAssignment.left.name !== resultAssignment.right.name) {
+      mainBlock.push(t.expressionStatement(resultAssignment));
+    }
+
     const ifHasInitialValue = t.ifStatement(
       hasInitialValueId,
-      t.blockStatement([valueAssignment, t.expressionStatement(resultAssignment)]),
+      t.blockStatement(mainBlock),
       t.blockStatement([
         t.expressionStatement(
           t.assignmentExpression('=', hasInitialValueId, t.booleanLiteral(true)),
@@ -506,7 +517,11 @@ function handleReduce({
 
     block = [ifHasInitialValue];
   } else {
-    block = [valueAssignment, t.expressionStatement(resultAssignment)];
+    block = [valueAssignment, ...resultApplication];
+
+    if (resultAssignment.left.name !== resultAssignment.right.name) {
+      block.push(t.expressionStatement(resultAssignment));
+    }
   }
 
   const loop = getLoop({
@@ -572,8 +587,8 @@ function handleSome({
   const fnUsed = isHandlerCached ? handler : fn;
   const iterableUsed = isIterableCached ? object : iterable;
 
-  const resultStatement = getResultStatement(t, handler, fnUsed, value, key, iterableUsed, path);
-  const body = getBody(t, {
+  const { body, resultStatement } = getInjectedValues(t, path, {
+    fn: fnUsed,
     getResult(resultStatement) {
       return t.ifStatement(
         resultStatement,
@@ -583,9 +598,9 @@ function handleSome({
         ]),
       );
     },
+    handler,
     iterable: iterableUsed,
     key,
-    resultStatement,
     value,
   });
 

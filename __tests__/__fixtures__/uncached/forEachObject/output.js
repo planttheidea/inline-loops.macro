@@ -5,15 +5,10 @@ const _iterable = {
   four: 4
 };
 
-const _fn = value => {
-  const isValueEven = value % 2 === 0;
-  return isValueEven;
-};
-
 let _value;
 
 for (let _key in _iterable) {
   _value = _iterable[_key];
-
-  _fn(_value, _key, _iterable);
+  const isValueEven = _value % 2 === 0;
+  isValueEven;
 }

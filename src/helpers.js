@@ -12,23 +12,28 @@ function getIds(scope) {
   }, {});
 }
 
-function getBody(t, {
-  getResult, iterable, key, resultStatement, value,
+function getInjectedValues(t, path, {
+  fn, getResult, handler, iterable, key, value,
 }) {
   const valueAssignment = t.expressionStatement(
     t.assignmentExpression('=', value, t.memberExpression(iterable, key, true)),
   );
+  const resultApplication = getResultApplication(t, handler, fn, value, key, iterable, path);
+  const resultStatement = resultApplication.pop();
   const result = getResult(resultStatement);
 
   const block = [valueAssignment];
 
-  if (t.isBlockStatement(result)) {
-    block.push(...result);
-  } else {
-    block.push(result);
+  if (resultApplication.length) {
+    block.push(...resultApplication);
   }
 
-  return t.blockStatement(block);
+  block.push(result);
+
+  return {
+    body: t.blockStatement(block),
+    resultStatement,
+  };
 }
 
 function getLoop({
@@ -133,7 +138,9 @@ function normalizeHandler(t, handler, path, {
   }
 }
 
-function getResultStatement(t, handler, fn, value, key, iterable, path, result) {
+function getResultApplication(t, handler, fn, value, key, iterable, path, result) {
+  const callParams = result ? [result, value, key, iterable] : [value, key, iterable];
+
   if (t.isArrowFunctionExpression(handler) || t.isFunctionExpression(handler)) {
     let { body } = handler;
 
@@ -141,7 +148,39 @@ function getResultStatement(t, handler, fn, value, key, iterable, path, result) 
       // eslint-disable-next-line prefer-destructuring
       body = body.body;
 
-      if (body.length === 1 && handler.params.every(param => t.isIdentifier(param))) {
+      const { parentPath } = path;
+
+      let returnCount = 0;
+
+      parentPath.traverse({
+        ReturnStatement(_path) {
+          returnCount++;
+
+          if (_path.parentPath.node !== handler.body) {
+            returnCount++;
+          }
+        },
+      });
+
+      if (returnCount < 2) {
+        if (!handler.params.every(param => t.isIdentifier(param))) {
+          const injectedParamAssigns = handler.params.reduce((injected, param, index) => {
+            if (t.isIdentifier(param)) {
+              return injected;
+            }
+
+            injected.push(
+              t.variableDeclaration('const', [t.variableDeclarator(param, callParams[index])]),
+            );
+
+            handler.params[index] = callParams[index];
+
+            return injected;
+          }, []);
+
+          body.unshift(...injectedParamAssigns);
+        }
+
         normalizeHandler(t, handler, path, {
           result,
           iterable,
@@ -149,18 +188,28 @@ function getResultStatement(t, handler, fn, value, key, iterable, path, result) 
           value,
         });
 
-        const node = body[0];
+        if (body.length === 1) {
+          const node = body[0];
 
-        if (t.isExpression(node)) {
-          return node;
-        }
+          if (t.isExpression(node)) {
+            return [node];
+          }
 
-        if (t.isExpressionStatement(node)) {
-          return node.expression;
-        }
+          if (t.isExpressionStatement(node)) {
+            return [node.expression];
+          }
 
-        if (t.isReturnStatement(node)) {
-          return node.argument;
+          if (t.isReturnStatement(node)) {
+            return [node.argument];
+          }
+        } else {
+          const ret = body[body.length - 1];
+
+          if (t.isReturnStatement(ret)) {
+            body[body.length - 1] = ret.argument;
+          }
+
+          return body;
         }
       }
     } else if (t.isExpression(body)) {
@@ -171,16 +220,15 @@ function getResultStatement(t, handler, fn, value, key, iterable, path, result) 
         value,
       });
 
-      return body;
+      return [body];
     }
   }
 
-  const callParams = result ? [result, value, key, iterable] : [value, key, iterable];
   const callExpression = t.callExpression(fn, callParams);
 
   callExpression.__inlineLoopsMacroFallback = true;
 
-  return callExpression;
+  return [callExpression];
 }
 
 function getUid(scope, name) {
@@ -241,12 +289,12 @@ function isCachedReference(t, node) {
 }
 
 module.exports = {
-  getBody,
   getDefaultResult,
   getIds,
+  getInjectedValues,
   getLoop,
   getUid,
-  getResultStatement,
+  getResultApplication,
   insertBeforeParent,
   isCachedReference,
 };
