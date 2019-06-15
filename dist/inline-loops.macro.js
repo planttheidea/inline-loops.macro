@@ -1,20 +1,10 @@
 "use strict";
 
-function _slicedToArray(arr, i) { return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _nonIterableRest(); }
+var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
 
-function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance"); }
+var _slicedToArray2 = _interopRequireDefault(require("@babel/runtime/helpers/slicedToArray"));
 
-function _iterableToArrayLimit(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"] != null) _i["return"](); } finally { if (_d) throw _e; } } return _arr; }
-
-function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
-
-function _toConsumableArray(arr) { return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _nonIterableSpread(); }
-
-function _nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance"); }
-
-function _iterableToArray(iter) { if (Symbol.iterator in Object(iter) || Object.prototype.toString.call(iter) === "[object Arguments]") return Array.from(iter); }
-
-function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = new Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } }
+var _toConsumableArray2 = _interopRequireDefault(require("@babel/runtime/helpers/toConsumableArray"));
 
 var _require = require('babel-plugin-macros'),
     createMacro = _require.createMacro,
@@ -88,14 +78,14 @@ function inlineLoops(_ref) {
         objectCalls = _getCallTypes.objectCalls;
 
     if (isArrayOnly) {
-      return allMethods.push.apply(allMethods, _toConsumableArray(incrementingCalls).concat(_toConsumableArray(decrementingCalls)));
+      return allMethods.push.apply(allMethods, (0, _toConsumableArray2["default"])(incrementingCalls).concat((0, _toConsumableArray2["default"])(decrementingCalls)));
     }
 
     if (isObjectOnly) {
-      return allMethods.push.apply(allMethods, _toConsumableArray(objectCalls));
+      return allMethods.push.apply(allMethods, (0, _toConsumableArray2["default"])(objectCalls));
     }
 
-    return allMethods.push.apply(allMethods, _toConsumableArray(incrementingCalls).concat(_toConsumableArray(decrementingCalls), _toConsumableArray(objectCalls)));
+    return allMethods.push.apply(allMethods, (0, _toConsumableArray2["default"])(incrementingCalls).concat((0, _toConsumableArray2["default"])(decrementingCalls), (0, _toConsumableArray2["default"])(objectCalls)));
   });
   allMethods.forEach(function (_ref2) {
     var path = _ref2.path;
@@ -108,7 +98,7 @@ function inlineLoops(_ref) {
     var bContainer = b.container;
 
     if (aContainer.arguments) {
-      var _aContainer$arguments = _slicedToArray(aContainer.arguments, 1),
+      var _aContainer$arguments = (0, _slicedToArray2["default"])(aContainer.arguments, 1),
           iterableA = _aContainer$arguments[0];
 
       if (t.isCallExpression(iterableA) && iterableA.callee.__inlineLoopsMacro && iterableA.callee === b.node) {
@@ -117,7 +107,7 @@ function inlineLoops(_ref) {
     }
 
     if (bContainer.arguments) {
-      var _bContainer$arguments = _slicedToArray(bContainer.arguments, 1),
+      var _bContainer$arguments = (0, _slicedToArray2["default"])(bContainer.arguments, 1),
           iterableB = _bContainer$arguments[0];
 
       if (t.isCallExpression(iterableB) && iterableB.callee.__inlineLoopsMacro && iterableB.callee === a.node) {
@@ -170,7 +160,7 @@ function inlineLoops(_ref) {
         throw new MacroError('You cannot use spread arguments with the macro, please declare the arguments explicitly.');
       }
 
-      var _args = _slicedToArray(args, 3),
+      var _args = (0, _slicedToArray2["default"])(args, 3),
           object = _args[0],
           handler = _args[1],
           initialValue = _args[2];
