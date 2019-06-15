@@ -56,7 +56,7 @@ function contrivedExample(array) {
   - `findIndexRight` => same as `findIndex`, but iterating in reverse
   - `findKey` => same as `findIndex` but iterating over objects intead of arrays
 - `flatMap` ([MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/flatMap))
-  - `flatMapRight` => same as `findIndex`, but iterating in reverse
+  - `flatMapRight` => same as `flatMap`, but iterating in reverse
   - There is no object method, as the use cases and expected results are not clearly defined, nor is the expected outcome obvious
 - `forEach` ([MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/forEach))
   - `forEachRight` => same as `forEach`, but iterating in reverse
