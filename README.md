@@ -113,9 +113,7 @@ Notice that there is no reference to the original function, because it used the 
 
 ```javascript
 // this
-const isAllTuples = every(array, tuple =>
-  every(tuple, value => Array.isArray(value) && value.length === 2),
-);
+const isAllTuples = every(array, tuple => every(tuple, value => Array.isArray(value) && value.length === 2));
 
 // becomes this
 let _result = true;
@@ -125,11 +123,7 @@ for (let _key = 0, _length = array.length, _value; _key < _length; ++_key) {
 
   let _result2 = true;
 
-  for (
-    let _key2 = 0, _length2 = _value.length, _value2;
-    _key2 < _length2;
-    ++_key2
-  ) {
+  for (let _key2 = 0, _length2 = _value.length, _value2; _key2 < _length2; ++_key2) {
     _value2 = _value[_key2];
 
     if (!(Array.isArray(_value2) && _value2.length === 2)) {
@@ -179,9 +173,7 @@ If you need to incorporate this, you can do it one of two ways:
 **Add filtering (iterates twice, but arguably cleaner semantics)**
 
 ```javascript
-const raw = mapObject(object, (value, key) =>
-  object.hasOwnProperty(key) ? value * 2 : null,
-);
+const raw = mapObject(object, (value, key) => (object.hasOwnProperty(key) ? value * 2 : null));
 const doubled = filterObject(raw, value => value !== null);
 ```
 
