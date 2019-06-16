@@ -10,6 +10,8 @@ Iteration helpers that inline to native loops for performance
   - [Usage](#usage)
   - [Methods](#methods)
   - [How it works](#how-it-works)
+    - [Aggressive inlining](#aggressive-inlining)
+    - [Bailout scenarios](#bailout-scenarios)
   - [Gotchas](#gotchas)
     - [`*Object` methods do not perform `hasOwnProperty` check](#object-methods-do-not-perform-hasownproperty-check)
     - [`findIndex` vs `findKey`](#findindex-vs-findkey)
@@ -92,7 +94,9 @@ const foo = _result;
 
 If you are passing uncached values as the array or the handler, it will store those values as local variables and execute the same loop based on those variables.
 
-One extra performance boost is that `inline-loops` will try to inline operations when possible. For example:
+### Aggressive inlining
+
+One extra performance boost is that `inline-loops` will try to inline the callback operations when possible. For example:
 
 ```javascript
 // this
@@ -139,6 +143,32 @@ for (let _key = 0, _length = array.length, _value; _key < _length; ++_key) {
 }
 
 const isAllTuples = _result;
+```
+
+### Bailout scenarios
+
+Inevitably not everything can be inlined, so there are known bailout scenarios:
+
+- When using a cached function reference (we can only inline functions that are statically declared in the macro scope)
+- When there are multiple `return` statements (as there is no scope to return from, the conversion of the logic would be highly complex)
+- When the `return` statement is not top-level (same reason as with multiple `return`s)
+
+That means if you are cranking every last ounce of performance out of this macro, you want to get cozy with ternaries.
+
+```js
+import { map } from 'inline-loops.macro';
+
+// this will bail out to storing the function and calling it in the loop
+const deopted = map(array, value => {
+  if (value % 2 === 0) {
+    return 'even';
+  }
+
+  return 'odd';
+});
+
+// this will inline the operation and avoid function calls
+const inlined = map(array, value => (value % 2 === 0 ? 'even' : 'odd'));
 ```
 
 ## Gotchas
