@@ -163,6 +163,8 @@ function getResultApplication(t, handler, fn, value, key, iterable, path, result
       });
 
       if (returnCount < 2) {
+        renameLocalVariables(t, path);
+
         if (!handler.params.every(param => t.isIdentifier(param))) {
           const injectedParamAssigns = handler.params.reduce((injected, param, index) => {
             if (t.isIdentifier(param)) {
@@ -288,6 +290,38 @@ function isCachedReference(t, node) {
   return t.isIdentifier(node);
 }
 
+function renameLocalVariables(t, path) {
+  const containerPath = path.getStatementParent().parentPath;
+
+  function renameLocalVariable(node, functionPath) {
+    const { name } = node;
+    const newId = containerPath.scope.generateUidIdentifier(name);
+
+    functionPath.scope.rename(name, newId.name);
+
+    node.id = newId;
+  }
+
+  path.parentPath.traverse({
+    VariableDeclarator(_path) {
+      const { node } = _path;
+      const functionPath = _path.getFunctionParent();
+
+      if (t.isArrayPattern(node.id)) {
+        const { elements } = node.id;
+
+        elements.forEach(element => renameLocalVariable(element, functionPath));
+      }
+
+      if (t.isObjectPattern(node.id)) {
+        // handle this as well
+      }
+
+      renameLocalVariable(node.id, functionPath);
+    },
+  });
+}
+
 module.exports = {
   getDefaultResult,
   getIds,
@@ -297,4 +331,5 @@ module.exports = {
   getResultApplication,
   insertBeforeParent,
   isCachedReference,
+  renameLocalVariables,
 };

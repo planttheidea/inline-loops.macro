@@ -10,8 +10,10 @@ let _value;
 
 for (let _key in _iterable) {
   _value = _iterable[_key];
-  const isValueEven = _value % 2 === 0;
-  if (isValueEven) _result[_key] = _value;
+
+  const _isValueEven = _value % 2 === 0;
+
+  if (_isValueEven) _result[_key] = _value;
 }
 
 const onlyEven = _result;
