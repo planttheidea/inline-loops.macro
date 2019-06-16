@@ -21,6 +21,10 @@ const TRANSFORMED_FILES = fs.readdirSync(TEST_FILES).reduce((tests, file) => {
 
   const transformed = transformFileSync(filename, TRANSFORM_OPTIONS).code;
 
+  // if (fn === 'complex-inliner') {
+  //   console.log(transformed);
+  // }
+
   tests[fn] = eval(transformed);
 
   return tests;

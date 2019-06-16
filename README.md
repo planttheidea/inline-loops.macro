@@ -175,6 +175,58 @@ const inlined = map(array, value => (value % 2 === 0 ? 'even' : 'odd'));
 
 Some aspects of implementing this macro that you should be aware of:
 
+### Conditionals do not delay execution
+
+If you do something like this with standard JS:
+
+```js
+return isFoo ? array.map(v => v * 2) : array;
+```
+
+The `array` is only mapped over if `isFoo` is true. However, because we are inlining these calls into `for` loops in the scope they operate in, this conditional calling does not apply with this macro.
+
+```js
+// this
+return isFoo ? map(array, v => v * 2) : array;
+
+// turns into this
+let _result = [];
+
+for (let _key = 0, _length = array.length, _value; _key < _length; ++_key) {
+  _value = array[_key];
+  _result[_key] = _value * 2;
+}
+
+return isFoo ? _result : array;
+```
+
+Notice the mapping occurs whether the condition is met or not. If you want to ensure this conditionality is maintained, you should use an `if` block instead:
+
+```js
+// this
+if (isFoo) {
+  return map(array, v => v * 2);
+}
+
+return array;
+
+// turns into this
+if (isFoo) {
+  let _result = [];
+
+  for (let _key = 0, _length = array.length, _value; _key < _length; ++_key) {
+    _value = array[_key];
+    _result[_key] = _value * 2;
+  }
+
+  return _result;
+}
+
+return array;
+```
+
+This will ensure the potentially expensive computation only occurs when necessary.
+
 ### `*Object` methods do not perform `hasOwnProperty` check
 
 The object methods will do operations in `for-in` loop, but will not guard via a `hasOwnProperty` check. For example:
