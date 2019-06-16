@@ -298,8 +298,6 @@ function renameLocalVariables(t, path) {
     const newId = containerPath.scope.generateUidIdentifier(name);
 
     functionPath.scope.rename(name, newId.name);
-
-    node.id = newId;
   }
 
   path.parentPath.traverse({
