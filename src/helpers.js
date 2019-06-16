@@ -303,21 +303,30 @@ function renameLocalVariables(t, path) {
   }
 
   path.parentPath.traverse({
+    ArrayPattern(_path) {
+      const { elements } = _path.node;
+
+      elements.forEach((element) => {
+        if (t.isIdentifier(element)) {
+          renameLocalVariable(element, _path.getFunctionParent());
+        }
+      });
+    },
+    ObjectPattern(_path) {
+      const { properties } = _path.node;
+
+      properties.forEach((property) => {
+        if (t.isIdentifier(property.value)) {
+          renameLocalVariable(property.value, _path.getFunctionParent());
+        }
+      });
+    },
     VariableDeclarator(_path) {
       const { node } = _path;
-      const functionPath = _path.getFunctionParent();
 
-      if (t.isArrayPattern(node.id)) {
-        const { elements } = node.id;
-
-        elements.forEach(element => renameLocalVariable(element, functionPath));
+      if (t.isIdentifier(node.id)) {
+        renameLocalVariable(node.id, _path.getFunctionParent());
       }
-
-      if (t.isObjectPattern(node.id)) {
-        // handle this as well
-      }
-
-      renameLocalVariable(node.id, functionPath);
     },
   });
 }

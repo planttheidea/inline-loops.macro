@@ -4,6 +4,8 @@ var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefau
 
 var _slicedToArray2 = _interopRequireDefault(require("@babel/runtime/helpers/slicedToArray"));
 
+var _toConsumableArray2 = _interopRequireDefault(require("@babel/runtime/helpers/toConsumableArray"));
+
 function getDefaultResult(t, isObject) {
   return isObject ? t.objectExpression([]) : t.arrayExpression();
 }
@@ -17,15 +19,39 @@ function getIds(scope) {
   }, {});
 }
 
-function getLoop(_ref) {
-  var t = _ref.t,
-      body = _ref.body,
+function getInjectedValues(t, path, _ref) {
+  var fn = _ref.fn,
+      getResult = _ref.getResult,
+      handler = _ref.handler,
       iterable = _ref.iterable,
       key = _ref.key,
-      length = _ref.length,
-      value = _ref.value,
-      isDecrementing = _ref.isDecrementing,
-      isObject = _ref.isObject;
+      value = _ref.value;
+  var valueAssignment = t.expressionStatement(t.assignmentExpression('=', value, t.memberExpression(iterable, key, true)));
+  var resultApplication = getResultApplication(t, handler, fn, value, key, iterable, path);
+  var resultStatement = resultApplication.pop();
+  var result = getResult(resultStatement);
+  var block = [valueAssignment];
+
+  if (resultApplication.length) {
+    block.push.apply(block, (0, _toConsumableArray2["default"])(resultApplication));
+  }
+
+  block.push(result);
+  return {
+    body: t.blockStatement(block),
+    resultStatement: resultStatement
+  };
+}
+
+function getLoop(_ref2) {
+  var t = _ref2.t,
+      body = _ref2.body,
+      iterable = _ref2.iterable,
+      key = _ref2.key,
+      length = _ref2.length,
+      value = _ref2.value,
+      isDecrementing = _ref2.isDecrementing,
+      isObject = _ref2.isObject;
 
   if (isObject) {
     var left = t.variableDeclaration('let', [t.variableDeclarator(key)]);
@@ -54,102 +80,79 @@ function getLoop(_ref) {
   return t.forStatement(t.variableDeclaration('let', assignments), test, update, body);
 }
 
-function getReduceResultStatement(t, handler, fn, result, value, key, iterable, path) {
-  function createRename(r, v, k, i) {
+function normalizeHandler(t, handler, path, _ref3) {
+  var iterable = _ref3.iterable,
+      key = _ref3.key,
+      result = _ref3.result,
+      value = _ref3.value;
+
+  function createRename(_ref4) {
+    var i = _ref4.i,
+        k = _ref4.k,
+        r = _ref4.r,
+        v = _ref4.v;
     return function rename(_path) {
-      if (r) {
+      if (r && result) {
         _path.scope.rename(r.name, result.name);
       }
 
-      if (v) {
+      if (v && value) {
         _path.scope.rename(v.name, value.name);
       }
 
-      if (k) {
+      if (k && key) {
         _path.scope.rename(k.name, key.name);
       }
 
-      if (i) {
+      if (i && iterable) {
         _path.scope.rename(i.name, iterable.name);
       }
     };
   }
 
-  if (t.isArrowFunctionExpression(handler) || t.isFunctionExpression(handler)) {
-    var body = handler.body;
+  var r;
+  var v;
+  var k;
+  var i;
 
-    if (t.isBlockStatement(body)) {
-      // eslint-disable-next-line prefer-destructuring
-      body = body.body;
+  if (result) {
+    var _handler$params = (0, _slicedToArray2["default"])(handler.params, 4);
 
-      if (body.length === 1 && handler.params.every(function (param) {
-        return t.isIdentifier(param);
-      })) {
-        var _handler$params = (0, _slicedToArray2["default"])(handler.params, 4),
-            r = _handler$params[0],
-            v = _handler$params[1],
-            k = _handler$params[2],
-            i = _handler$params[3];
+    r = _handler$params[0];
+    v = _handler$params[1];
+    k = _handler$params[2];
+    i = _handler$params[3];
+  } else {
+    var _handler$params2 = (0, _slicedToArray2["default"])(handler.params, 3);
 
-        var node = body[0];
-
-        if (t.isArrowFunctionExpression(handler)) {
-          path.parentPath.traverse({
-            ArrowFunctionExpression: createRename(r, v, k, i)
-          });
-        } else {
-          path.parentPath.traverse({
-            FunctionExpression: createRename(r, v, k, i)
-          });
-        }
-
-        if (t.isExpression(node)) {
-          return node;
-        }
-
-        if (t.isExpressionStatement(node)) {
-          return node.expression;
-        }
-
-        if (t.isReturnStatement(node)) {
-          return node.argument;
-        }
-      }
-    } else if (t.isExpression(body)) {
-      var _handler$params2 = (0, _slicedToArray2["default"])(handler.params, 4),
-          _r = _handler$params2[0],
-          _v = _handler$params2[1],
-          _k = _handler$params2[2],
-          _i = _handler$params2[3];
-
-      path.parentPath.traverse({
-        ArrowFunctionExpression: createRename(_r, _v, _k, _i)
-      });
-      return body;
-    }
+    v = _handler$params2[0];
+    k = _handler$params2[1];
+    i = _handler$params2[2];
   }
 
-  var callExpression = t.callExpression(fn, [result, value, key, iterable]);
-  callExpression.__inlineLoopsMacroFallback = true;
-  return callExpression;
+  if (t.isArrowFunctionExpression(handler)) {
+    path.parentPath.traverse({
+      ArrowFunctionExpression: createRename({
+        r: r,
+        v: v,
+        k: k,
+        i: i
+      })
+    });
+  } else {
+    path.parentPath.traverse({
+      FunctionExpression: createRename({
+        r: r,
+        v: v,
+        k: k,
+        i: i
+      })
+    });
+  }
 }
 
-function getResultStatement(t, handler, fn, value, key, iterable, path) {
-  function createRename(v, k, i) {
-    return function rename(_path) {
-      if (v) {
-        _path.scope.rename(v.name, value.name);
-      }
-
-      if (k) {
-        _path.scope.rename(k.name, key.name);
-      }
-
-      if (i) {
-        _path.scope.rename(i.name, iterable.name);
-      }
-    };
-  }
+function getResultApplication(t, handler, fn, value, key, iterable, path, result) {
+  var callParams = result ? [result, value, key, iterable] : [value, key, iterable];
 
   if (t.isArrowFunctionExpression(handler) || t.isFunctionExpression(handler)) {
     var body = handler.body;
@@ -157,74 +160,103 @@ function getResultStatement(t, handler, fn, value, key, iterable, path) {
     if (t.isBlockStatement(body)) {
       // eslint-disable-next-line prefer-destructuring
       body = body.body;
+      var parentPath = path.parentPath;
+      var returnCount = 0;
+      parentPath.traverse({
+        ReturnStatement: function ReturnStatement(_path) {
+          returnCount++;
 
-      if (body.length === 1 && handler.params.every(function (param) {
-        return t.isIdentifier(param);
-      })) {
-        var _handler$params3 = (0, _slicedToArray2["default"])(handler.params, 3),
-            v = _handler$params3[0],
-            k = _handler$params3[1],
-            i = _handler$params3[2];
+          if (_path.parentPath.node !== handler.body) {
+            returnCount++;
+          }
+        }
+      });
 
-        var node = body[0];
+      if (returnCount < 2) {
+        renameLocalVariables(t, path);
 
-        if (t.isArrowFunctionExpression(handler)) {
-          path.parentPath.traverse({
-            ArrowFunctionExpression: createRename(v, k, i)
-          });
+        if (!handler.params.every(function (param) {
+          return t.isIdentifier(param);
+        })) {
+          var _body;
+
+          var injectedParamAssigns = handler.params.reduce(function (injected, param, index) {
+            if (t.isIdentifier(param)) {
+              return injected;
+            }
+
+            injected.push(t.variableDeclaration('const', [t.variableDeclarator(param, callParams[index])]));
+            handler.params[index] = callParams[index];
+            return injected;
+          }, []);
+
+          (_body = body).unshift.apply(_body, (0, _toConsumableArray2["default"])(injectedParamAssigns));
+        }
+
+        normalizeHandler(t, handler, path, {
+          result: result,
+          iterable: iterable,
+          key: key,
+          value: value
+        });
+
+        if (body.length === 1) {
+          var node = body[0];
+
+          if (t.isExpression(node)) {
+            return [node];
+          }
+
+          if (t.isExpressionStatement(node)) {
+            return [node.expression];
+          }
+
+          if (t.isReturnStatement(node)) {
+            return [node.argument];
+          }
         } else {
-          path.parentPath.traverse({
-            FunctionExpression: createRename(v, k, i)
-          });
-        }
+          var ret = body[body.length - 1];
 
-        if (t.isExpression(node)) {
-          return node;
-        }
+          if (t.isReturnStatement(ret)) {
+            body[body.length - 1] = ret.argument;
+          }
 
-        if (t.isExpressionStatement(node)) {
-          return node.expression;
-        }
-
-        if (t.isReturnStatement(node)) {
-          return node.argument;
+          return body;
         }
       }
     } else if (t.isExpression(body)) {
-      var _handler$params4 = (0, _slicedToArray2["default"])(handler.params, 3),
-          _v2 = _handler$params4[0],
-          _k2 = _handler$params4[1],
-          _i2 = _handler$params4[2];
-
-      path.parentPath.traverse({
-        ArrowFunctionExpression: createRename(_v2, _k2, _i2)
+      normalizeHandler(t, handler, path, {
+        result: result,
+        iterable: iterable,
+        key: key,
+        value: value
       });
-      return body;
+      return [body];
     }
   }
 
-  var callExpression = t.callExpression(fn, [value, key, iterable]);
+  var callExpression = t.callExpression(fn, callParams);
   callExpression.__inlineLoopsMacroFallback = true;
-  return callExpression;
+  return [callExpression];
 }
 
 function getUid(scope, name) {
   return scope.generateUidIdentifier(name);
 }
 
-function insertBeforeParent(_ref2) {
-  var fn = _ref2.fn,
-      handler = _ref2.handler,
-      isObject = _ref2.isObject,
-      iterable = _ref2.iterable,
-      loop = _ref2.loop,
-      object = _ref2.object,
-      path = _ref2.path,
-      result = _ref2.result,
-      resultStatement = _ref2.resultStatement,
-      resultValue = _ref2.resultValue,
-      t = _ref2.t,
-      value = _ref2.value;
+function insertBeforeParent(_ref5) {
+  var fn = _ref5.fn,
+      handler = _ref5.handler,
+      isObject = _ref5.isObject,
+      iterable = _ref5.iterable,
+      loop = _ref5.loop,
+      object = _ref5.object,
+      path = _ref5.path,
+      result = _ref5.result,
+      resultStatement = _ref5.resultStatement,
+      resultValue = _ref5.resultValue,
+      t = _ref5.t,
+      value = _ref5.value;
   var insertBefore = [];
 
   if (!isCachedReference(t, object)) {
@@ -255,13 +287,51 @@ function isCachedReference(t, node) {
   return t.isIdentifier(node);
 }
 
+function renameLocalVariables(t, path) {
+  var containerPath = path.getStatementParent().parentPath;
+
+  function renameLocalVariable(node, functionPath) {
+    var name = node.name;
+    var newId = containerPath.scope.generateUidIdentifier(name);
+    functionPath.scope.rename(name, newId.name);
+    node.id = newId;
+  }
+
+  path.parentPath.traverse({
+    ArrayPattern: function ArrayPattern(_path) {
+      var elements = _path.node.elements;
+      elements.forEach(function (element) {
+        if (t.isIdentifier(element)) {
+          renameLocalVariable(element, _path.getFunctionParent());
+        }
+      });
+    },
+    ObjectPattern: function ObjectPattern(_path) {
+      var properties = _path.node.properties;
+      properties.forEach(function (property) {
+        if (t.isIdentifier(property.value)) {
+          renameLocalVariable(property.value, _path.getFunctionParent());
+        }
+      });
+    },
+    VariableDeclarator: function VariableDeclarator(_path) {
+      var node = _path.node;
+
+      if (t.isIdentifier(node.id)) {
+        renameLocalVariable(node.id, _path.getFunctionParent());
+      }
+    }
+  });
+}
+
 module.exports = {
   getDefaultResult: getDefaultResult,
   getIds: getIds,
+  getInjectedValues: getInjectedValues,
   getLoop: getLoop,
   getUid: getUid,
-  getReduceResultStatement: getReduceResultStatement,
-  getResultStatement: getResultStatement,
+  getResultApplication: getResultApplication,
   insertBeforeParent: insertBeforeParent,
-  isCachedReference: isCachedReference
+  isCachedReference: isCachedReference,
+  renameLocalVariables: renameLocalVariables
 };
