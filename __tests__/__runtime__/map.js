@@ -19,7 +19,7 @@ const isEven = value => value % 2 === 0;
 const BAD_ARRAY_RESULT = [...ARRAY];
 const ARRAY_RESULT = ARRAY.map(isEven);
 
-const BAD_DECREMENTING_ARRAY_RESULT = [...ARRAY].reverse();
+const BAD_DECREMENTING_ARRAY_RESULT = [...BAD_ARRAY_RESULT].reverse();
 const DECREMENTING_ARRAY_RESULT = [...ARRAY_RESULT].reverse();
 
 const BAD_OBJECT_RESULT = Object.assign({}, OBJECT);

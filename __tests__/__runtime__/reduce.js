@@ -25,7 +25,7 @@ const isEven = (total, value) => {
 const BAD_ARRAY_RESULT = [...ARRAY];
 const ARRAY_RESULT = ARRAY.reduce(isEven, 10);
 
-const BAD_DECREMENTING_ARRAY_RESULT = [...ARRAY].reverse();
+const BAD_DECREMENTING_ARRAY_RESULT = [...BAD_ARRAY_RESULT].reverse();
 const DECREMENTING_ARRAY_RESULT = ARRAY.reduceRight(isEven, 10);
 
 const BAD_OBJECT_RESULT = Object.assign({}, OBJECT);
