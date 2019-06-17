@@ -1,10 +1,10 @@
 const {
   getDefaultResult,
   getIds,
+  getInjectedValues,
   getLoop,
   getUid,
-  getReduceResultStatement,
-  getResultStatement,
+  getResultApplication,
   insertBeforeParent,
   isCachedReference,
 } = require('./helpers');
@@ -22,21 +22,26 @@ function handleEvery({
   const fnUsed = isHandlerCached ? handler : fn;
   const iterableUsed = isIterableCached ? object : iterable;
 
-  const valueAssignment = t.expressionStatement(
-    t.assignmentExpression('=', value, t.memberExpression(iterableUsed, key, true)),
-  );
-  const resultStatement = getResultStatement(t, handler, fnUsed, value, key, iterableUsed, path);
-  const expr = t.ifStatement(
-    t.unaryExpression('!', resultStatement),
-    t.blockStatement([
-      t.expressionStatement(t.assignmentExpression('=', result, t.booleanLiteral(false))),
-      t.breakStatement(),
-    ]),
-  );
+  const { body, resultStatement } = getInjectedValues(t, path, {
+    fn: fnUsed,
+    getResult(resultStatement) {
+      return t.ifStatement(
+        t.unaryExpression('!', resultStatement),
+        t.blockStatement([
+          t.expressionStatement(t.assignmentExpression('=', result, t.booleanLiteral(false))),
+          t.breakStatement(),
+        ]),
+      );
+    },
+    handler,
+    iterable: iterableUsed,
+    key,
+    value,
+  });
 
   const loop = getLoop({
     t,
-    body: t.blockStatement([valueAssignment, expr]),
+    body,
     iterable: iterableUsed,
     key,
     length,
@@ -77,19 +82,27 @@ function handleFilter({
   const fnUsed = isHandlerCached ? handler : fn;
   const iterableUsed = isIterableCached ? object : iterable;
 
-  const valueAssignment = t.expressionStatement(
-    t.assignmentExpression('=', value, t.memberExpression(iterableUsed, key, true)),
-  );
-  const resultAssignment = isObject
-    ? t.assignmentExpression('=', t.memberExpression(result, key, true), value)
-    : t.callExpression(t.memberExpression(result, t.identifier('push')), [value]);
-
-  const resultStatement = getResultStatement(t, handler, fnUsed, value, key, iterableUsed, path);
-  const expr = t.ifStatement(resultStatement, t.expressionStatement(resultAssignment));
+  const { body, resultStatement } = getInjectedValues(t, path, {
+    fn: fnUsed,
+    getResult(resultStatement) {
+      return t.ifStatement(
+        resultStatement,
+        t.expressionStatement(
+          isObject
+            ? t.assignmentExpression('=', t.memberExpression(result, key, true), value)
+            : t.callExpression(t.memberExpression(result, t.identifier('push')), [value]),
+        ),
+      );
+    },
+    handler,
+    iterable: iterableUsed,
+    key,
+    value,
+  });
 
   const loop = getLoop({
     t,
-    body: t.blockStatement([valueAssignment, expr]),
+    body,
     iterable: iterableUsed,
     key,
     length,
@@ -130,21 +143,26 @@ function handleFind({
   const fnUsed = isHandlerCached ? handler : fn;
   const iterableUsed = isIterableCached ? object : iterable;
 
-  const valueAssignment = t.expressionStatement(
-    t.assignmentExpression('=', value, t.memberExpression(iterableUsed, key, true)),
-  );
-  const resultStatement = getResultStatement(t, handler, fnUsed, value, key, iterableUsed, path);
-  const expr = t.ifStatement(
-    resultStatement,
-    t.blockStatement([
-      t.expressionStatement(t.assignmentExpression('=', result, value)),
-      t.breakStatement(),
-    ]),
-  );
+  const { body, resultStatement } = getInjectedValues(t, path, {
+    fn: fnUsed,
+    getResult(resultStatement) {
+      return t.ifStatement(
+        resultStatement,
+        t.blockStatement([
+          t.expressionStatement(t.assignmentExpression('=', result, value)),
+          t.breakStatement(),
+        ]),
+      );
+    },
+    handler,
+    iterable: iterableUsed,
+    key,
+    value,
+  });
 
   const loop = getLoop({
     t,
-    body: t.blockStatement([valueAssignment, expr]),
+    body,
     iterable: iterableUsed,
     key,
     length,
@@ -184,21 +202,26 @@ function handleFindKey({
   const fnUsed = isHandlerCached ? handler : fn;
   const iterableUsed = isIterableCached ? object : iterable;
 
-  const valueAssignment = t.expressionStatement(
-    t.assignmentExpression('=', value, t.memberExpression(iterableUsed, key, true)),
-  );
-  const resultStatement = getResultStatement(t, handler, fnUsed, value, key, iterableUsed, path);
-  const expr = t.ifStatement(
-    resultStatement,
-    t.blockStatement([
-      t.expressionStatement(t.assignmentExpression('=', result, key)),
-      t.breakStatement(),
-    ]),
-  );
+  const { body, resultStatement } = getInjectedValues(t, path, {
+    fn: fnUsed,
+    getResult(resultStatement) {
+      return t.ifStatement(
+        resultStatement,
+        t.blockStatement([
+          t.expressionStatement(t.assignmentExpression('=', result, key)),
+          t.breakStatement(),
+        ]),
+      );
+    },
+    handler,
+    iterable: iterableUsed,
+    key,
+    value,
+  });
 
   const loop = getLoop({
     t,
-    body: t.blockStatement([valueAssignment, expr]),
+    body,
     iterable: iterableUsed,
     key,
     length,
@@ -239,20 +262,28 @@ function handleFlatMap({
   const fnUsed = isHandlerCached ? handler : fn;
   const iterableUsed = isIterableCached ? object : iterable;
 
-  const valueAssignment = t.expressionStatement(
-    t.assignmentExpression('=', value, t.memberExpression(iterableUsed, key, true)),
-  );
-  const resultStatement = getResultStatement(t, handler, fnUsed, value, key, iterableUsed, path);
-  const expr = t.expressionStatement(
-    t.callExpression(
-      t.memberExpression(t.memberExpression(result, t.identifier('push')), t.identifier('apply')),
-      [result, resultStatement],
-    ),
-  );
+  const { body, resultStatement } = getInjectedValues(t, path, {
+    fn: fnUsed,
+    getResult(resultStatement) {
+      return t.expressionStatement(
+        t.callExpression(
+          t.memberExpression(
+            t.memberExpression(result, t.identifier('push')),
+            t.identifier('apply'),
+          ),
+          [result, resultStatement],
+        ),
+      );
+    },
+    handler,
+    iterable: iterableUsed,
+    key,
+    value,
+  });
 
   const loop = getLoop({
     t,
-    body: t.blockStatement([valueAssignment, expr]),
+    body,
     iterable: iterableUsed,
     key,
     length,
@@ -293,15 +324,22 @@ function handleForEach({
   const fnUsed = isHandlerCached ? handler : fn;
   const iterableUsed = isIterableCached ? object : iterable;
 
-  const valueAssignment = t.expressionStatement(
-    t.assignmentExpression('=', value, t.memberExpression(iterableUsed, key, true)),
-  );
-  const resultStatement = getResultStatement(t, handler, fnUsed, value, key, iterableUsed, path);
-  const call = t.expressionStatement(resultStatement);
+  const { body, resultStatement } = getInjectedValues(t, path, {
+    fn: fnUsed,
+    getResult(resultStatement) {
+      return t.isExpression(resultStatement)
+        ? t.expressionStatement(resultStatement)
+        : resultStatement;
+    },
+    handler,
+    iterable: iterableUsed,
+    key,
+    value,
+  });
 
   const loop = getLoop({
     t,
-    body: t.blockStatement([valueAssignment, call]),
+    body,
     iterable: iterableUsed,
     key,
     length,
@@ -340,23 +378,28 @@ function handleMap({
   const fnUsed = isHandlerCached ? handler : fn;
   const iterableUsed = isIterableCached ? object : iterable;
 
-  const valueAssignment = t.expressionStatement(
-    t.assignmentExpression('=', value, t.memberExpression(iterableUsed, key, true)),
-  );
-  const resultStatement = getResultStatement(t, handler, fnUsed, value, key, iterableUsed, path);
-  const expr = t.expressionStatement(
-    isDecrementing
-      ? t.assignmentExpression(
-        '=',
-        t.memberExpression(result, t.memberExpression(result, t.identifier('length')), true),
-        resultStatement,
-      )
-      : t.assignmentExpression('=', t.memberExpression(result, key, true), resultStatement),
-  );
+  const { body, resultStatement } = getInjectedValues(t, path, {
+    fn: fnUsed,
+    getResult(resultStatement) {
+      return t.expressionStatement(
+        isDecrementing
+          ? t.assignmentExpression(
+            '=',
+            t.memberExpression(result, t.memberExpression(result, t.identifier('length')), true),
+            resultStatement,
+          )
+          : t.assignmentExpression('=', t.memberExpression(result, key, true), resultStatement),
+      );
+    },
+    handler,
+    iterable: iterableUsed,
+    key,
+    value,
+  });
 
   const loop = getLoop({
     t,
-    body: t.blockStatement([valueAssignment, expr]),
+    body,
     iterable: iterableUsed,
     key,
     length,
@@ -435,24 +478,33 @@ function handleReduce({
   const valueAssignment = t.expressionStatement(
     t.assignmentExpression('=', value, t.memberExpression(iterableUsed, key, true)),
   );
-  const resultStatement = getReduceResultStatement(
+  const resultApplication = getResultApplication(
     t,
     handler,
     fnUsed,
-    result,
     value,
     key,
     iterableUsed,
     path,
+    result,
   );
+
+  const resultStatement = resultApplication.pop();
+
   const resultAssignment = t.assignmentExpression('=', result, resultStatement);
 
   let block;
 
   if (!hasInitialValue && isObject) {
+    const mainBlock = [valueAssignment, ...resultApplication];
+
+    if (resultAssignment.left.name !== resultAssignment.right.name) {
+      mainBlock.push(t.expressionStatement(resultAssignment));
+    }
+
     const ifHasInitialValue = t.ifStatement(
       hasInitialValueId,
-      t.blockStatement([valueAssignment, t.expressionStatement(resultAssignment)]),
+      t.blockStatement(mainBlock),
       t.blockStatement([
         t.expressionStatement(
           t.assignmentExpression('=', hasInitialValueId, t.booleanLiteral(true)),
@@ -465,7 +517,11 @@ function handleReduce({
 
     block = [ifHasInitialValue];
   } else {
-    block = [valueAssignment, t.expressionStatement(resultAssignment)];
+    block = [valueAssignment, ...resultApplication];
+
+    if (resultAssignment.left.name !== resultAssignment.right.name) {
+      block.push(t.expressionStatement(resultAssignment));
+    }
   }
 
   const loop = getLoop({
@@ -531,21 +587,26 @@ function handleSome({
   const fnUsed = isHandlerCached ? handler : fn;
   const iterableUsed = isIterableCached ? object : iterable;
 
-  const valueAssignment = t.expressionStatement(
-    t.assignmentExpression('=', value, t.memberExpression(iterableUsed, key, true)),
-  );
-  const resultStatement = getResultStatement(t, handler, fnUsed, value, key, iterableUsed, path);
-  const expr = t.ifStatement(
-    resultStatement,
-    t.blockStatement([
-      t.expressionStatement(t.assignmentExpression('=', result, t.booleanLiteral(true))),
-      t.breakStatement(),
-    ]),
-  );
+  const { body, resultStatement } = getInjectedValues(t, path, {
+    fn: fnUsed,
+    getResult(resultStatement) {
+      return t.ifStatement(
+        resultStatement,
+        t.blockStatement([
+          t.expressionStatement(t.assignmentExpression('=', result, t.booleanLiteral(true))),
+          t.breakStatement(),
+        ]),
+      );
+    },
+    handler,
+    iterable: iterableUsed,
+    key,
+    value,
+  });
 
   const loop = getLoop({
     t,
-    body: t.blockStatement([valueAssignment, expr]),
+    body,
     iterable: iterableUsed,
     key,
     length,

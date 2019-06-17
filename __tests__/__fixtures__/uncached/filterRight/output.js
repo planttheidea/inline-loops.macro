@@ -1,15 +1,12 @@
 const _iterable = [1, 2, 3, 4];
-
-const _fn = value => {
-  const isValueEven = value % 2 === 0;
-  return isValueEven;
-};
-
 let _result = [];
 
 for (let _key = _iterable.length - 1, _value; _key >= 0; --_key) {
   _value = _iterable[_key];
-  if (_fn(_value, _key, _iterable)) _result.push(_value);
+
+  const _isValueEven = _value % 2 === 0;
+
+  if (_isValueEven) _result.push(_value);
 }
 
 const onlyEven = _result;

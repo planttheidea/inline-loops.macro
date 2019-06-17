@@ -97,7 +97,7 @@
     "prepublishOnly": "npm run lint && npm run dist && npm run test",
     "release": "release-it",
     "release:beta": "release-it --config=.release-it.beta.json",
-    "test": "jest",
+    "test": "BABEL_DISABLE_CACHE=1 jest",
     "test:watch": "npm run test -- --watch"
   },
   "typings": "./index.d.ts",

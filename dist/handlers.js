@@ -1,12 +1,16 @@
 "use strict";
 
+var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
+
+var _toConsumableArray2 = _interopRequireDefault(require("@babel/runtime/helpers/toConsumableArray"));
+
 var _require = require('./helpers'),
     getDefaultResult = _require.getDefaultResult,
     getIds = _require.getIds,
+    getInjectedValues = _require.getInjectedValues,
     getLoop = _require.getLoop,
     getUid = _require.getUid,
-    getReduceResultStatement = _require.getReduceResultStatement,
-    getResultStatement = _require.getResultStatement,
+    getResultApplication = _require.getResultApplication,
     insertBeforeParent = _require.insertBeforeParent,
     isCachedReference = _require.isCachedReference;
 
@@ -30,12 +34,23 @@ function handleEvery(_ref) {
   var isIterableCached = isCachedReference(t, object);
   var fnUsed = isHandlerCached ? handler : fn;
   var iterableUsed = isIterableCached ? object : iterable;
-  var valueAssignment = t.expressionStatement(t.assignmentExpression('=', value, t.memberExpression(iterableUsed, key, true)));
-  var resultStatement = getResultStatement(t, handler, fnUsed, value, key, iterableUsed, path);
-  var expr = t.ifStatement(t.unaryExpression('!', resultStatement), t.blockStatement([t.expressionStatement(t.assignmentExpression('=', result, t.booleanLiteral(false))), t.breakStatement()]));
+
+  var _getInjectedValues = getInjectedValues(t, path, {
+    fn: fnUsed,
+    getResult: function getResult(resultStatement) {
+      return t.ifStatement(t.unaryExpression('!', resultStatement), t.blockStatement([t.expressionStatement(t.assignmentExpression('=', result, t.booleanLiteral(false))), t.breakStatement()]));
+    },
+    handler: handler,
+    iterable: iterableUsed,
+    key: key,
+    value: value
+  }),
+      body = _getInjectedValues.body,
+      resultStatement = _getInjectedValues.resultStatement;
+
   var loop = getLoop({
     t: t,
-    body: t.blockStatement([valueAssignment, expr]),
+    body: body,
     iterable: iterableUsed,
     key: key,
     length: length,
@@ -81,13 +96,23 @@ function handleFilter(_ref2) {
   var isIterableCached = isCachedReference(t, object);
   var fnUsed = isHandlerCached ? handler : fn;
   var iterableUsed = isIterableCached ? object : iterable;
-  var valueAssignment = t.expressionStatement(t.assignmentExpression('=', value, t.memberExpression(iterableUsed, key, true)));
-  var resultAssignment = isObject ? t.assignmentExpression('=', t.memberExpression(result, key, true), value) : t.callExpression(t.memberExpression(result, t.identifier('push')), [value]);
-  var resultStatement = getResultStatement(t, handler, fnUsed, value, key, iterableUsed, path);
-  var expr = t.ifStatement(resultStatement, t.expressionStatement(resultAssignment));
+
+  var _getInjectedValues2 = getInjectedValues(t, path, {
+    fn: fnUsed,
+    getResult: function getResult(resultStatement) {
+      return t.ifStatement(resultStatement, t.expressionStatement(isObject ? t.assignmentExpression('=', t.memberExpression(result, key, true), value) : t.callExpression(t.memberExpression(result, t.identifier('push')), [value])));
+    },
+    handler: handler,
+    iterable: iterableUsed,
+    key: key,
+    value: value
+  }),
+      body = _getInjectedValues2.body,
+      resultStatement = _getInjectedValues2.resultStatement;
+
   var loop = getLoop({
     t: t,
-    body: t.blockStatement([valueAssignment, expr]),
+    body: body,
     iterable: iterableUsed,
     key: key,
     length: length,
@@ -133,12 +158,23 @@ function handleFind(_ref3) {
   var isIterableCached = isCachedReference(t, object);
   var fnUsed = isHandlerCached ? handler : fn;
   var iterableUsed = isIterableCached ? object : iterable;
-  var valueAssignment = t.expressionStatement(t.assignmentExpression('=', value, t.memberExpression(iterableUsed, key, true)));
-  var resultStatement = getResultStatement(t, handler, fnUsed, value, key, iterableUsed, path);
-  var expr = t.ifStatement(resultStatement, t.blockStatement([t.expressionStatement(t.assignmentExpression('=', result, value)), t.breakStatement()]));
+
+  var _getInjectedValues3 = getInjectedValues(t, path, {
+    fn: fnUsed,
+    getResult: function getResult(resultStatement) {
+      return t.ifStatement(resultStatement, t.blockStatement([t.expressionStatement(t.assignmentExpression('=', result, value)), t.breakStatement()]));
+    },
+    handler: handler,
+    iterable: iterableUsed,
+    key: key,
+    value: value
+  }),
+      body = _getInjectedValues3.body,
+      resultStatement = _getInjectedValues3.resultStatement;
+
   var loop = getLoop({
     t: t,
-    body: t.blockStatement([valueAssignment, expr]),
+    body: body,
     iterable: iterableUsed,
     key: key,
     length: length,
@@ -183,12 +219,23 @@ function handleFindKey(_ref4) {
   var isIterableCached = isCachedReference(t, object);
   var fnUsed = isHandlerCached ? handler : fn;
   var iterableUsed = isIterableCached ? object : iterable;
-  var valueAssignment = t.expressionStatement(t.assignmentExpression('=', value, t.memberExpression(iterableUsed, key, true)));
-  var resultStatement = getResultStatement(t, handler, fnUsed, value, key, iterableUsed, path);
-  var expr = t.ifStatement(resultStatement, t.blockStatement([t.expressionStatement(t.assignmentExpression('=', result, key)), t.breakStatement()]));
+
+  var _getInjectedValues4 = getInjectedValues(t, path, {
+    fn: fnUsed,
+    getResult: function getResult(resultStatement) {
+      return t.ifStatement(resultStatement, t.blockStatement([t.expressionStatement(t.assignmentExpression('=', result, key)), t.breakStatement()]));
+    },
+    handler: handler,
+    iterable: iterableUsed,
+    key: key,
+    value: value
+  }),
+      body = _getInjectedValues4.body,
+      resultStatement = _getInjectedValues4.resultStatement;
+
   var loop = getLoop({
     t: t,
-    body: t.blockStatement([valueAssignment, expr]),
+    body: body,
     iterable: iterableUsed,
     key: key,
     length: length,
@@ -234,12 +281,23 @@ function handleFlatMap(_ref5) {
   var isIterableCached = isCachedReference(t, object);
   var fnUsed = isHandlerCached ? handler : fn;
   var iterableUsed = isIterableCached ? object : iterable;
-  var valueAssignment = t.expressionStatement(t.assignmentExpression('=', value, t.memberExpression(iterableUsed, key, true)));
-  var resultStatement = getResultStatement(t, handler, fnUsed, value, key, iterableUsed, path);
-  var expr = t.expressionStatement(t.callExpression(t.memberExpression(t.memberExpression(result, t.identifier('push')), t.identifier('apply')), [result, resultStatement]));
+
+  var _getInjectedValues5 = getInjectedValues(t, path, {
+    fn: fnUsed,
+    getResult: function getResult(resultStatement) {
+      return t.expressionStatement(t.callExpression(t.memberExpression(t.memberExpression(result, t.identifier('push')), t.identifier('apply')), [result, resultStatement]));
+    },
+    handler: handler,
+    iterable: iterableUsed,
+    key: key,
+    value: value
+  }),
+      body = _getInjectedValues5.body,
+      resultStatement = _getInjectedValues5.resultStatement;
+
   var loop = getLoop({
     t: t,
-    body: t.blockStatement([valueAssignment, expr]),
+    body: body,
     iterable: iterableUsed,
     key: key,
     length: length,
@@ -284,12 +342,23 @@ function handleForEach(_ref6) {
   var isIterableCached = isCachedReference(t, object);
   var fnUsed = isHandlerCached ? handler : fn;
   var iterableUsed = isIterableCached ? object : iterable;
-  var valueAssignment = t.expressionStatement(t.assignmentExpression('=', value, t.memberExpression(iterableUsed, key, true)));
-  var resultStatement = getResultStatement(t, handler, fnUsed, value, key, iterableUsed, path);
-  var call = t.expressionStatement(resultStatement);
+
+  var _getInjectedValues6 = getInjectedValues(t, path, {
+    fn: fnUsed,
+    getResult: function getResult(resultStatement) {
+      return t.isExpression(resultStatement) ? t.expressionStatement(resultStatement) : resultStatement;
+    },
+    handler: handler,
+    iterable: iterableUsed,
+    key: key,
+    value: value
+  }),
+      body = _getInjectedValues6.body,
+      resultStatement = _getInjectedValues6.resultStatement;
+
   var loop = getLoop({
     t: t,
-    body: t.blockStatement([valueAssignment, call]),
+    body: body,
     iterable: iterableUsed,
     key: key,
     length: length,
@@ -333,12 +402,23 @@ function handleMap(_ref7) {
   var isIterableCached = isCachedReference(t, object);
   var fnUsed = isHandlerCached ? handler : fn;
   var iterableUsed = isIterableCached ? object : iterable;
-  var valueAssignment = t.expressionStatement(t.assignmentExpression('=', value, t.memberExpression(iterableUsed, key, true)));
-  var resultStatement = getResultStatement(t, handler, fnUsed, value, key, iterableUsed, path);
-  var expr = t.expressionStatement(isDecrementing ? t.assignmentExpression('=', t.memberExpression(result, t.memberExpression(result, t.identifier('length')), true), resultStatement) : t.assignmentExpression('=', t.memberExpression(result, key, true), resultStatement));
+
+  var _getInjectedValues7 = getInjectedValues(t, path, {
+    fn: fnUsed,
+    getResult: function getResult(resultStatement) {
+      return t.expressionStatement(isDecrementing ? t.assignmentExpression('=', t.memberExpression(result, t.memberExpression(result, t.identifier('length')), true), resultStatement) : t.assignmentExpression('=', t.memberExpression(result, key, true), resultStatement));
+    },
+    handler: handler,
+    iterable: iterableUsed,
+    key: key,
+    value: value
+  }),
+      body = _getInjectedValues7.body,
+      resultStatement = _getInjectedValues7.resultStatement;
+
   var loop = getLoop({
     t: t,
-    body: t.blockStatement([valueAssignment, expr]),
+    body: body,
     iterable: iterableUsed,
     key: key,
     length: length,
@@ -406,15 +486,26 @@ function handleReduce(_ref8) {
   }
 
   var valueAssignment = t.expressionStatement(t.assignmentExpression('=', value, t.memberExpression(iterableUsed, key, true)));
-  var resultStatement = getReduceResultStatement(t, handler, fnUsed, result, value, key, iterableUsed, path);
+  var resultApplication = getResultApplication(t, handler, fnUsed, value, key, iterableUsed, path, result);
+  var resultStatement = resultApplication.pop();
   var resultAssignment = t.assignmentExpression('=', result, resultStatement);
   var block;
 
   if (!hasInitialValue && isObject) {
-    var ifHasInitialValue = t.ifStatement(hasInitialValueId, t.blockStatement([valueAssignment, t.expressionStatement(resultAssignment)]), t.blockStatement([t.expressionStatement(t.assignmentExpression('=', hasInitialValueId, t.booleanLiteral(true))), t.expressionStatement(t.assignmentExpression('=', result, t.memberExpression(iterableUsed, key, true)))]));
+    var mainBlock = [valueAssignment].concat((0, _toConsumableArray2["default"])(resultApplication));
+
+    if (resultAssignment.left.name !== resultAssignment.right.name) {
+      mainBlock.push(t.expressionStatement(resultAssignment));
+    }
+
+    var ifHasInitialValue = t.ifStatement(hasInitialValueId, t.blockStatement(mainBlock), t.blockStatement([t.expressionStatement(t.assignmentExpression('=', hasInitialValueId, t.booleanLiteral(true))), t.expressionStatement(t.assignmentExpression('=', result, t.memberExpression(iterableUsed, key, true)))]));
     block = [ifHasInitialValue];
   } else {
-    block = [valueAssignment, t.expressionStatement(resultAssignment)];
+    block = [valueAssignment].concat((0, _toConsumableArray2["default"])(resultApplication));
+
+    if (resultAssignment.left.name !== resultAssignment.right.name) {
+      block.push(t.expressionStatement(resultAssignment));
+    }
   }
 
   var loop = getLoop({
@@ -484,12 +575,23 @@ function handleSome(_ref10) {
   var isIterableCached = isCachedReference(t, object);
   var fnUsed = isHandlerCached ? handler : fn;
   var iterableUsed = isIterableCached ? object : iterable;
-  var valueAssignment = t.expressionStatement(t.assignmentExpression('=', value, t.memberExpression(iterableUsed, key, true)));
-  var resultStatement = getResultStatement(t, handler, fnUsed, value, key, iterableUsed, path);
-  var expr = t.ifStatement(resultStatement, t.blockStatement([t.expressionStatement(t.assignmentExpression('=', result, t.booleanLiteral(true))), t.breakStatement()]));
+
+  var _getInjectedValues8 = getInjectedValues(t, path, {
+    fn: fnUsed,
+    getResult: function getResult(resultStatement) {
+      return t.ifStatement(resultStatement, t.blockStatement([t.expressionStatement(t.assignmentExpression('=', result, t.booleanLiteral(true))), t.breakStatement()]));
+    },
+    handler: handler,
+    iterable: iterableUsed,
+    key: key,
+    value: value
+  }),
+      body = _getInjectedValues8.body,
+      resultStatement = _getInjectedValues8.resultStatement;
+
   var loop = getLoop({
     t: t,
-    body: t.blockStatement([valueAssignment, expr]),
+    body: body,
     iterable: iterableUsed,
     key: key,
     length: length,

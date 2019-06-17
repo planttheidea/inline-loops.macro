@@ -12,6 +12,30 @@ function getIds(scope) {
   }, {});
 }
 
+function getInjectedValues(t, path, {
+  fn, getResult, handler, iterable, key, value,
+}) {
+  const valueAssignment = t.expressionStatement(
+    t.assignmentExpression('=', value, t.memberExpression(iterable, key, true)),
+  );
+  const resultApplication = getResultApplication(t, handler, fn, value, key, iterable, path);
+  const resultStatement = resultApplication.pop();
+  const result = getResult(resultStatement);
+
+  const block = [valueAssignment];
+
+  if (resultApplication.length) {
+    block.push(...resultApplication);
+  }
+
+  block.push(result);
+
+  return {
+    body: t.blockStatement(block),
+    resultStatement,
+  };
+}
+
 function getLoop({
   t, body, iterable, key, length, value, isDecrementing, isObject,
 }) {
@@ -57,94 +81,65 @@ function getLoop({
   return t.forStatement(t.variableDeclaration('let', assignments), test, update, body);
 }
 
-function getReduceResultStatement(t, handler, fn, result, value, key, iterable, path) {
-  function createRename(r, v, k, i) {
+function normalizeHandler(t, handler, path, {
+  iterable, key, result, value,
+}) {
+  function createRename({
+    i, k, r, v,
+  }) {
     return function rename(_path) {
-      if (r) {
+      if (r && result) {
         _path.scope.rename(r.name, result.name);
       }
 
-      if (v) {
+      if (v && value) {
         _path.scope.rename(v.name, value.name);
       }
 
-      if (k) {
+      if (k && key) {
         _path.scope.rename(k.name, key.name);
       }
 
-      if (i) {
+      if (i && iterable) {
         _path.scope.rename(i.name, iterable.name);
       }
     };
   }
 
-  if (t.isArrowFunctionExpression(handler) || t.isFunctionExpression(handler)) {
-    let { body } = handler;
+  let r;
+  let v;
+  let k;
+  let i;
 
-    if (t.isBlockStatement(body)) {
-      // eslint-disable-next-line prefer-destructuring
-      body = body.body;
-
-      if (body.length === 1 && handler.params.every(param => t.isIdentifier(param))) {
-        const [r, v, k, i] = handler.params;
-        const node = body[0];
-
-        if (t.isArrowFunctionExpression(handler)) {
-          path.parentPath.traverse({
-            ArrowFunctionExpression: createRename(r, v, k, i),
-          });
-        } else {
-          path.parentPath.traverse({
-            FunctionExpression: createRename(r, v, k, i),
-          });
-        }
-
-        if (t.isExpression(node)) {
-          return node;
-        }
-
-        if (t.isExpressionStatement(node)) {
-          return node.expression;
-        }
-
-        if (t.isReturnStatement(node)) {
-          return node.argument;
-        }
-      }
-    } else if (t.isExpression(body)) {
-      const [r, v, k, i] = handler.params;
-
-      path.parentPath.traverse({
-        ArrowFunctionExpression: createRename(r, v, k, i),
-      });
-
-      return body;
-    }
+  if (result) {
+    [r, v, k, i] = handler.params;
+  } else {
+    [v, k, i] = handler.params;
   }
 
-  const callExpression = t.callExpression(fn, [result, value, key, iterable]);
-
-  callExpression.__inlineLoopsMacroFallback = true;
-
-  return callExpression;
+  if (t.isArrowFunctionExpression(handler)) {
+    path.parentPath.traverse({
+      ArrowFunctionExpression: createRename({
+        r,
+        v,
+        k,
+        i,
+      }),
+    });
+  } else {
+    path.parentPath.traverse({
+      FunctionExpression: createRename({
+        r,
+        v,
+        k,
+        i,
+      }),
+    });
+  }
 }
 
-function getResultStatement(t, handler, fn, value, key, iterable, path) {
-  function createRename(v, k, i) {
-    return function rename(_path) {
-      if (v) {
-        _path.scope.rename(v.name, value.name);
-      }
-
-      if (k) {
-        _path.scope.rename(k.name, key.name);
-      }
-
-      if (i) {
-        _path.scope.rename(i.name, iterable.name);
-      }
-    };
-  }
+function getResultApplication(t, handler, fn, value, key, iterable, path, result) {
+  const callParams = result ? [result, value, key, iterable] : [value, key, iterable];
 
   if (t.isArrowFunctionExpression(handler) || t.isFunctionExpression(handler)) {
     let { body } = handler;
@@ -153,48 +148,89 @@ function getResultStatement(t, handler, fn, value, key, iterable, path) {
       // eslint-disable-next-line prefer-destructuring
       body = body.body;
 
-      if (body.length === 1 && handler.params.every(param => t.isIdentifier(param))) {
-        const [v, k, i] = handler.params;
-        const node = body[0];
+      const { parentPath } = path;
 
-        if (t.isArrowFunctionExpression(handler)) {
-          path.parentPath.traverse({
-            ArrowFunctionExpression: createRename(v, k, i),
-          });
+      let returnCount = 0;
+
+      parentPath.traverse({
+        ReturnStatement(_path) {
+          returnCount++;
+
+          if (_path.parentPath.node !== handler.body) {
+            returnCount++;
+          }
+        },
+      });
+
+      if (returnCount < 2) {
+        renameLocalVariables(t, path);
+
+        if (!handler.params.every(param => t.isIdentifier(param))) {
+          const injectedParamAssigns = handler.params.reduce((injected, param, index) => {
+            if (t.isIdentifier(param)) {
+              return injected;
+            }
+
+            injected.push(
+              t.variableDeclaration('const', [t.variableDeclarator(param, callParams[index])]),
+            );
+
+            handler.params[index] = callParams[index];
+
+            return injected;
+          }, []);
+
+          body.unshift(...injectedParamAssigns);
+        }
+
+        normalizeHandler(t, handler, path, {
+          result,
+          iterable,
+          key,
+          value,
+        });
+
+        if (body.length === 1) {
+          const node = body[0];
+
+          if (t.isExpression(node)) {
+            return [node];
+          }
+
+          if (t.isExpressionStatement(node)) {
+            return [node.expression];
+          }
+
+          if (t.isReturnStatement(node)) {
+            return [node.argument];
+          }
         } else {
-          path.parentPath.traverse({
-            FunctionExpression: createRename(v, k, i),
-          });
-        }
+          const ret = body[body.length - 1];
 
-        if (t.isExpression(node)) {
-          return node;
-        }
+          if (t.isReturnStatement(ret)) {
+            body[body.length - 1] = ret.argument;
+          }
 
-        if (t.isExpressionStatement(node)) {
-          return node.expression;
-        }
-
-        if (t.isReturnStatement(node)) {
-          return node.argument;
+          return body;
         }
       }
     } else if (t.isExpression(body)) {
-      const [v, k, i] = handler.params;
-
-      path.parentPath.traverse({
-        ArrowFunctionExpression: createRename(v, k, i),
+      normalizeHandler(t, handler, path, {
+        result,
+        iterable,
+        key,
+        value,
       });
 
-      return body;
+      return [body];
     }
   }
 
-  const callExpression = t.callExpression(fn, [value, key, iterable]);
+  const callExpression = t.callExpression(fn, callParams);
 
   callExpression.__inlineLoopsMacroFallback = true;
 
-  return callExpression;
+  return [callExpression];
 }
 
 function getUid(scope, name) {
@@ -254,13 +290,53 @@ function isCachedReference(t, node) {
   return t.isIdentifier(node);
 }
 
+function renameLocalVariables(t, path) {
+  const containerPath = path.getStatementParent().parentPath;
+
+  function renameLocalVariable(node, functionPath) {
+    const { name } = node;
+    const newId = containerPath.scope.generateUidIdentifier(name);
+
+    functionPath.scope.rename(name, newId.name);
+  }
+
+  path.parentPath.traverse({
+    ArrayPattern(_path) {
+      const { elements } = _path.node;
+
+      elements.forEach((element) => {
+        if (t.isIdentifier(element)) {
+          renameLocalVariable(element, _path.getFunctionParent());
+        }
+      });
+    },
+    ObjectPattern(_path) {
+      const { properties } = _path.node;
+
+      properties.forEach((property) => {
+        if (t.isIdentifier(property.value)) {
+          renameLocalVariable(property.value, _path.getFunctionParent());
+        }
+      });
+    },
+    VariableDeclarator(_path) {
+      const { node } = _path;
+
+      if (t.isIdentifier(node.id)) {
+        renameLocalVariable(node.id, _path.getFunctionParent());
+      }
+    },
+  });
+}
+
 module.exports = {
   getDefaultResult,
   getIds,
+  getInjectedValues,
   getLoop,
   getUid,
-  getReduceResultStatement,
-  getResultStatement,
+  getResultApplication,
   insertBeforeParent,
   isCachedReference,
+  renameLocalVariables,
 };

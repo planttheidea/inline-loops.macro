@@ -48,3 +48,11 @@ pluginTester({
   plugin,
   title: 'Complex references',
 });
+
+pluginTester({
+  babelOptions: BABEL_OPTIONS,
+  fixtures: path.join(__dirname, '__fixtures__', 'bailout'),
+  filename: __filename,
+  plugin,
+  title: 'Bailout scenarios',
+});
