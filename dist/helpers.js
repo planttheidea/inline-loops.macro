@@ -162,17 +162,29 @@ function getResultApplication(t, handler, fn, value, key, iterable, path, result
       body = body.body;
       var parentPath = path.parentPath;
       var returnCount = 0;
+      var hasConditionalReturn = false;
       parentPath.traverse({
         ReturnStatement: function ReturnStatement(_path) {
           returnCount++;
 
           if (_path.parentPath.node !== handler.body) {
-            returnCount++;
+            hasConditionalReturn = true;
           }
         }
       });
+      /* eslint-disable no-console */
 
-      if (returnCount < 2) {
+      if (returnCount >= 2) {
+        console.warn('You are using multiple `return` statements in your callback, which is a deopt because the callback operation cannot be inlined. ' + 'You should consider refactoring your code to provide only one `return` statement.');
+      } else if (hasConditionalReturn) {
+        console.warn('You are using a `return` statement in a conditional block, which is a deopt because the callback operation cannot be inlined. ' + 'You should consider refactoring your code to have a consistent `return` statement.');
+      }
+      /* eslint-enable */
+
+
+      var canBeInlined = !hasConditionalReturn && returnCount < 2;
+
+      if (canBeInlined) {
         renameLocalVariables(t, path);
 
         if (!handler.params.every(function (param) {
