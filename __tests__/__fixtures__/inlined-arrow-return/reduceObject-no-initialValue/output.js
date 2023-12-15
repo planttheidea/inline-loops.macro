@@ -1,9 +1,6 @@
 let _hasInitialValue = false;
-
 let _value;
-
 let _result;
-
 for (let _key in object) {
   if (_hasInitialValue) {
     _value = object[_key];
@@ -13,5 +10,4 @@ for (let _key in object) {
     _result = object[_key];
   }
 }
-
 const sum = _result;

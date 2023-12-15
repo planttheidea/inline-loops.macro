@@ -12,13 +12,23 @@ function getIds(scope) {
   }, {});
 }
 
-function getInjectedValues(t, path, {
-  fn, getResult, handler, iterable, key, value,
-}) {
+function getInjectedValues(
+  t,
+  path,
+  { fn, getResult, handler, iterable, key, value },
+) {
   const valueAssignment = t.expressionStatement(
     t.assignmentExpression('=', value, t.memberExpression(iterable, key, true)),
   );
-  const resultApplication = getResultApplication(t, handler, fn, value, key, iterable, path);
+  const resultApplication = getResultApplication(
+    t,
+    handler,
+    fn,
+    value,
+    key,
+    iterable,
+    path,
+  );
   const resultStatement = resultApplication.pop();
   const result = getResult(resultStatement);
 
@@ -37,7 +47,14 @@ function getInjectedValues(t, path, {
 }
 
 function getLoop({
-  t, body, iterable, key, length, value, isDecrementing, isObject,
+  t,
+  body,
+  iterable,
+  key,
+  length,
+  value,
+  isDecrementing,
+  isObject,
 }) {
   if (isObject) {
     const left = t.variableDeclaration('let', [t.variableDeclarator(key)]);
@@ -67,7 +84,10 @@ function getLoop({
   } else {
     assignments = [
       t.variableDeclarator(key, t.numericLiteral(0)),
-      t.variableDeclarator(length, t.memberExpression(iterable, t.identifier('length'))),
+      t.variableDeclarator(
+        length,
+        t.memberExpression(iterable, t.identifier('length')),
+      ),
     ];
 
     test = t.binaryExpression('<', key, length);
@@ -78,15 +98,16 @@ function getLoop({
     assignments.push(t.variableDeclarator(value));
   }
 
-  return t.forStatement(t.variableDeclaration('let', assignments), test, update, body);
+  return t.forStatement(
+    t.variableDeclaration('let', assignments),
+    test,
+    update,
+    body,
+  );
 }
 
-function normalizeHandler(t, handler, path, {
-  iterable, key, result, value,
-}) {
-  function createRename({
-    i, k, r, v,
-  }) {
+function normalizeHandler(t, handler, path, { iterable, key, result, value }) {
+  function createRename({ i, k, r, v }) {
     return function rename(_path) {
       if (r && result) {
         _path.scope.rename(r.name, result.name);
@@ -138,8 +159,19 @@ function normalizeHandler(t, handler, path, {
   }
 }
 
-function getResultApplication(t, handler, fn, value, key, iterable, path, result) {
-  const callParams = result ? [result, value, key, iterable] : [value, key, iterable];
+function getResultApplication(
+  t,
+  handler,
+  fn,
+  value,
+  key,
+  iterable,
+  path,
+  result,
+) {
+  const callParams = result
+    ? [result, value, key, iterable]
+    : [value, key, iterable];
 
   if (t.isArrowFunctionExpression(handler) || t.isFunctionExpression(handler)) {
     let { body } = handler;
@@ -167,13 +199,13 @@ function getResultApplication(t, handler, fn, value, key, iterable, path, result
 
       if (returnCount >= 2) {
         console.warn(
-          'You are using multiple `return` statements in your callback, which is a deopt because the callback operation cannot be inlined. '
-            + 'You should consider refactoring your code to provide only one `return` statement.',
+          'You are using multiple `return` statements in your callback, which is a deopt because the callback operation cannot be inlined. ' +
+            'You should consider refactoring your code to provide only one `return` statement.',
         );
       } else if (hasConditionalReturn) {
         console.warn(
-          'You are using a `return` statement in a conditional block, which is a deopt because the callback operation cannot be inlined. '
-            + 'You should consider refactoring your code to have a consistent `return` statement.',
+          'You are using a `return` statement in a conditional block, which is a deopt because the callback operation cannot be inlined. ' +
+            'You should consider refactoring your code to have a consistent `return` statement.',
         );
       }
 
@@ -184,20 +216,25 @@ function getResultApplication(t, handler, fn, value, key, iterable, path, result
       if (canBeInlined) {
         renameLocalVariables(t, path);
 
-        if (!handler.params.every(param => t.isIdentifier(param))) {
-          const injectedParamAssigns = handler.params.reduce((injected, param, index) => {
-            if (t.isIdentifier(param)) {
+        if (!handler.params.every((param) => t.isIdentifier(param))) {
+          const injectedParamAssigns = handler.params.reduce(
+            (injected, param, index) => {
+              if (t.isIdentifier(param)) {
+                return injected;
+              }
+
+              injected.push(
+                t.variableDeclaration('const', [
+                  t.variableDeclarator(param, callParams[index]),
+                ]),
+              );
+
+              handler.params[index] = callParams[index];
+
               return injected;
-            }
-
-            injected.push(
-              t.variableDeclaration('const', [t.variableDeclarator(param, callParams[index])]),
-            );
-
-            handler.params[index] = callParams[index];
-
-            return injected;
-          }, []);
+            },
+            [],
+          );
 
           body.unshift(...injectedParamAssigns);
         }
@@ -273,29 +310,37 @@ function insertBeforeParent({
   const insertBefore = [];
 
   if (!isCachedReference(t, object)) {
-    const iterableVar = t.variableDeclaration('const', [t.variableDeclarator(iterable, object)]);
+    const iterableVar = t.variableDeclaration('const', [
+      t.variableDeclarator(iterable, object),
+    ]);
 
     insertBefore.push(iterableVar);
   }
 
   if (
-    !isCachedReference(t, handler)
-    && t.isCallExpression(resultStatement)
-    && resultStatement.__inlineLoopsMacroFallback
+    !isCachedReference(t, handler) &&
+    t.isCallExpression(resultStatement) &&
+    resultStatement.__inlineLoopsMacroFallback
   ) {
-    const handlerVar = t.variableDeclaration('const', [t.variableDeclarator(fn, handler)]);
+    const handlerVar = t.variableDeclaration('const', [
+      t.variableDeclarator(fn, handler),
+    ]);
 
     insertBefore.push(handlerVar);
   }
 
   if (result) {
-    const resultVar = t.variableDeclaration('let', [t.variableDeclarator(result, resultValue)]);
+    const resultVar = t.variableDeclaration('let', [
+      t.variableDeclarator(result, resultValue),
+    ]);
 
     insertBefore.push(resultVar);
   }
 
   if (isObject) {
-    const valueVar = t.variableDeclaration('let', [t.variableDeclarator(value)]);
+    const valueVar = t.variableDeclaration('let', [
+      t.variableDeclarator(value),
+    ]);
 
     insertBefore.push(valueVar);
   }

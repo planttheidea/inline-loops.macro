@@ -39,14 +39,14 @@ function getCallTypes(references, method) {
   const objectCalls = references[objectMethod] || [];
 
   return {
-    decrementingCalls: decrementingCalls.map(path => ({
+    decrementingCalls: decrementingCalls.map((path) => ({
       method: decrementingMethod,
       path,
       sourceMethod: method,
       type: 'decrementing',
     })),
     decrementingMethod,
-    incrementingCalls: incrementingCalls.map(path => ({
+    incrementingCalls: incrementingCalls.map((path) => ({
       method,
       path,
       sourceMethod: method,
@@ -54,7 +54,7 @@ function getCallTypes(references, method) {
     })),
     isArrayOnly,
     isObjectOnly,
-    objectCalls: objectCalls.map(path => ({
+    objectCalls: objectCalls.map((path) => ({
       method: objectMethod,
       path,
       sourceMethod: method,
@@ -86,7 +86,11 @@ function inlineLoops({ references, babel }) {
       return allMethods.push(...objectCalls);
     }
 
-    return allMethods.push(...incrementingCalls, ...decrementingCalls, ...objectCalls);
+    return allMethods.push(
+      ...incrementingCalls,
+      ...decrementingCalls,
+      ...objectCalls,
+    );
   });
 
   allMethods.forEach(({ path }) => {
@@ -101,9 +105,9 @@ function inlineLoops({ references, babel }) {
       const [iterableA] = aContainer.arguments;
 
       if (
-        t.isCallExpression(iterableA)
-        && iterableA.callee.__inlineLoopsMacro
-        && iterableA.callee === b.node
+        t.isCallExpression(iterableA) &&
+        iterableA.callee.__inlineLoopsMacro &&
+        iterableA.callee === b.node
       ) {
         return 1;
       }
@@ -113,9 +117,9 @@ function inlineLoops({ references, babel }) {
       const [iterableB] = bContainer.arguments;
 
       if (
-        t.isCallExpression(iterableB)
-        && iterableB.callee.__inlineLoopsMacro
-        && iterableB.callee === a.node
+        t.isCallExpression(iterableB) &&
+        iterableB.callee.__inlineLoopsMacro &&
+        iterableB.callee === a.node
       ) {
         return -1;
       }
@@ -154,12 +158,14 @@ function inlineLoops({ references, babel }) {
 
   function createTransformer(name, transform, isDecrementing, isObject) {
     return function _transform(path) {
-      if (path.findParent(_path => _path.isConditionalExpression())) {
-        throw new MacroError(`You cannot use ${name} in a conditional expression.`);
+      if (path.findParent((_path) => _path.isConditionalExpression())) {
+        throw new MacroError(
+          `You cannot use ${name} in a conditional expression.`,
+        );
       }
       const args = path.parent.arguments;
 
-      if (args.some(arg => t.isSpreadElement(arg))) {
+      if (args.some((arg) => t.isSpreadElement(arg))) {
         throw new MacroError(
           'You cannot use spread arguments with the macro, please declare the arguments explicitly.',
         );
@@ -167,7 +173,8 @@ function inlineLoops({ references, babel }) {
 
       const [object, handler, initialValue] = args;
       const isHandlerMacro = allMethods.find(
-        ({ path: methodPath }) => methodPath.node !== path.node && handler === methodPath.node,
+        ({ path: methodPath }) =>
+          methodPath.node !== path.node && handler === methodPath.node,
       );
 
       if (isHandlerMacro) {
@@ -188,13 +195,16 @@ function inlineLoops({ references, babel }) {
     };
   }
 
-  allMethods.forEach(({
-    method, path, sourceMethod, type,
-  }) => {
+  allMethods.forEach(({ method, path, sourceMethod, type }) => {
     const isDecrementing = type === 'decrementing';
     const isObject = type === 'object';
 
-    const handler = createTransformer(method, handlers[sourceMethod], isDecrementing, isObject);
+    const handler = createTransformer(
+      method,
+      handlers[sourceMethod],
+      isDecrementing,
+      isObject,
+    );
 
     handler(path);
   });

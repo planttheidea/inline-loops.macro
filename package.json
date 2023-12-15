@@ -22,45 +22,27 @@
     "url": "https://github.com/planttheidea/inline-loops.macro/issues"
   },
   "dependencies": {
-    "@babel/types": "^7.0.0",
-    "babel-plugin-macros": "^2.0.0"
+    "@babel/types": "^7.23.6",
+    "babel-plugin-macros": "^3.1.0"
   },
   "description": "Macros that will inline loops for arrays and objects",
   "devDependencies": {
-    "@babel/cli": "^7.4.4",
-    "@babel/core": "^7.4.5",
-    "@babel/plugin-external-helpers": "^7.2.0",
-    "@babel/plugin-transform-runtime": "^7.4.4",
-    "@babel/preset-env": "^7.4.5",
-    "@babel/preset-react": "^7.0.0",
-    "@types/jest": "^24.0.15",
-    "babel-eslint": "^10.0.2",
-    "babel-jest": "^24.8.0",
-    "babel-plugin-tester": "^6.2.1",
-    "eslint": "^6.0.1",
-    "eslint-config-airbnb-base": "^13.1.0",
-    "eslint-plugin-import": "^2.18.0",
-    "fast-equals": "^2.0.0",
-    "jest": "^24.8.0",
-    "ts-jest": "^24.0.2"
-  },
-  "eslintConfig": {
-    "extends": [
-      "airbnb-base"
-    ],
-    "parser": "babel-eslint",
-    "parserOptions": {
-      "ecmaVersion": 2019,
-      "sourceType": "module"
-    },
-    "rules": {
-      "no-param-reassign": "off",
-      "no-plusplus": "off",
-      "no-shadow": "off",
-      "no-underscore-dangle": "off",
-      "no-use-before-define": "off",
-      "import/order": "off"
-    }
+    "@babel/cli": "^7.23.4",
+    "@babel/core": "^7.23.6",
+    "@babel/eslint-parser": "^7.23.3",
+    "@babel/plugin-external-helpers": "^7.23.3",
+    "@babel/plugin-transform-runtime": "^7.23.6",
+    "@babel/preset-env": "^7.23.6",
+    "@babel/preset-react": "^7.23.3",
+    "@types/jest": "^29.5.11",
+    "babel-jest": "^29.7.0",
+    "babel-plugin-tester": "^11.0.4",
+    "eslint": "^8.55.0",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-plugin-import": "^2.29.1",
+    "fast-equals": "^5.0.1",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.1.1"
   },
   "homepage": "https://github.com/planttheidea/inline-loops.macro#readme",
   "jest": {
@@ -94,7 +76,7 @@
     "dist": "npm run build && npm run copy:types",
     "lint": "eslint src",
     "lint:fix": "npm run lint -- --fix",
-    "prepublishOnly": "npm run lint && npm run dist && npm run test",
+    "prepublishOnly": "npm run lint && npm run dist && npm run test && npm run dist",
     "release": "release-it",
     "release:beta": "release-it --config=.release-it.beta.json",
     "test": "BABEL_DISABLE_CACHE=1 jest",
