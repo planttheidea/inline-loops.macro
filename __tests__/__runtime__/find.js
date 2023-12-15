@@ -1,6 +1,6 @@
 /* eslint-disable */
 
-const { find, findObject, findRight } = require('../../src/inline-loops.macro');
+const { find, findObject, findLast } = require('../../src/inline-loops.macro');
 
 const { deepEqual: isEqual } = require('fast-equals');
 
@@ -14,7 +14,7 @@ const OBJECT = {
   six: 6,
 };
 
-const isEven = value => value % 2 === 0;
+const isEven = (value) => value % 2 === 0;
 
 const BAD_DECREMENTING_ARRAY_RESULT = 2;
 const DECREMENTING_ARRAY_RESULT = 6;
@@ -28,8 +28,8 @@ const OBJECT_RESULT = 2;
 module.exports = {
   cached: {
     decrementing: {
-      false: isEqual(findRight(ARRAY, isEven), BAD_DECREMENTING_ARRAY_RESULT),
-      true: isEqual(findRight(ARRAY, isEven), DECREMENTING_ARRAY_RESULT),
+      false: isEqual(findLast(ARRAY, isEven), BAD_DECREMENTING_ARRAY_RESULT),
+      true: isEqual(findLast(ARRAY, isEven), DECREMENTING_ARRAY_RESULT),
     },
     object: {
       false: isEqual(findObject(OBJECT, isEven), BAD_OBJECT_RESULT),
@@ -42,28 +42,46 @@ module.exports = {
   },
   inlinedArrowExpression: {
     decrementing: {
-      false: isEqual(findRight(ARRAY, value => value % 2 === 0), BAD_DECREMENTING_ARRAY_RESULT),
-      true: isEqual(findRight(ARRAY, value => value % 2 === 0), DECREMENTING_ARRAY_RESULT),
+      false: isEqual(
+        findLast(ARRAY, (value) => value % 2 === 0),
+        BAD_DECREMENTING_ARRAY_RESULT,
+      ),
+      true: isEqual(
+        findLast(ARRAY, (value) => value % 2 === 0),
+        DECREMENTING_ARRAY_RESULT,
+      ),
     },
     object: {
-      false: isEqual(findObject(OBJECT, value => value % 2 === 0), BAD_OBJECT_RESULT),
-      true: isEqual(findObject(OBJECT, value => value % 2 === 0), OBJECT_RESULT),
+      false: isEqual(
+        findObject(OBJECT, (value) => value % 2 === 0),
+        BAD_OBJECT_RESULT,
+      ),
+      true: isEqual(
+        findObject(OBJECT, (value) => value % 2 === 0),
+        OBJECT_RESULT,
+      ),
     },
     standard: {
-      false: isEqual(find(ARRAY, value => value % 2 === 0), ARRAY),
-      true: isEqual(find(ARRAY, value => value % 2 === 0), ARRAY_RESULT),
+      false: isEqual(
+        find(ARRAY, (value) => value % 2 === 0),
+        ARRAY,
+      ),
+      true: isEqual(
+        find(ARRAY, (value) => value % 2 === 0),
+        ARRAY_RESULT,
+      ),
     },
   },
   inlinedArrowReturn: {
     decrementing: {
       false: isEqual(
-        findRight(ARRAY, value => {
+        findLast(ARRAY, (value) => {
           return value % 2 === 0;
         }),
         BAD_DECREMENTING_ARRAY_RESULT,
       ),
       true: isEqual(
-        findRight(ARRAY, value => {
+        findLast(ARRAY, (value) => {
           return value % 2 === 0;
         }),
         DECREMENTING_ARRAY_RESULT,
@@ -71,13 +89,13 @@ module.exports = {
     },
     object: {
       false: isEqual(
-        findObject(OBJECT, value => {
+        findObject(OBJECT, (value) => {
           return value % 2 === 0;
         }),
         BAD_OBJECT_RESULT,
       ),
       true: isEqual(
-        findObject(OBJECT, value => {
+        findObject(OBJECT, (value) => {
           return value % 2 === 0;
         }),
         OBJECT_RESULT,
@@ -85,13 +103,13 @@ module.exports = {
     },
     standard: {
       false: isEqual(
-        find(ARRAY, value => {
+        find(ARRAY, (value) => {
           return value % 2 === 0;
         }),
         BAD_ARRAY_RESULT,
       ),
       true: isEqual(
-        find(ARRAY, value => {
+        find(ARRAY, (value) => {
           return value % 2 === 0;
         }),
         ARRAY_RESULT,
@@ -101,13 +119,13 @@ module.exports = {
   inlinedFunctionReturn: {
     decrementing: {
       false: isEqual(
-        findRight(ARRAY, function(value) {
+        findLast(ARRAY, function (value) {
           return value % 2 === 0;
         }),
         BAD_DECREMENTING_ARRAY_RESULT,
       ),
       true: isEqual(
-        findRight(ARRAY, function(value) {
+        findLast(ARRAY, function (value) {
           return value % 2 === 0;
         }),
         DECREMENTING_ARRAY_RESULT,
@@ -115,13 +133,13 @@ module.exports = {
     },
     object: {
       false: isEqual(
-        findObject(OBJECT, function(value) {
+        findObject(OBJECT, function (value) {
           return value % 2 === 0;
         }),
         BAD_OBJECT_RESULT,
       ),
       true: isEqual(
-        findObject(OBJECT, function(value) {
+        findObject(OBJECT, function (value) {
           return value % 2 === 0;
         }),
         OBJECT_RESULT,
@@ -131,7 +149,7 @@ module.exports = {
   uncached: {
     decrementing: {
       false: isEqual(
-        findRight([].concat(ARRAY), value => {
+        findLast([].concat(ARRAY), (value) => {
           const isEven = value % 2 === 0;
 
           return isEven;
@@ -139,7 +157,7 @@ module.exports = {
         BAD_DECREMENTING_ARRAY_RESULT,
       ),
       true: isEqual(
-        findRight([].concat(ARRAY), value => {
+        findLast([].concat(ARRAY), (value) => {
           const isEven = value % 2 === 0;
 
           return isEven;
@@ -149,7 +167,7 @@ module.exports = {
     },
     object: {
       false: isEqual(
-        findObject(Object.assign({}, OBJECT), value => {
+        findObject(Object.assign({}, OBJECT), (value) => {
           const isEven = value % 2 === 0;
 
           return isEven;
@@ -157,7 +175,7 @@ module.exports = {
         BAD_OBJECT_RESULT,
       ),
       true: isEqual(
-        findObject(Object.assign({}, OBJECT), value => {
+        findObject(Object.assign({}, OBJECT), (value) => {
           const isEven = value % 2 === 0;
 
           return isEven;
@@ -167,7 +185,7 @@ module.exports = {
     },
     standard: {
       false: isEqual(
-        find([].concat(ARRAY), value => {
+        find([].concat(ARRAY), (value) => {
           const isEven = value % 2 === 0;
 
           return isEven;
@@ -175,7 +193,7 @@ module.exports = {
         BAD_ARRAY_RESULT,
       ),
       true: isEqual(
-        find([].concat(ARRAY), value => {
+        find([].concat(ARRAY), (value) => {
           const isEven = value % 2 === 0;
 
           return isEven;

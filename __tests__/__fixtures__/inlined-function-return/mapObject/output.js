@@ -1,7 +1,7 @@
-let _result = {};
-let _value;
-for (let _key in object) {
+const _results = {};
+let _value, _result;
+for (const _key in object) {
   _value = object[_key];
-  _result[_key] = _value * 2;
+  _results[_key] = _value * 2;
 }
-const doubledValues = _result;
+const doubledValues = _results;

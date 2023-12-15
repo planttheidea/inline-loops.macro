@@ -1,9 +1,14 @@
-let _result;
-for (let _key = 0, _length = array.length, _value; _key < _length; ++_key) {
+let _match;
+for (
+  let _key = 0, _length = array.length, _value, _result;
+  _key < _length;
+  ++_key
+) {
   _value = array[_key];
-  if (fn(_value, _key, array)) {
-    _result = _value;
+  _result = fn(_value, _key, array);
+  if (_result) {
+    _match = _value;
     break;
   }
 }
-const firstEven = _result;
+const firstEven = _match;

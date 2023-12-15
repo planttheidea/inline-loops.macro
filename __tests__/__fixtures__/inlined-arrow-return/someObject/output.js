@@ -1,10 +1,12 @@
-let _result = false;
-let _value;
-for (let _key in object) {
+let _determination = false,
+  _value,
+  _result;
+for (const _key in object) {
   _value = object[_key];
-  if (_value % 2 === 0) {
-    _result = true;
+  _result = _value % 2 === 0;
+  if (_result) {
+    _determination = true;
     break;
   }
 }
-const areAnyEven = _result;
+const areAnyEven = _determination;

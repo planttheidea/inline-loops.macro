@@ -1,7 +1,13 @@
-let _value;
-let _result = 0;
-for (let _key in object) {
+let _skip = false,
+  _total = 0,
+  _value;
+for (const _key in object) {
   _value = object[_key];
-  _result = _result + _value;
+  if (_skip) {
+    _total = _value;
+    _skip = false;
+    continue;
+  }
+  _total = _total + _value;
 }
-const sum = _result;
+const sum = _total;

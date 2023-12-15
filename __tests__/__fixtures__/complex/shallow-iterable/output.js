@@ -1,18 +1,16 @@
-let _result = [];
-for (let _key = 0, _length = array.length, _value; _key < _length; ++_key) {
-  _value = array[_key];
-  let _result2 = true;
-  for (
-    let _key2 = 0, _length2 = _value.length, _value2;
-    _key2 < _length2;
-    ++_key2
-  ) {
-    _value2 = _value[_key2];
-    if (!(typeof _value2 === 'string')) {
-      _result2 = false;
-      break;
-    }
+let _determination = true;
+for (let _key = 0, _length = item.length, _v, _result; _key < _length; ++_key) {
+  _v = item[_key];
+  _result = typeof _v === 'string';
+  if (!_result) {
+    _determination = false;
+    break;
   }
-  _result[_key] = _result2;
 }
-const allStrings = _result;
+const _length2 = array.length;
+const _results2 = Array(_length2);
+for (let _key2 = 0, _item; _key2 < _length2; ++_key2) {
+  _item = array[_key2];
+  _results2[_key2] = _determination;
+}
+const allStrings = _results2;

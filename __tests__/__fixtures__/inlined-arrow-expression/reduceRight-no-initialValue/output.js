@@ -1,7 +1,6 @@
-const _length = array.length;
-let _result = array[_length - 1];
-for (let _key = _length - 2, _value; _key >= 0; --_key) {
+let _total = array[array.length - 1];
+for (let _key = array.length - 1, _value; --_key >= 1; ) {
   _value = array[_key];
-  _result = _result + _value;
+  _total = _total + _value;
 }
-const sum = _result;
+const sum = _total;

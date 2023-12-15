@@ -1,6 +1,7 @@
-let _result = [];
-for (let _key = array.length - 1, _value; _key >= 0; --_key) {
+let _results = [];
+for (let _key = array.length, _value, _result; --_key >= 0; ) {
   _value = array[_key];
-  _result.push.apply(_result, fn(_value, _key, array));
+  _result = fn(_value, _key, array);
+  _results = _results.concat(_result);
 }
-const flattened = _result;
+const flattened = _results;

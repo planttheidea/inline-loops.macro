@@ -1,8 +1,12 @@
 function foo(array) {
-  let _result = [];
-  for (let _key = 0, _length = array.length, _value; _key < _length; ++_key) {
+  const _fn = function (_value) {
+    return this && this.foo ? _value : null;
+  };
+  const _length = array.length;
+  const _results = Array(_length);
+  for (let _key = 0, _value; _key < _length; ++_key) {
     _value = array[_key];
-    _result[_key] = this && this.foo ? _value : null;
+    _results[_key] = _fn(_value, _key, array);
   }
-  return _result;
+  return _results;
 }

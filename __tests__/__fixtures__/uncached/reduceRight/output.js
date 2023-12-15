@@ -1,7 +1,8 @@
-const _iterable = [1, 2, 3, 4];
-let _result = {};
-for (let _key = _iterable.length - 1, _value; _key >= 0; --_key) {
-  _value = _iterable[_key];
-  _result[_key] = _value * 2;
+const _collection = [1, 2, 3, 4];
+let _agg = {};
+for (let _index = _collection.length - 0, _value; --_index >= 0; ) {
+  _value = _collection[_index];
+  _agg[_index] = _value * 2;
+  _agg = _agg;
 }
-const doubledValues = _result;
+const doubledValues = _agg;

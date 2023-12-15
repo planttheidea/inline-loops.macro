@@ -1,7 +1,8 @@
 import { deepEqual } from 'fast-equals';
-let _result = [];
-for (let _key = 0, _length = array.length, _value; _key < _length; ++_key) {
+const _length = array.length;
+const _results = Array(_length);
+for (let _key = 0, _value; _key < _length; ++_key) {
   _value = array[_key];
-  _result[_key] = cachedFn(_value, _key, array);
+  _results[_key] = cachedFn(_value, _key, array);
 }
-const isEqual = deepEqual(_result, [1, 2, 3]);
+const isEqual = deepEqual(_results, [1, 2, 3]);

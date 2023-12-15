@@ -1,20 +1,17 @@
 import React from 'react';
 function List(props) {
-  const _iterable = props.items;
-  let _result = [];
-  for (
-    let _key = 0, _length = _iterable.length, _value;
-    _key < _length;
-    ++_key
-  ) {
-    _value = _iterable[_key];
-    _result[_key] = /*#__PURE__*/ React.createElement(
+  const _collection = props.items;
+  const _length = _collection.length;
+  const _results = Array(_length);
+  for (let _key = 0, _item; _key < _length; ++_key) {
+    _item = _collection[_key];
+    _results[_key] = /*#__PURE__*/ React.createElement(
       'li',
       {
-        key: _value.id,
+        key: _item.id,
       },
-      _value.value,
+      _item.value,
     );
   }
-  return /*#__PURE__*/ React.createElement('ul', null, _result);
+  return /*#__PURE__*/ React.createElement('ul', null, _results);
 }

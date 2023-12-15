@@ -1,21 +1,22 @@
-let _result = [];
-for (let _key = 0, _length = array.length, _value; _key < _length; ++_key) {
-  _value = array[_key];
-  let _result2 = [];
-  for (
-    let _key3 = 0, _length2 = array.length, _value2;
-    _key3 < _length2;
-    ++_key3
-  ) {
-    _value2 = array[_key3];
-    _result2[_key3] = _value2 * 2;
+const _results = [];
+for (
+  let _index = 0, _length = array.length, _value, _result;
+  _index < _length;
+  ++_index
+) {
+  _value = array[_index];
+  const _length2 = array.length;
+  const _results2 = Array(_length2);
+  for (let _key2 = 0, _value2; _key2 < _length2; ++_key2) {
+    _value2 = array[_key2];
+    _results2[_key2] = _value2 * 2;
   }
   // usage inside
-  const _mapped = _result2;
+  const _mapped = _results2;
 
   // custom for loop with let
-  for (let i = 0; i < _mapped.length; i++) {
-    _mapped[i] = _mapped[i] ** 2;
+  for (let _i = 0; _i < _mapped.length; _i++) {
+    _mapped[_i] = _mapped[_i] ** 2;
   }
 
   // custom for loop with var
@@ -24,28 +25,31 @@ for (let _key = 0, _length = array.length, _value; _key < _length; ++_key) {
   }
 
   // another iteration, using the mapped values
-  let _hasInitialValue = false;
-  let _value3;
-  let _result3;
-  for (let _key4 in object) {
-    if (_hasInitialValue) {
-      _value3 = object[_key4];
-      _result3 = {
-        [_result3]: _mapped,
-      };
-    } else {
-      _hasInitialValue = true;
-      _result3 = object[_key4];
+  let _skip = true,
+    _value3 = undefined,
+    _value4;
+  for (const _key3 in object) {
+    _value4 = object[_key3];
+    if (_skip) {
+      _value3 = _value4;
+      _skip = false;
+      continue;
     }
+    _value3 = {
+      [_value3]: _mapped,
+    };
   }
-  const _reduced = _result3;
+  const _reduced = _value3;
 
   // custom for-in
-  for (var _key2 in _reduced) {
-    if (_reduced[_key2] < 0) {
-      delete _reduced[_key2];
+  for (var _key in _reduced) {
+    if (_reduced[_key] < 0) {
+      delete _reduced[_key];
     }
   }
-  if (_reduced[100]) _result.push(_value);
+  _result = _reduced[100];
+  if (_result) {
+    _results.push(_value);
+  }
 }
-const result = _result;
+const result = _results;

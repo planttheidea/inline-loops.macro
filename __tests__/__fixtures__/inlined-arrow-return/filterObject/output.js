@@ -1,7 +1,10 @@
-let _result = {};
-let _value;
-for (let _key in object) {
+const _results = {};
+let _result, _value;
+for (const _key in object) {
   _value = object[_key];
-  if (_value % 2 === 0) _result[_key] = _value;
+  _result = _value % 2 === 0;
+  if (_result) {
+    _results[_key] = _value;
+  }
 }
-const onlyEven = _result;
+const onlyEven = _results;

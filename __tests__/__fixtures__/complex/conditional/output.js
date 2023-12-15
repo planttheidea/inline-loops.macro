@@ -1,11 +1,12 @@
 function getStuff() {
   if (foo === 'bar') {
-    let _result = [];
-    for (let _key = 0, _length = array.length, _value; _key < _length; ++_key) {
-      _value = array[_key];
-      _result[_key] = _value * 2;
+    const _length = array.length;
+    const _results = Array(_length);
+    for (let _key = 0, _v; _key < _length; ++_key) {
+      _v = array[_key];
+      _results[_key] = _v * 2;
     }
-    return _result;
+    return _results;
   }
   return array;
 }
