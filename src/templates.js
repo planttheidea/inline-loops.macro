@@ -1,4 +1,4 @@
-function createTemplates(template) {
+function createTemplates({ template }) {
   const every = template`
     let DETERMINATION = true;
     for (let KEY = 0, LENGTH = COLLECTION.length, VALUE, RESULT; KEY < LENGTH; ++KEY) {
