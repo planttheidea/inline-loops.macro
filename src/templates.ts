@@ -1,6 +1,6 @@
-import type { Babel } from './types';
+import type { MacroParams } from 'babel-plugin-macros';
 
-export function createTemplates({ template }: Babel) {
+export function createTemplates({ template }: MacroParams['babel']) {
   const every = template`
     let DETERMINATION = true;
     for (let KEY = 0, LENGTH = COLLECTION.length, VALUE, RESULT; KEY < LENGTH; ++KEY) {

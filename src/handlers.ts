@@ -10,9 +10,10 @@ import {
   Statement,
 } from '@babel/types';
 import { MacroError } from 'babel-plugin-macros';
+import type { MacroParams } from 'babel-plugin-macros';
 import { createTemplates } from './templates';
 import { createTraverseConfigs } from './traverse';
-import type { Babel, Handlers, LocalReferences } from './types';
+import type { Handlers, LocalReferences } from './types';
 import {
   getCachedFnArgs,
   getLocalName,
@@ -23,7 +24,7 @@ import {
   replaceOrRemove,
 } from './utils';
 
-export function createHandlers(babel: Babel) {
+export function createHandlers(babel: MacroParams['babel']) {
   const { types: t } = babel;
 
   const templates = createTemplates(babel);

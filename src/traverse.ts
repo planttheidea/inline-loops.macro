@@ -7,7 +7,7 @@ import {
   ThisExpression,
   VariableDeclarator,
 } from '@babel/types';
-import type { Babel } from './types';
+import type { MacroParams } from 'babel-plugin-macros';
 import { rename } from './utils';
 
 interface BodyState {
@@ -20,7 +20,7 @@ interface StripReturnState {
   isForEach?: boolean;
 }
 
-export function createTraverseConfigs({ types: t }: Babel) {
+export function createTraverseConfigs({ types: t }: MacroParams['babel']) {
   const body = {
     ArrayPattern(arrayPatternPath: Path<ArrayPattern>) {
       arrayPatternPath.get('elements').forEach((element) => {

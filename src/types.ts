@@ -1,16 +1,6 @@
 import type { NodePath as Path } from '@babel/core';
 import type { Identifier } from '@babel/types';
 
-export interface Babel {
-  template: typeof import('@babel/template').default;
-  types: typeof import('@babel/types');
-}
-
-export interface Config {
-  babel: Babel;
-  references: References;
-}
-
 export interface LocalReferences {
   accumulated: Identifier;
   collection: Identifier;

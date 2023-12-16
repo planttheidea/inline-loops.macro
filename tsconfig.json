@@ -10,6 +10,7 @@
     "noImplicitAny": true,
     "noUncheckedIndexedAccess": true,
     "outDir": "./dist",
+    "skipLibCheck": true,
     "sourceMap": true,
     "strict": true,
     "target": "es5"
