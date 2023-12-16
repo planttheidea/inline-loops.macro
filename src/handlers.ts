@@ -24,6 +24,15 @@ import {
   replaceOrRemove,
 } from './utils';
 
+interface InjectedBodyAndLogicConfig {
+  handler: Path;
+  isForEach?: boolean;
+  isReduce?: boolean;
+  local: LocalReferences;
+  path: Path<CallExpression>;
+  statement: Path<Statement>;
+}
+
 export function createHandlers(babel: MacroParams['babel']) {
   const { types: t } = babel;
 
@@ -58,15 +67,6 @@ export function createHandlers(babel: MacroParams['babel']) {
     someObject: createHandleEverySome('some-object'),
     someRight: createHandleEverySome('some-right'),
   };
-
-  interface InjectedBodyAndLogicConfig {
-    handler: Path;
-    isForEach?: boolean;
-    isReduce?: boolean;
-    local: LocalReferences;
-    path: Path<CallExpression>;
-    statement: Path<Statement>;
-  }
 
   function getInjectedBodyAndLogic({
     handler,
