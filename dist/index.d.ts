@@ -1,99 +1,141 @@
-type Dictionary<Type> = {
-  [key: string]: Type;
-  [index: number]: Type;
-};
+type ArrayHandler<Item, Result> = (
+  value: Item,
+  index: number,
+  array: Item[],
+) => Result;
 
-/**
- * iterables
- */
-type ArrayIterable = any[];
-type ObjectIterable = Dictionary<any>;
-
-/**
- * the handlers for the iterables, specific to type
- */
-type ArrayHandler = (value: any, index: number, array: ArrayIterable) => any;
-type ObjectHandler = (value: any, key: string, object: ObjectIterable) => any;
-
-/**
- * available exports
- */
-
-declare function every(iterable: ArrayIterable, handler: ArrayHandler): boolean;
-declare function everyObject(iterable: ObjectIterable, handler: ObjectHandler): boolean;
-declare function everyRight(iterable: ArrayIterable, handler: ArrayHandler): boolean;
-
-declare function filter<Iterable = ArrayIterable>(
-  iterable: Iterable,
-  handler: ArrayHandler,
-): Iterable;
-declare function filterObject<Iterable = ObjectIterable>(
-  iterable: ObjectIterable,
-  handler: ObjectHandler,
-): Iterable;
-declare function filterRight<Iterable = ArrayIterable>(
-  iterable: Iterable,
-  handler: ArrayHandler,
-): Iterable;
-
-declare function find(iterable: ArrayIterable, handler: ArrayHandler): any;
-declare function findObject(iterable: ObjectIterable, handler: ObjectHandler): any;
-declare function findRight(iterable: ArrayIterable, handler: ArrayHandler): any;
-
-declare function findIndex<Iterable = ArrayIterable>(
-  iterable: Iterable,
-  handler: ArrayHandler,
-): keyof Iterable | -1;
-declare function findIndexRight<Iterable = ArrayIterable>(
-  iterable: Iterable,
-  handler: ArrayHandler,
-): keyof Iterable | -1;
-
-declare function findKey<Iterable = ObjectIterable>(
-  iterable: Iterable,
-  handler: ObjectHandler,
-): keyof Iterable | void;
-
-declare function forEach(iterable: ArrayIterable, handler: ArrayHandler): void;
-declare function forEachObject(iterable: ObjectIterable, handler: ObjectHandler): void;
-declare function forEachRight(iterable: ArrayIterable, handler: ArrayHandler): void;
-
-declare function map(iterable: ArrayIterable, handler: ArrayHandler): ArrayIterable;
-declare function mapObject(iterable: ObjectIterable, handler: ObjectHandler): ObjectIterable;
-declare function mapRight(iterable: ArrayIterable, handler: ArrayHandler): ArrayIterable;
-
-type ArrayReduceHandler = (
-  accumulator?: any,
-  value?: any,
+type ArrayReduceHandler<Item, Result> = (
+  accumulator?: Result,
+  value?: Item,
   index?: number,
-  array?: ArrayIterable,
-) => any;
-type ObjectReduceHandler = (
-  accumulator?: any,
-  value?: any,
+  array?: Item[],
+) => Result;
+
+type ObjectHandler<Item, Result> = (
+  value: Item,
+  key: string,
+  object: Record<number | string, Item>,
+) => Result;
+
+type ObjectReduceHandler<Item, Result> = (
+  accumulator?: Result,
+  value?: Item,
   key?: string,
-  object?: ObjectIterable,
-) => any;
+  object?: Record<number | string, Item>,
+) => Result;
 
-declare function reduce(
-  iterable: ArrayIterable,
-  handler: ArrayReduceHandler,
-  initialValue?: any,
-): any;
-declare function reduceObject(
-  iterable: ObjectIterable,
-  handler: ObjectReduceHandler,
-  initialValue?: any,
-): any;
-declare function reduceRight(
-  iterable: ArrayIterable,
-  handler: ArrayReduceHandler,
-  initialValue?: any,
-): any;
+declare function every<Item>(
+  collection: Item[],
+  handler: ArrayHandler<Item, unknown>,
+): boolean;
+declare function everyObject<Item>(
+  collection: Record<number | string, Item>,
+  handler: ObjectHandler<Item, unknown>,
+): boolean;
+declare function everyRight<Item>(
+  collection: Item[],
+  handler: ArrayHandler<Item, unknown>,
+): boolean;
 
-declare function some(iterable: ArrayIterable, handler: ArrayHandler): boolean;
-declare function someObject(iterable: ObjectIterable, handler: ObjectHandler): boolean;
-declare function someRight(iterable: ArrayIterable, handler: ArrayHandler): boolean;
+declare function filter<Item>(
+  collection: Item[],
+  handler: ArrayHandler<Item, unknown>,
+): Item[];
+declare function filterObject<Item>(
+  collection: Record<number | string, Item>,
+  handler: ObjectHandler<Item, unknown>,
+): Record<number | string, Item>;
+declare function filterRight<Item>(
+  collection: Item[],
+  handler: ArrayHandler<Item, unknown>,
+): Item[];
+
+declare function find<Item>(
+  collection: Item[],
+  handler: ArrayHandler<Item, unknown>,
+): Item | undefined;
+declare function findObject<Item>(
+  collection: Record<number | string, Item>,
+  handler: ObjectHandler<Item, unknown>,
+): Item | undefined;
+declare function findLast<Item>(
+  collection: Item[],
+  handler: ArrayHandler<Item, unknown>,
+): Item | undefined;
+
+declare function findIndex<Item, Collection extends Item[]>(
+  collection: Collection,
+  handler: ArrayHandler<Item, unknown>,
+): keyof Collection | -1;
+declare function findKey<
+  Item,
+  Collection extends Record<number | string, Item>,
+>(
+  collection: Collection,
+  handler: ObjectHandler<Item, unknown>,
+): keyof Collection | void;
+declare function findLastIndex<
+  Item,
+  Collection extends Record<number | string, Item>,
+>(
+  collection: Collection,
+  handler: ArrayHandler<Item, unknown>,
+): keyof Collection | -1;
+
+declare function forEach<Item>(
+  collection: Item[],
+  handler: ArrayHandler<Item, void>,
+): void;
+declare function forEachObject<Item>(
+  collection: Record<number | string, Item>,
+  handler: ObjectHandler<Item, void>,
+): void;
+declare function forEachRight<Item>(
+  collection: Item[],
+  handler: ArrayHandler<Item, void>,
+): void;
+
+declare function map<Item, Result>(
+  collection: Item[],
+  handler: ArrayHandler<Item, Result>,
+): Result[];
+declare function mapObject<Item, Result>(
+  collection: Record<number | string, Item>,
+  handler: ObjectHandler<Item, Result>,
+): Record<number | string, Result>;
+declare function mapRight<Item, Result>(
+  collection: Item[],
+  handler: ArrayHandler<Item, Result>,
+): Result[];
+
+declare function reduce<Item, Result>(
+  collection: Item[],
+  handler: ArrayReduceHandler<Item, Result>,
+  initialValue?: Result,
+): Result;
+declare function reduceObject<Item, Result>(
+  collection: Record<number | string, Item>,
+  handler: ObjectReduceHandler<Item, Result>,
+  initialValue?: Result,
+): Result;
+declare function reduceRight<Item, Result>(
+  collection: Item[],
+  handler: ArrayReduceHandler<Item, Result>,
+  initialValue?: Result,
+): Result;
+
+declare function some<Item>(
+  collection: Item[],
+  handler: ArrayHandler<Item, unknown>,
+): boolean;
+declare function someObject<Item>(
+  collection: Record<number | string, Item>,
+  handler: ObjectHandler<Item, unknown>,
+): boolean;
+declare function someRight<Item>(
+  collection: Item[],
+  handler: ArrayHandler<Item, unknown>,
+): boolean;
 
 export {
   every,
@@ -104,10 +146,10 @@ export {
   filterRight,
   find,
   findIndex,
-  findIndexRight,
+  findLastIndex,
   findKey,
   findObject,
-  findRight,
+  findLast,
   forEach,
   forEachObject,
   forEachRight,
