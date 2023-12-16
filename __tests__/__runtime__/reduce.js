@@ -35,19 +35,6 @@ const DECREMENTING_ARRAY_RESULT = ARRAY.reduceRight(isEven, 10);
 const BAD_OBJECT_RESULT = Object.assign({}, OBJECT);
 const OBJECT_RESULT = Object.values(OBJECT).reduce(isEven, 10);
 
-console.log(
-  reduceRight(ARRAY, (total, value) =>
-    value % 2 === 0 ? total + value : total,
-  ),
-  OBJECT_RESULT,
-  isEqual(
-    reduceRight(ARRAY, (total, value) =>
-      value % 2 === 0 ? total + value : total,
-    ),
-    OBJECT_RESULT,
-  ),
-);
-
 module.exports = {
   cached: {
     decrementing: {

@@ -30,12 +30,6 @@ const TRANSFORMED_FILES = fs.readdirSync(TEST_FILES).reduce((tests, file) => {
 
 describe('runtime tests', () => {
   for (const fn in TRANSFORMED_FILES) {
-    if (fn === 'errors') {
-      console.log('foo');
-
-      continue;
-    }
-
     const file = TRANSFORMED_FILES[fn];
 
     describe(fn, () => {

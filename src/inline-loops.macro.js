@@ -713,6 +713,15 @@ function myMacro({ references, babel }) {
     };
   }
 
+  function handleArrowFunctionExpressionUse(path) {
+    if (path.parentPath.isArrowFunctionExpression()) {
+      path.parentPath.arrowFunctionToExpression({
+        allowInsertArrow: false,
+        noNewArrows: true,
+      });
+    }
+  }
+
   function handleInvalidUsage(path) {
     const [collection, callback] = path.get('arguments');
 
@@ -772,6 +781,7 @@ function myMacro({ references, babel }) {
       }
 
       handleInvalidUsage(path);
+      handleArrowFunctionExpressionUse(path);
 
       const [collection, callback] = path.get('arguments');
 
@@ -779,7 +789,6 @@ function myMacro({ references, babel }) {
 
       const statement = path.getStatementParent();
       const local = getLocalReferences(path, statement);
-      const localResults = getLocalName(path, 'results');
 
       const { injectedBody, logic } = getInjectedBodyAndLogic({
         callback,
@@ -887,6 +896,7 @@ function myMacro({ references, babel }) {
       }
 
       handleInvalidUsage(path);
+      handleArrowFunctionExpressionUse(path);
 
       const [collection, callback] = path.get('arguments');
 
@@ -894,7 +904,6 @@ function myMacro({ references, babel }) {
 
       const statement = path.getStatementParent();
       const local = getLocalReferences(path, statement);
-      const localResults = getLocalName(path, 'results');
 
       const { injectedBody, logic } = getInjectedBodyAndLogic({
         callback,
@@ -1002,6 +1011,7 @@ function myMacro({ references, babel }) {
       }
 
       handleInvalidUsage(path);
+      handleArrowFunctionExpressionUse(path);
 
       const [collection, callback] = path.get('arguments');
 
@@ -1169,6 +1179,7 @@ function myMacro({ references, babel }) {
       }
 
       handleInvalidUsage(path);
+      handleArrowFunctionExpressionUse(path);
 
       const [collection, callback, initialValue] = path.get('arguments');
 
@@ -1176,7 +1187,6 @@ function myMacro({ references, babel }) {
 
       const statement = path.getStatementParent();
       const local = getLocalReferences(path, statement, true);
-      const localResults = getLocalName(path, 'results');
 
       const { injectedBody, logic } = getInjectedBodyAndLogic({
         callback,
@@ -1233,7 +1243,7 @@ function myMacro({ references, babel }) {
           });
           break;
 
-        case 'object':
+        case 'object': {
           const skip = path.scope.generateUidIdentifier('skip');
           const shouldSkip = t.booleanLiteral(!initialValue);
 
@@ -1249,6 +1259,7 @@ function myMacro({ references, babel }) {
             VALUE: local.value,
           });
           break;
+        }
       }
 
       statement.insertBefore(forLoop);
