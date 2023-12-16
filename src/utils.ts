@@ -132,7 +132,10 @@ export function isConditionalUsage(path: Path<CallExpression>): boolean {
   const parentPath = path.parentPath;
 
   return (
-    parentPath.isConditionalExpression() || parentPath.isLogicalExpression()
+    parentPath.isConditionalExpression() ||
+    parentPath.isLogicalExpression() ||
+    parentPath.isUnaryExpression() ||
+    parentPath.isBinaryExpression()
   );
 }
 
