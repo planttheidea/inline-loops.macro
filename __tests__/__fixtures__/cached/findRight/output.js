@@ -1,1 +1,0 @@
-const lastEven = findRight(array, fn);

@@ -1,1 +1,0 @@
-const firstEven = findIndexRight(array, fn);
