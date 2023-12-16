@@ -1,7 +1,15 @@
 const { MacroError, createMacro } = require('babel-plugin-macros');
 const { createTemplates } = require('./templates');
 const { createTraverseConfigs } = require('./traverse');
-const { rename } = require('./utils');
+const {
+  getCachedFnArgs,
+  getLocalName,
+  handleArrowFunctionExpressionUse,
+  handleInvalidUsage,
+  processNestedInlineLoopMacros,
+  rename,
+  replaceOrRemove,
+} = require('./utils');
 
 function myMacro({ references, babel }) {
   const { template, types: t } = babel;
@@ -65,68 +73,6 @@ function myMacro({ references, babel }) {
     someObject: createHandleEverySome('some-object'),
     someRight: createHandleEverySome('some-right'),
   };
-
-  function getImportedHandlerName(callee) {
-    const binding = callee.scope.getBinding(callee.node.name);
-
-    if (!binding) {
-      return;
-    }
-
-    const owner = binding.path;
-
-    if (owner.isImportSpecifier()) {
-      const imported = owner.get('imported');
-      const name = imported.node.name;
-
-      if (!Object.keys(handlers).some((handler) => handler === name)) {
-        return;
-      }
-
-      const importSource = owner.parentPath.get('source.value');
-
-      if (!importSource.node.endsWith('inline-loops.macro')) {
-        return;
-      }
-
-      return name;
-    }
-
-    if (owner.isVariableDeclarator()) {
-      const init = owner.get('init');
-
-      if (
-        !init.isCallExpression() ||
-        !init.get('callee').isIdentifier({ name: 'require' })
-      ) {
-        return;
-      }
-
-      const requireSource = init.get('arguments.0.value');
-
-      if (!requireSource.node.endsWith('inline-loops.macro')) {
-        return;
-      }
-
-      const imported = owner
-        .get('id.properties')
-        .find((property) =>
-          property.get('value').isIdentifier({ name: callee.node.name }),
-        );
-
-      if (!imported) {
-        return;
-      }
-
-      const name = imported.get('key').node.name;
-
-      if (!Object.keys(handlers).some((handler) => handler === name)) {
-        return;
-      }
-
-      return name;
-    }
-  }
 
   function getInjectedBodyAndLogic({
     callback,
@@ -214,16 +160,6 @@ function myMacro({ references, babel }) {
     );
 
     return { injectedBody: [], logic };
-  }
-
-  function getCachedFnArgs(local, isReduce) {
-    return isReduce
-      ? [local.accumulated, local.value, local.key, local.collection]
-      : [local.value, local.key, local.collection];
-  }
-
-  function getLocalName(path, name = path.node.name) {
-    return path.scope.generateUidIdentifier(name);
   }
 
   function getLocalReferences(path, statement, isReduce) {
@@ -317,61 +253,6 @@ function myMacro({ references, babel }) {
     };
   }
 
-  function handleArrowFunctionExpressionUse(path) {
-    if (path.parentPath.isArrowFunctionExpression()) {
-      path.parentPath.arrowFunctionToExpression({
-        allowInsertArrow: false,
-        noNewArrows: true,
-      });
-    }
-  }
-
-  function handleInvalidUsage(path) {
-    const [collection, callback] = path.get('arguments');
-
-    if (collection.isSpreadElement()) {
-      throw new MacroError(
-        'You cannot use spread arguments with `inline-loops.macro`; please declare the arguments explicitly.',
-      );
-    }
-
-    const importedHandlerName = getImportedHandlerName(callback);
-
-    if (importedHandlerName) {
-      throw new MacroError(
-        'You cannot use a method from `inline-loops.macro` directly as a handler; please wrap it in a function call.',
-      );
-    }
-  }
-
-  function processNestedInlineLoopMacros(path) {
-    if (!path.isCallExpression()) {
-      return;
-    }
-
-    const callee = path.get('callee');
-
-    if (!callee.isIdentifier()) {
-      return;
-    }
-
-    const importedHandlerName = getImportedHandlerName(callee);
-
-    if (importedHandlerName) {
-      handlers[importedHandlerName](path.get('callee'));
-    }
-  }
-
-  function replaceOrRemove(path, replacement) {
-    const parentPath = path.parentPath;
-
-    if (parentPath.isExpressionStatement()) {
-      path.remove();
-    } else {
-      path.replaceWith(replacement);
-    }
-  }
-
   function createHandleEverySome(type) {
     return function handleFilter(referencePath) {
       const path = referencePath.parentPath;
@@ -380,12 +261,12 @@ function myMacro({ references, babel }) {
         return;
       }
 
-      handleInvalidUsage(path);
+      handleInvalidUsage({ handlers, path });
       handleArrowFunctionExpressionUse(path);
 
       const [collection, callback] = path.get('arguments');
 
-      processNestedInlineLoopMacros(collection);
+      processNestedInlineLoopMacros(collection, handlers);
 
       const statement = path.getStatementParent();
       const local = getLocalReferences(path, statement);
@@ -495,12 +376,12 @@ function myMacro({ references, babel }) {
         return;
       }
 
-      handleInvalidUsage(path);
+      handleInvalidUsage({ handlers, path });
       handleArrowFunctionExpressionUse(path);
 
       const [collection, callback] = path.get('arguments');
 
-      processNestedInlineLoopMacros(collection);
+      processNestedInlineLoopMacros(collection, handlers);
 
       const statement = path.getStatementParent();
       const local = getLocalReferences(path, statement);
@@ -610,12 +491,12 @@ function myMacro({ references, babel }) {
         return;
       }
 
-      handleInvalidUsage(path);
+      handleInvalidUsage({ handlers, path });
       handleArrowFunctionExpressionUse(path);
 
       const [collection, callback] = path.get('arguments');
 
-      processNestedInlineLoopMacros(collection);
+      processNestedInlineLoopMacros(collection, handlers);
 
       const statement = path.getStatementParent();
       const local = getLocalReferences(path, statement);
@@ -778,12 +659,12 @@ function myMacro({ references, babel }) {
         return;
       }
 
-      handleInvalidUsage(path);
+      handleInvalidUsage({ handlers, path });
       handleArrowFunctionExpressionUse(path);
 
       const [collection, callback, initialValue] = path.get('arguments');
 
-      processNestedInlineLoopMacros(collection);
+      processNestedInlineLoopMacros(collection, handlers);
 
       const statement = path.getStatementParent();
       const local = getLocalReferences(path, statement, true);
