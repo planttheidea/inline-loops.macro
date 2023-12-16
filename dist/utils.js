@@ -9,6 +9,7 @@ exports.getImportedHandlerName = getImportedHandlerName;
 exports.getLocalName = getLocalName;
 exports.handleArrowFunctionExpressionUse = handleArrowFunctionExpressionUse;
 exports.handleInvalidUsage = handleInvalidUsage;
+exports.isConditionalUsage = isConditionalUsage;
 exports.isMacroHandlerName = isMacroHandlerName;
 exports.processNestedInlineLoopMacros = processNestedInlineLoopMacros;
 exports.rename = rename;
@@ -92,6 +93,10 @@ function handleInvalidUsage(path, handlers) {
     throw new _babelPluginMacros.MacroError('You cannot use a method from `inline-loops.macro` directly as a handler; please wrap it in a export function call.');
   }
 }
+function isConditionalUsage(path) {
+  var parentPath = path.parentPath;
+  return parentPath.isConditionalExpression() || parentPath.isLogicalExpression();
+}
 function isMacroHandlerName(handlers, name) {
   return !!(name && handlers[name]);
 }
@@ -111,11 +116,35 @@ function processNestedInlineLoopMacros(path, handlers) {
 function rename(path, newName) {
   path.scope.rename(path.node.name, newName);
 }
-function replaceOrRemove(path, replacement) {
-  var parentPath = path.parentPath;
-  if (parentPath !== null && parentPath !== void 0 && parentPath.isExpressionStatement()) {
-    path.remove();
+function replaceOrRemove(_ref, path, local, templates, replacement) {
+  var _functionParent$get;
+  var t = _ref.types;
+  var functionParent = path.getFunctionParent();
+  var contents = functionParent === null || functionParent === void 0 || (_functionParent$get = functionParent.get('body')) === null || _functionParent$get === void 0 ? void 0 : _functionParent$get.get('body');
+  var shouldWrapInIife = functionParent && (Array.isArray(contents) && contents.length > 1 || local.contents.length > 1 || isConditionalUsage(path));
+  if (shouldWrapInIife) {
+    if (!t.isIdentifier(replacement, {
+      name: 'undefined'
+    })) {
+      local.contents.push(t.returnStatement(replacement));
+    }
+    var iife = templates.iife({
+      BODY: local.contents.flat()
+    });
+    path.replaceWith(iife.expression);
   } else {
-    path.replaceWith(replacement);
+    var statement = path.getStatementParent();
+    if (!statement) {
+      throw new _babelPluginMacros.MacroError('Could not insert contents because the statement was indeterminable.');
+    }
+    local.contents.forEach(function (content) {
+      statement.insertBefore(content);
+    });
+    var parentPath = path.parentPath;
+    if (parentPath !== null && parentPath !== void 0 && parentPath.isExpressionStatement()) {
+      path.remove();
+    } else {
+      path.replaceWith(replacement);
+    }
   }
 }

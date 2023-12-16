@@ -1,9 +1,10 @@
 import type { NodePath as Path } from '@babel/core';
-import type { Identifier } from '@babel/types';
+import type { Identifier, Statement } from '@babel/types';
 
 export interface LocalReferences {
   accumulated: Identifier;
   collection: Identifier;
+  contents: Array<Statement | Statement[]>;
   key: Identifier;
   length: Identifier;
   value: Identifier;

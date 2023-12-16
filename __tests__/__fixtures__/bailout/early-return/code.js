@@ -1,7 +1,11 @@
 import { filter } from '../../../../src/inline-loops.macro';
 
-const result = filter([1, 2, 3], (value) => {
-  if (value === 2) {
-    return true;
-  }
-});
+function getFoo(config) {
+  const collection = config.collection || [1, 2, 3];
+
+  return filter(collection, (value) => {
+    if (value === 2) {
+      return true;
+    }
+  });
+}

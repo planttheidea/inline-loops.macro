@@ -7,7 +7,6 @@ import {
   ExpressionStatement,
   Identifier,
   ObjectExpression,
-  Statement,
 } from '@babel/types';
 import { MacroError } from 'babel-plugin-macros';
 import type { MacroParams } from 'babel-plugin-macros';
@@ -30,7 +29,6 @@ interface InjectedBodyAndLogicConfig {
   isReduce?: boolean;
   local: LocalReferences;
   path: Path<CallExpression>;
-  statement: Path<Statement>;
 }
 
 export function createHandlers(babel: MacroParams['babel']) {
@@ -74,7 +72,6 @@ export function createHandlers(babel: MacroParams['babel']) {
     isReduce,
     local,
     path,
-    statement,
   }: InjectedBodyAndLogicConfig) {
     const body = handler.get('body') as Path<BlockStatement | Expression>;
     const traverseState = {
@@ -106,10 +103,7 @@ export function createHandlers(babel: MacroParams['babel']) {
         }
 
         if (returnCount === 1) {
-          return {
-            injectedBody: body.node.body,
-            logic: returnValue,
-          };
+          return { injectedBody: body.node.body, logic: returnValue };
         }
       }
 
@@ -119,17 +113,14 @@ export function createHandlers(babel: MacroParams['babel']) {
         VALUE: handler.node,
       });
 
-      statement.insertBefore(localFn);
+      local.contents.push(localFn);
 
       const logic = t.callExpression(
         localFnName,
         getCachedFnArgs(local, isReduce),
       );
 
-      return {
-        injectedBody: [],
-        logic,
-      };
+      return { injectedBody: [], logic };
     }
 
     if (handler.isFunction()) {
@@ -161,7 +152,6 @@ export function createHandlers(babel: MacroParams['babel']) {
 
   function getLocalReferences(
     path: Path<CallExpression>,
-    statement: Path<Statement>,
     isReduce?: boolean,
   ): LocalReferences {
     const [collection, handler] = path.get('arguments');
@@ -169,6 +159,8 @@ export function createHandlers(babel: MacroParams['babel']) {
     if (!collection || !handler) {
       throw new MacroError('Must pass both a collection and a handler');
     }
+
+    const contents: LocalReferences['contents'] = [];
 
     let localCollection = collection.node;
 
@@ -180,7 +172,7 @@ export function createHandlers(babel: MacroParams['babel']) {
         VALUE: collection.node,
       });
 
-      statement.insertBefore(localVariable);
+      contents.push(localVariable);
     }
 
     let accumulated: Path<Identifier> | undefined;
@@ -256,6 +248,7 @@ export function createHandlers(babel: MacroParams['babel']) {
     return {
       accumulated: localAccumulated,
       collection: localCollection as Identifier,
+      contents,
       key: localKey,
       length: localLength,
       value: localValue,
@@ -281,24 +274,22 @@ export function createHandlers(babel: MacroParams['babel']) {
 
       processNestedInlineLoopMacros(collection, handlers);
 
-      const statement = path.getStatementParent()!;
-      const local = getLocalReferences(path, statement);
+      const local = getLocalReferences(path);
 
       const { injectedBody, logic } = getInjectedBodyAndLogic({
         handler,
         local,
         path,
-        statement,
       });
 
       const result = path.scope.generateUidIdentifier('result');
       const determination = path.scope.generateUidIdentifier('determination');
 
-      let forLoop;
+      let loop;
 
       switch (type) {
         case 'every-left':
-          forLoop = templates.every({
+          loop = templates.every({
             BODY: injectedBody,
             RESULT: result,
             COLLECTION: local.collection,
@@ -311,7 +302,7 @@ export function createHandlers(babel: MacroParams['babel']) {
           break;
 
         case 'some-left':
-          forLoop = templates.some({
+          loop = templates.some({
             BODY: injectedBody,
             RESULT: result,
             COLLECTION: local.collection,
@@ -324,7 +315,7 @@ export function createHandlers(babel: MacroParams['babel']) {
           break;
 
         case 'every-right':
-          forLoop = templates.everyRight({
+          loop = templates.everyRight({
             BODY: injectedBody,
             RESULT: result,
             COLLECTION: local.collection,
@@ -336,7 +327,7 @@ export function createHandlers(babel: MacroParams['babel']) {
           break;
 
         case 'some-right':
-          forLoop = templates.someRight({
+          loop = templates.someRight({
             BODY: injectedBody,
             RESULT: result,
             COLLECTION: local.collection,
@@ -348,7 +339,7 @@ export function createHandlers(babel: MacroParams['babel']) {
           break;
 
         case 'every-object':
-          forLoop = templates.everyObject({
+          loop = templates.everyObject({
             BODY: injectedBody,
             RESULT: result,
             COLLECTION: local.collection,
@@ -360,7 +351,7 @@ export function createHandlers(babel: MacroParams['babel']) {
           break;
 
         case 'some-object':
-          forLoop = templates.someObject({
+          loop = templates.someObject({
             BODY: injectedBody,
             RESULT: result,
             COLLECTION: local.collection,
@@ -375,9 +366,9 @@ export function createHandlers(babel: MacroParams['babel']) {
           throw new MacroError(`Invalid type ${type} provided`);
       }
 
-      statement.insertBefore(forLoop);
+      local.contents.push(loop);
 
-      replaceOrRemove(path, determination);
+      replaceOrRemove(babel, path, local, templates, determination);
     };
   }
 
@@ -400,24 +391,22 @@ export function createHandlers(babel: MacroParams['babel']) {
 
       processNestedInlineLoopMacros(collection, handlers);
 
-      const statement = path.getStatementParent()!;
-      const local = getLocalReferences(path, statement);
+      const local = getLocalReferences(path);
 
       const { injectedBody, logic } = getInjectedBodyAndLogic({
         handler,
         local,
         path,
-        statement,
       });
 
       const result = path.scope.generateUidIdentifier('result');
       const match = path.scope.generateUidIdentifier('match');
 
-      let forLoop;
+      let loop;
 
       switch (type) {
         case 'find-left':
-          forLoop = templates.find({
+          loop = templates.find({
             BODY: injectedBody,
             RESULT: result,
             COLLECTION: local.collection,
@@ -430,7 +419,7 @@ export function createHandlers(babel: MacroParams['babel']) {
           break;
 
         case 'find-index':
-          forLoop = templates.findIndex({
+          loop = templates.findIndex({
             BODY: injectedBody,
             RESULT: result,
             COLLECTION: local.collection,
@@ -443,7 +432,7 @@ export function createHandlers(babel: MacroParams['babel']) {
           break;
 
         case 'find-last':
-          forLoop = templates.findLast({
+          loop = templates.findLast({
             BODY: injectedBody,
             RESULT: result,
             COLLECTION: local.collection,
@@ -455,7 +444,7 @@ export function createHandlers(babel: MacroParams['babel']) {
           break;
 
         case 'find-last-index':
-          forLoop = templates.findLastIndex({
+          loop = templates.findLastIndex({
             BODY: injectedBody,
             RESULT: result,
             COLLECTION: local.collection,
@@ -467,7 +456,7 @@ export function createHandlers(babel: MacroParams['babel']) {
           break;
 
         case 'find-object':
-          forLoop = templates.findObject({
+          loop = templates.findObject({
             BODY: injectedBody,
             RESULT: result,
             COLLECTION: local.collection,
@@ -479,7 +468,7 @@ export function createHandlers(babel: MacroParams['babel']) {
           break;
 
         case 'find-key':
-          forLoop = templates.findKey({
+          loop = templates.findKey({
             BODY: injectedBody,
             RESULT: result,
             COLLECTION: local.collection,
@@ -494,9 +483,9 @@ export function createHandlers(babel: MacroParams['babel']) {
           throw new MacroError(`Invalid type ${type} provided`);
       }
 
-      statement.insertBefore(forLoop);
+      local.contents.push(loop);
 
-      replaceOrRemove(path, match);
+      replaceOrRemove(babel, path, local, templates, match);
     };
   }
 
@@ -519,8 +508,7 @@ export function createHandlers(babel: MacroParams['babel']) {
 
       processNestedInlineLoopMacros(collection, handlers);
 
-      const statement = path.getStatementParent()!;
-      const local = getLocalReferences(path, statement);
+      const local = getLocalReferences(path);
       const localResults = getLocalName(path, 'results');
       const isForEach = type.includes('for-each');
       const result = path.scope.generateUidIdentifier('result');
@@ -530,14 +518,13 @@ export function createHandlers(babel: MacroParams['babel']) {
         isForEach,
         local,
         path,
-        statement,
       });
 
-      let forLoop;
+      let loop;
 
       switch (type) {
         case 'map-left':
-          forLoop = templates.map({
+          loop = templates.map({
             BODY: injectedBody,
             COLLECTION: local.collection,
             KEY: local.key,
@@ -549,7 +536,7 @@ export function createHandlers(babel: MacroParams['babel']) {
           break;
 
         case 'filter-left':
-          forLoop = templates.filter({
+          loop = templates.filter({
             BODY: injectedBody,
             COLLECTION: local.collection,
             KEY: local.key,
@@ -562,7 +549,7 @@ export function createHandlers(babel: MacroParams['babel']) {
           break;
 
         case 'flat-map-left':
-          forLoop = templates.flatMap({
+          loop = templates.flatMap({
             BODY: injectedBody,
             COLLECTION: local.collection,
             KEY: local.key,
@@ -575,7 +562,7 @@ export function createHandlers(babel: MacroParams['babel']) {
           break;
 
         case 'for-each-left':
-          forLoop = templates.forEach({
+          loop = templates.forEach({
             BODY: injectedBody,
             COLLECTION: local.collection,
             KEY: local.key,
@@ -585,7 +572,7 @@ export function createHandlers(babel: MacroParams['babel']) {
           break;
 
         case 'map-right':
-          forLoop = templates.mapRight({
+          loop = templates.mapRight({
             BODY: injectedBody,
             COLLECTION: local.collection,
             KEY: local.key,
@@ -597,7 +584,7 @@ export function createHandlers(babel: MacroParams['babel']) {
           break;
 
         case 'filter-right':
-          forLoop = templates.filterRight({
+          loop = templates.filterRight({
             BODY: injectedBody,
             COLLECTION: local.collection,
             KEY: local.key,
@@ -609,7 +596,7 @@ export function createHandlers(babel: MacroParams['babel']) {
           break;
 
         case 'flat-map-right':
-          forLoop = templates.flatMapRight({
+          loop = templates.flatMapRight({
             BODY: injectedBody,
             COLLECTION: local.collection,
             KEY: local.key,
@@ -621,7 +608,7 @@ export function createHandlers(babel: MacroParams['babel']) {
           break;
 
         case 'for-each-right':
-          forLoop = templates.forEachRight({
+          loop = templates.forEachRight({
             BODY: injectedBody,
             COLLECTION: local.collection,
             KEY: local.key,
@@ -630,7 +617,7 @@ export function createHandlers(babel: MacroParams['babel']) {
           break;
 
         case 'map-object':
-          forLoop = templates.mapObject({
+          loop = templates.mapObject({
             BODY: injectedBody,
             COLLECTION: local.collection,
             KEY: local.key,
@@ -642,7 +629,7 @@ export function createHandlers(babel: MacroParams['babel']) {
           break;
 
         case 'filter-object':
-          forLoop = templates.filterObject({
+          loop = templates.filterObject({
             BODY: injectedBody,
             COLLECTION: local.collection,
             KEY: local.key,
@@ -654,7 +641,7 @@ export function createHandlers(babel: MacroParams['babel']) {
           break;
 
         case 'for-each-object':
-          forLoop = templates.forEachObject({
+          loop = templates.forEachObject({
             BODY: injectedBody,
             COLLECTION: local.collection,
             KEY: local.key,
@@ -666,10 +653,13 @@ export function createHandlers(babel: MacroParams['babel']) {
           throw new MacroError(`Invalid type ${type} provided`);
       }
 
-      statement.insertBefore(forLoop);
+      local.contents.push(loop);
 
       replaceOrRemove(
+        babel,
         path,
+        local,
+        templates,
         isForEach ? t.identifier('undefined') : localResults,
       );
     };
@@ -694,15 +684,13 @@ export function createHandlers(babel: MacroParams['babel']) {
 
       processNestedInlineLoopMacros(collection, handlers);
 
-      const statement = path.getStatementParent()!;
-      const local = getLocalReferences(path, statement, true);
+      const local = getLocalReferences(path, true);
 
       const { injectedBody, logic } = getInjectedBodyAndLogic({
         handler,
         isReduce: true,
         local,
         path,
-        statement,
       });
 
       let initial;
@@ -724,11 +712,11 @@ export function createHandlers(babel: MacroParams['babel']) {
 
       const start = t.numericLiteral(initialValue ? 0 : 1);
 
-      let forLoop;
+      let loop;
 
       switch (type) {
         case 'left':
-          forLoop = templates.reduce({
+          loop = templates.reduce({
             ACCUMULATED: local.accumulated,
             BODY: injectedBody,
             COLLECTION: local.collection,
@@ -742,7 +730,7 @@ export function createHandlers(babel: MacroParams['babel']) {
           break;
 
         case 'right':
-          forLoop = templates.reduceRight({
+          loop = templates.reduceRight({
             ACCUMULATED: local.accumulated,
             BODY: injectedBody,
             COLLECTION: local.collection,
@@ -758,7 +746,7 @@ export function createHandlers(babel: MacroParams['babel']) {
           const skip = path.scope.generateUidIdentifier('skip');
           const shouldSkip = t.booleanLiteral(!initialValue);
 
-          forLoop = templates.reduceObject({
+          loop = templates.reduceObject({
             ACCUMULATED: local.accumulated,
             BODY: injectedBody,
             COLLECTION: local.collection,
@@ -776,9 +764,9 @@ export function createHandlers(babel: MacroParams['babel']) {
           throw new MacroError(`Invalid type ${type} provided`);
       }
 
-      statement.insertBefore(forLoop);
+      local.contents.push(loop);
 
-      replaceOrRemove(path, local.accumulated);
+      replaceOrRemove(babel, path, local, templates, local.accumulated);
     };
   }
 

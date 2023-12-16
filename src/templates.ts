@@ -222,6 +222,12 @@ export function createTemplates({ template }: MacroParams['babel']) {
   const LOCAL = VALUE;
 `;
 
+  const iife = template`
+  (() => {
+    BODY
+  })();
+`;
+
   const map = template`
     const LENGTH = COLLECTION.length;
     const RESULTS = Array(LENGTH);
@@ -356,6 +362,7 @@ export function createTemplates({ template }: MacroParams['babel']) {
     forEach,
     forEachObject,
     forEachRight,
+    iife,
     localVariable,
     map,
     mapObject,

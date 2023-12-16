@@ -13,7 +13,6 @@ Iteration helpers that inline to native loops for performance
     - [Aggressive inlining](#aggressive-inlining)
     - [Bailout scenarios](#bailout-scenarios)
   - [Gotchas](#gotchas)
-    - [Conditionals do not delay execution](#conditionals-do-not-delay-execution)
     - [`*Object` methods do not perform `hasOwnProperty` check](#object-methods-do-not-perform-hasownproperty-check)
     - [`find*` methods](#find-methods)
   - [Development](#development)
@@ -180,56 +179,6 @@ const inlined = map(array, (value) => (value % 2 === 0 ? 'even' : 'odd'));
 ## Gotchas
 
 Some aspects of implementing this macro that you should be aware of:
-
-### Conditionals do not delay execution
-
-If you do something like this with standard JS:
-
-```js
-return isFoo ? array.map((v) => v * 2) : array;
-```
-
-The `array` is only mapped over if `isFoo` is true. However, because we are inlining these calls into `for` loops in the scope they operate in, this conditional calling does not apply with this macro.
-
-```js
-// this
-return isFoo ? map(array, (v) => v * 2) : array;
-
-// turns into this
-const _length = array.length;
-const _results = Array(_length);
-for (let _key = 0, _value; _key < _length; ++_key) {
-  _value = array[_key];
-  _results[_key] = fn(_value, _key, array);
-}
-return isFoo ? _results : array;
-```
-
-Notice the mapping occurs whether the condition is met or not. If you want to ensure this conditionality is maintained, you should use an `if` block instead:
-
-```js
-// this
-if (isFoo) {
-  return map(array, (v) => v * 2);
-}
-
-return array;
-
-// turns into this
-if (isFoo) {
-  const _length = array.length;
-  const _results = Array(_length);
-  for (let _key = 0, _value; _key < _length; ++_key) {
-    _value = array[_key];
-    _results[_key] = fn(_value, _key, array);
-  }
-  return _results;
-}
-
-return array;
-```
-
-This will ensure the potentially-expensive computation only occurs when necessary.
 
 ### `*Object` methods do not perform `hasOwnProperty` check
 

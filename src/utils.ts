@@ -1,13 +1,14 @@
 import type { NodePath as Path } from '@babel/core';
 import {
   CallExpression,
+  Expression,
   Identifier,
-  Node,
   ObjectProperty,
   StringLiteral,
 } from '@babel/types';
-import { MacroError } from 'babel-plugin-macros';
+import { MacroError, MacroParams } from 'babel-plugin-macros';
 import { Handlers, LocalReferences } from './types';
+import { createTemplates } from 'templates';
 
 export function getCachedFnArgs(local: LocalReferences, isReduce?: boolean) {
   return isReduce
@@ -127,6 +128,14 @@ export function handleInvalidUsage(
   }
 }
 
+export function isConditionalUsage(path: Path<CallExpression>): boolean {
+  const parentPath = path.parentPath;
+
+  return (
+    parentPath.isConditionalExpression() || parentPath.isLogicalExpression()
+  );
+}
+
 export function isMacroHandlerName(
   handlers: Handlers,
   name: string | undefined,
@@ -156,12 +165,51 @@ export function rename(path: Path<Identifier>, newName?: string) {
   path.scope.rename(path.node.name, newName);
 }
 
-export function replaceOrRemove(path: Path, replacement: Node) {
-  const parentPath = path.parentPath;
+export function replaceOrRemove(
+  { types: t }: MacroParams['babel'],
+  path: Path<CallExpression>,
+  local: LocalReferences,
+  templates: ReturnType<typeof createTemplates>,
+  replacement: Expression,
+) {
+  const functionParent = path.getFunctionParent();
+  const contents = functionParent?.get('body')?.get('body');
 
-  if (parentPath?.isExpressionStatement()) {
-    path.remove();
+  const shouldWrapInIife =
+    functionParent &&
+    ((Array.isArray(contents) && contents.length > 1) ||
+      local.contents.length > 1 ||
+      isConditionalUsage(path));
+
+  if (shouldWrapInIife) {
+    if (!t.isIdentifier(replacement, { name: 'undefined' })) {
+      local.contents.push(t.returnStatement(replacement));
+    }
+
+    const iife = templates.iife({
+      BODY: local.contents.flat(),
+    }) as { expression: Expression };
+
+    path.replaceWith(iife.expression);
   } else {
-    path.replaceWith(replacement);
+    const statement = path.getStatementParent();
+
+    if (!statement) {
+      throw new MacroError(
+        'Could not insert contents because the statement was indeterminable.',
+      );
+    }
+
+    local.contents.forEach((content) => {
+      statement.insertBefore(content);
+    });
+
+    const parentPath = path.parentPath;
+
+    if (parentPath?.isExpressionStatement()) {
+      path.remove();
+    } else {
+      path.replaceWith(replacement);
+    }
   }
 }
