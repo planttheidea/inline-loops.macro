@@ -1,4 +1,5 @@
 const { MacroError, createMacro } = require('babel-plugin-macros');
+const { createTemplates } = require('./templates');
 
 function myMacro({ references, babel }) {
   const { template, types: t } = babel;
@@ -31,342 +32,7 @@ function myMacro({ references, babel }) {
     someRight = [],
   } = references;
 
-  const nthLastItemTemplate = template`
-	COLLECTION[COLLECTION.length - COUNT]
-`;
-
-  const localVariableTemplate = template`
-	const LOCAL = VALUE;
-`;
-
-  const everyTemplate = template`
-    let DETERMINATION = true;
-    for (let KEY = 0, LENGTH = COLLECTION.length, VALUE, RESULT; KEY < LENGTH; ++KEY) {
-      VALUE = COLLECTION[KEY];
-      BODY
-      RESULT = LOGIC;
-
-      if (!RESULT) {
-        DETERMINATION = false;
-        break;
-      }
-    }
-`;
-
-  const everyObjectTemplate = template`
-    let DETERMINATION = true,
-        VALUE,
-        RESULT;
-    for (const KEY in COLLECTION) {
-      VALUE = COLLECTION[KEY];
-      BODY
-      RESULT = LOGIC;
-
-      if (!RESULT) {
-        DETERMINATION = false;
-        break;
-      }
-	}
-`;
-
-  const everyRightTemplate = template`
-    let DETERMINATION = true;
-    for (let KEY = COLLECTION.length, VALUE, RESULT; --KEY >= 0;) {
-      VALUE = COLLECTION[KEY];
-      BODY
-      RESULT = LOGIC;
-
-      if (!RESULT) {
-        DETERMINATION = false;
-        break;
-      }
-    }
-`;
-
-  const filterTemplate = template`
-    const RESULTS = [];
-    for (let KEY = 0, LENGTH = COLLECTION.length, VALUE, RESULT; KEY < LENGTH; ++KEY) {
-      VALUE = COLLECTION[KEY];
-      BODY
-      RESULT = LOGIC;
-
-      if (RESULT) {
-        RESULTS.push(VALUE);
-      }
-    }
-`;
-
-  const filterObjectTemplate = template`
-    const RESULTS = {};
-    let RESULT,
-        VALUE;
-    for (const KEY in COLLECTION) {
-      VALUE = COLLECTION[KEY];
-      BODY
-      RESULT = LOGIC;
-
-      if (RESULT) {
-        RESULTS[KEY] = VALUE;
-      }
-    }
-`;
-
-  const filterRightTemplate = template`
-    const RESULTS = [];
-    let RESULT,
-        VALUE;
-    for (let KEY = COLLECTION.length, VALUE, RESULT; --KEY >= 0;) {
-      VALUE = COLLECTION[KEY];
-      BODY
-      RESULT = LOGIC;
-
-      if (RESULT) {
-        RESULTS.push(VALUE);
-      }
-    }
-`;
-
-  const findTemplate = template`
-    let MATCH;
-    for (let KEY = 0, LENGTH = COLLECTION.length, VALUE, RESULT; KEY < LENGTH; ++KEY) {
-      VALUE = COLLECTION[KEY];
-      BODY
-      RESULT = LOGIC;
-
-      if (RESULT) {
-        MATCH = VALUE;
-        break;
-      }
-    }
-`;
-
-  const findObjectTemplate = template`
-    let MATCH,
-        VALUE,
-        RESULT;
-    for (const KEY in COLLECTION) {
-      VALUE = COLLECTION[KEY];
-      BODY
-      RESULT = LOGIC;
-
-      if (RESULT) {
-        MATCH = VALUE;
-        break;
-      }
-    }
-`;
-
-  const findRightTemplate = template`
-    let MATCH;
-    for (let KEY = COLLECTION.length, VALUE, RESULT; --KEY >= 0;) {
-      VALUE = COLLECTION[KEY];
-      BODY
-      RESULT = LOGIC;
-
-      if (RESULT) {
-        MATCH = VALUE;
-        break;
-      }
-    }
-`;
-
-  const findIndexTemplate = template`
-    let MATCH = -1;
-    for (let KEY = 0, LENGTH = COLLECTION.length, VALUE, RESULT; KEY < LENGTH; ++KEY) {
-      VALUE = COLLECTION[KEY];
-      BODY
-      RESULT = LOGIC;
-
-      if (RESULT) {
-        MATCH = KEY;
-        break;
-      }
-    }
-`;
-
-  const findKeyTemplate = template`
-    let MATCH = -1,
-        VALUE,
-        RESULT;
-    for (const KEY in COLLECTION) {
-      VALUE = COLLECTION[KEY];
-      BODY
-      RESULT = LOGIC;
-
-      if (RESULT) {
-        MATCH = KEY;
-        break;
-      }
-    }
-`;
-
-  const findIndexRightTemplate = template`
-    let MATCH = -1;
-    for (let KEY = COLLECTION.length, VALUE, RESULT; --KEY >= 0;) {
-      VALUE = COLLECTION[KEY];
-      BODY
-      RESULT = LOGIC;
-
-      if (RESULT) {
-        MATCH = KEY;
-        break;
-      }
-    }
-`;
-
-  const flatMapTemplate = template`
-    let RESULTS = [];
-    for (let KEY = 0, LENGTH = COLLECTION.length, VALUE, RESULT; KEY < LENGTH; ++KEY) {
-      VALUE = COLLECTION[KEY];
-      BODY
-      RESULT = LOGIC;
-      RESULTS = RESULTS.concat(RESULT);
-    }
-`;
-
-  const flatMapRightTemplate = template`
-    let RESULTS = [];
-    for (let KEY = COLLECTION.length, VALUE, RESULT; --KEY >= 0;) {
-      VALUE = COLLECTION[KEY];
-      BODY
-      RESULT = LOGIC;
-      RESULTS = RESULTS.concat(RESULT);
-    }
-`;
-
-  const forEachTemplate = template`
-    for (let KEY = 0, LENGTH = COLLECTION.length, VALUE; KEY < LENGTH; ++KEY) {
-      VALUE = COLLECTION[KEY];
-      BODY
-    }
-`;
-
-  const forEachObjectTemplate = template`
-    let VALUE;
-    for (const KEY in COLLECTION) {
-      VALUE = COLLECTION[KEY];
-      BODY
-    }
-`;
-
-  const forEachRightTemplate = template` 
-    for (let KEY = COLLECTION.length, VALUE; --KEY >= 0;) {
-      VALUE = COLLECTION[KEY];
-      BODY
-    }
-`;
-
-  const mapTemplate = template`
-    const LENGTH = COLLECTION.length;
-    const RESULTS = Array(LENGTH);
-	for (let KEY = 0, VALUE; KEY < LENGTH; ++KEY) {
-      VALUE = COLLECTION[KEY];
-      BODY
-      RESULTS[KEY] = LOGIC;
-    }
-`;
-
-  const mapObjectTemplate = template`
-    const RESULTS = {};
-    let VALUE,
-        RESULT;
-    for (const KEY in COLLECTION) {
-      VALUE = COLLECTION[KEY];
-      BODY
-      RESULTS[KEY] = LOGIC;
-    }
-`;
-
-  const mapRightTemplate = template`
-    const LENGTH = COLLECTION.length;
-    let KEY = LENGTH;
-    const RESULTS = Array(LENGTH);
-    for (let VALUE; --KEY >= 0;) {
-      VALUE = COLLECTION[KEY];
-      BODY
-      RESULTS[LENGTH - KEY - 1] = LOGIC;
-    }
-`;
-
-  const reduceTemplate = template`
-    let ACCUMULATED = INITIAL;
-    for (let KEY = START, LENGTH = COLLECTION.length, VALUE; KEY < LENGTH; ++KEY) {
-      VALUE = COLLECTION[KEY];
-      BODY
-      ACCUMULATED = LOGIC;
-    }
-`;
-
-  const reduceObjectTemplate = template`
-    let SKIP = SHOULD_SKIP,
-        ACCUMULATED = INITIAL,
-        VALUE;
-    for (const KEY in COLLECTION) {
-      VALUE = COLLECTION[KEY];
-
-      if (SKIP) {
-        ACCUMULATED = VALUE;
-        SKIP = false;
-        continue;
-      }
-
-      BODY
-      ACCUMULATED = LOGIC;
-    }
-`;
-
-  const reduceRightTemplate = template`
-    let ACCUMULATED = INITIAL;
-    for (let KEY = COLLECTION.length - START, VALUE; --KEY >= START;) {
-      VALUE = COLLECTION[KEY];
-      BODY
-      ACCUMULATED = LOGIC;
-    }
-`;
-
-  const someTemplate = template`
-    let DETERMINATION = false;
-    for (let KEY = 0, LENGTH = COLLECTION.length, VALUE, RESULT; KEY < LENGTH; ++KEY) {
-      VALUE = COLLECTION[KEY];
-      BODY
-      RESULT = LOGIC;
-
-      if (RESULT) {
-        DETERMINATION = true;
-        break;
-      }
-    }
-`;
-
-  const someObjectTemplate = template`
-    let DETERMINATION = false,
-        VALUE,
-        RESULT;
-    for (const KEY in COLLECTION) {
-      VALUE = COLLECTION[KEY];
-      BODY
-      RESULT = LOGIC;
-
-      if (RESULT) {
-        DETERMINATION = true;
-        break;
-      }
-    }
-`;
-
-  const someRightTemplate = template`
-    const DETERMINATION = false;
-    for (let KEY = COLLECTION.length, VALUE, RESULT; --KEY >= 0;) {
-      VALUE = COLLECTION[KEY];
-      BODY
-      RESULT = LOGIC;
-
-      if (RESULT) {
-        DETERMINATION = true;
-        break;
-      }
-    }
-`;
+  const templates = createTemplates(template);
 
   const stripReturnTraverseConfig = {
     ReturnStatement(returnPath, returnState = {}) {
@@ -570,7 +236,7 @@ function myMacro({ references, babel }) {
       }
 
       const localFnName = path.scope.generateUidIdentifier('fn');
-      const localFn = localVariableTemplate({
+      const localFn = templates.localVariable({
         LOCAL: localFnName,
         VALUE: callback.node,
       });
@@ -632,7 +298,7 @@ function myMacro({ references, babel }) {
     if (!collection.isIdentifier()) {
       localCollection = getLocalName(path, 'collection');
 
-      const localVariable = localVariableTemplate({
+      const localVariable = templates.localVariable({
         LOCAL: localCollection,
         VALUE: collection.node,
       });
@@ -658,7 +324,7 @@ function myMacro({ references, babel }) {
         localDestructuredRefName =
           path.scope.generateUidIdentifier('destructured');
 
-        const localVariable = localVariableTemplate({
+        const localVariable = templates.localVariable({
           LOCAL: value.node,
           VALUE: localDestructuredRefName,
         });
@@ -804,7 +470,7 @@ function myMacro({ references, babel }) {
 
       switch (type) {
         case 'every-left':
-          forLoop = everyTemplate({
+          forLoop = templates.every({
             BODY: injectedBody,
             RESULT: result,
             COLLECTION: local.collection,
@@ -817,7 +483,7 @@ function myMacro({ references, babel }) {
           break;
 
         case 'some-left':
-          forLoop = someTemplate({
+          forLoop = templates.some({
             BODY: injectedBody,
             RESULT: result,
             COLLECTION: local.collection,
@@ -830,7 +496,7 @@ function myMacro({ references, babel }) {
           break;
 
         case 'every-right':
-          forLoop = everyRightTemplate({
+          forLoop = templates.everyRight({
             BODY: injectedBody,
             RESULT: result,
             COLLECTION: local.collection,
@@ -842,7 +508,7 @@ function myMacro({ references, babel }) {
           break;
 
         case 'some-right':
-          forLoop = someRightTemplate({
+          forLoop = templates.someRight({
             BODY: injectedBody,
             RESULT: result,
             COLLECTION: local.collection,
@@ -854,7 +520,7 @@ function myMacro({ references, babel }) {
           break;
 
         case 'every-object':
-          forLoop = everyObjectTemplate({
+          forLoop = templates.everyObject({
             BODY: injectedBody,
             RESULT: result,
             COLLECTION: local.collection,
@@ -866,7 +532,7 @@ function myMacro({ references, babel }) {
           break;
 
         case 'some-object':
-          forLoop = someObjectTemplate({
+          forLoop = templates.someObject({
             BODY: injectedBody,
             RESULT: result,
             COLLECTION: local.collection,
@@ -919,7 +585,7 @@ function myMacro({ references, babel }) {
 
       switch (type) {
         case 'find-left':
-          forLoop = findTemplate({
+          forLoop = templates.find({
             BODY: injectedBody,
             RESULT: result,
             COLLECTION: local.collection,
@@ -932,7 +598,7 @@ function myMacro({ references, babel }) {
           break;
 
         case 'find-index':
-          forLoop = findIndexTemplate({
+          forLoop = templates.findIndex({
             BODY: injectedBody,
             RESULT: result,
             COLLECTION: local.collection,
@@ -945,7 +611,7 @@ function myMacro({ references, babel }) {
           break;
 
         case 'find-last':
-          forLoop = findRightTemplate({
+          forLoop = templates.findLast({
             BODY: injectedBody,
             RESULT: result,
             COLLECTION: local.collection,
@@ -957,7 +623,7 @@ function myMacro({ references, babel }) {
           break;
 
         case 'find-last-index':
-          forLoop = findIndexRightTemplate({
+          forLoop = templates.findLastIndex({
             BODY: injectedBody,
             RESULT: result,
             COLLECTION: local.collection,
@@ -969,7 +635,7 @@ function myMacro({ references, babel }) {
           break;
 
         case 'find-object':
-          forLoop = findObjectTemplate({
+          forLoop = templates.findObject({
             BODY: injectedBody,
             RESULT: result,
             COLLECTION: local.collection,
@@ -981,7 +647,7 @@ function myMacro({ references, babel }) {
           break;
 
         case 'find-key':
-          forLoop = findKeyTemplate({
+          forLoop = templates.findKey({
             BODY: injectedBody,
             RESULT: result,
             COLLECTION: local.collection,
@@ -1035,7 +701,7 @@ function myMacro({ references, babel }) {
 
       switch (type) {
         case 'map-left':
-          forLoop = mapTemplate({
+          forLoop = templates.map({
             BODY: injectedBody,
             COLLECTION: local.collection,
             KEY: local.key,
@@ -1047,7 +713,7 @@ function myMacro({ references, babel }) {
           break;
 
         case 'filter-left':
-          forLoop = filterTemplate({
+          forLoop = templates.filter({
             BODY: injectedBody,
             COLLECTION: local.collection,
             KEY: local.key,
@@ -1060,7 +726,7 @@ function myMacro({ references, babel }) {
           break;
 
         case 'flat-map-left':
-          forLoop = flatMapTemplate({
+          forLoop = templates.flatMap({
             BODY: injectedBody,
             COLLECTION: local.collection,
             KEY: local.key,
@@ -1073,7 +739,7 @@ function myMacro({ references, babel }) {
           break;
 
         case 'for-each-left':
-          forLoop = forEachTemplate({
+          forLoop = templates.forEach({
             BODY: injectedBody,
             COLLECTION: local.collection,
             KEY: local.key,
@@ -1083,7 +749,7 @@ function myMacro({ references, babel }) {
           break;
 
         case 'map-right':
-          forLoop = mapRightTemplate({
+          forLoop = templates.mapRight({
             BODY: injectedBody,
             COLLECTION: local.collection,
             KEY: local.key,
@@ -1095,7 +761,7 @@ function myMacro({ references, babel }) {
           break;
 
         case 'filter-right':
-          forLoop = filterRightTemplate({
+          forLoop = templates.filterRight({
             BODY: injectedBody,
             COLLECTION: local.collection,
             KEY: local.key,
@@ -1107,7 +773,7 @@ function myMacro({ references, babel }) {
           break;
 
         case 'flat-map-right':
-          forLoop = flatMapRightTemplate({
+          forLoop = templates.flatMapRight({
             BODY: injectedBody,
             COLLECTION: local.collection,
             KEY: local.key,
@@ -1119,7 +785,7 @@ function myMacro({ references, babel }) {
           break;
 
         case 'for-each-right':
-          forLoop = forEachRightTemplate({
+          forLoop = templates.forEachRight({
             BODY: injectedBody,
             COLLECTION: local.collection,
             KEY: local.key,
@@ -1128,7 +794,7 @@ function myMacro({ references, babel }) {
           break;
 
         case 'map-object':
-          forLoop = mapObjectTemplate({
+          forLoop = templates.mapObject({
             BODY: injectedBody,
             COLLECTION: local.collection,
             KEY: local.key,
@@ -1140,7 +806,7 @@ function myMacro({ references, babel }) {
           break;
 
         case 'filter-object':
-          forLoop = filterObjectTemplate({
+          forLoop = templates.filterObject({
             BODY: injectedBody,
             COLLECTION: local.collection,
             KEY: local.key,
@@ -1152,7 +818,7 @@ function myMacro({ references, babel }) {
           break;
 
         case 'for-each-object':
-          forLoop = forEachObjectTemplate({
+          forLoop = templates.forEachObject({
             BODY: injectedBody,
             COLLECTION: local.collection,
             KEY: local.key,
@@ -1201,7 +867,7 @@ function myMacro({ references, babel }) {
       if (type === 'right') {
         initial = initialValue
           ? initialValue.node
-          : nthLastItemTemplate({
+          : templates.nthLastItem({
               COLLECTION: local.collection,
               COUNT: t.numericLiteral(1),
             }).expression;
@@ -1217,7 +883,7 @@ function myMacro({ references, babel }) {
 
       switch (type) {
         case 'left':
-          forLoop = reduceTemplate({
+          forLoop = templates.reduce({
             ACCUMULATED: local.accumulated,
             BODY: injectedBody,
             COLLECTION: local.collection,
@@ -1231,7 +897,7 @@ function myMacro({ references, babel }) {
           break;
 
         case 'right':
-          forLoop = reduceRightTemplate({
+          forLoop = templates.reduceRight({
             ACCUMULATED: local.accumulated,
             BODY: injectedBody,
             COLLECTION: local.collection,
@@ -1247,7 +913,7 @@ function myMacro({ references, babel }) {
           const skip = path.scope.generateUidIdentifier('skip');
           const shouldSkip = t.booleanLiteral(!initialValue);
 
-          forLoop = reduceObjectTemplate({
+          forLoop = templates.reduceObject({
             ACCUMULATED: local.accumulated,
             BODY: injectedBody,
             COLLECTION: local.collection,
