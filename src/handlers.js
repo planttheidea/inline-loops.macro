@@ -47,14 +47,14 @@ function createHandlers(babel) {
   };
 
   function getInjectedBodyAndLogic({
-    callback,
+    handler,
     isForEach,
     isReduce,
     local,
     path,
     statement,
   }) {
-    const body = callback.get('body');
+    const body = handler.get('body');
     const traverseState = {
       containsThis: false,
       count: 0,
@@ -94,7 +94,7 @@ function createHandlers(babel) {
       const localFnName = path.scope.generateUidIdentifier('fn');
       const localFn = templates.localVariable({
         LOCAL: localFnName,
-        VALUE: callback.node,
+        VALUE: handler.node,
       });
 
       statement.insertBefore(localFn);
@@ -110,7 +110,7 @@ function createHandlers(babel) {
       };
     }
 
-    if (callback.isFunction()) {
+    if (handler.isFunction()) {
       return isForEach
         ? { injectedBody: body.node, logic: undefined }
         : { injectedBody: [], logic: body.node };
@@ -119,7 +119,7 @@ function createHandlers(babel) {
     if (isForEach) {
       const injectedBody = [
         t.expressionStatement(
-          t.callExpression(callback.node, getCachedFnArgs(local, isReduce)),
+          t.callExpression(handler.node, getCachedFnArgs(local, isReduce)),
         ),
       ];
 
@@ -127,7 +127,7 @@ function createHandlers(babel) {
     }
 
     const logic = t.callExpression(
-      callback.node,
+      handler.node,
       getCachedFnArgs(local, isReduce),
     );
 
@@ -137,7 +137,7 @@ function createHandlers(babel) {
   function getLocalReferences(path, statement, isReduce) {
     const args = path.get('arguments');
 
-    const [collection, callback] = args;
+    const [collection, handler] = args;
 
     let localCollection = collection.node;
 
@@ -159,11 +159,11 @@ function createHandlers(babel) {
 
     let localDestructuredRefName;
 
-    if (callback.isFunction()) {
+    if (handler.isFunction()) {
       if (isReduce) {
-        [accumulated, value, key, scopedCollection] = callback.get('params');
+        [accumulated, value, key, scopedCollection] = handler.get('params');
       } else {
-        [value, key, scopedCollection] = callback.get('params');
+        [value, key, scopedCollection] = handler.get('params');
       }
 
       if (value && (value.isArrayPattern() || value.isObjectPattern())) {
@@ -175,7 +175,7 @@ function createHandlers(babel) {
           VALUE: localDestructuredRefName,
         });
 
-        const body = callback.get('body');
+        const body = handler.get('body');
 
         if (!body.isBlockStatement()) {
           body.replaceWith(t.blockStatement([t.returnStatement(body.node)]));
@@ -236,7 +236,7 @@ function createHandlers(babel) {
       handleInvalidUsage({ handlers, path });
       handleArrowFunctionExpressionUse(path);
 
-      const [collection, callback] = path.get('arguments');
+      const [collection, handler] = path.get('arguments');
 
       processNestedInlineLoopMacros(collection, handlers);
 
@@ -244,7 +244,7 @@ function createHandlers(babel) {
       const local = getLocalReferences(path, statement);
 
       const { injectedBody, logic } = getInjectedBodyAndLogic({
-        callback,
+        handler,
         local,
         path,
         statement,
@@ -351,7 +351,7 @@ function createHandlers(babel) {
       handleInvalidUsage({ handlers, path });
       handleArrowFunctionExpressionUse(path);
 
-      const [collection, callback] = path.get('arguments');
+      const [collection, handler] = path.get('arguments');
 
       processNestedInlineLoopMacros(collection, handlers);
 
@@ -359,7 +359,7 @@ function createHandlers(babel) {
       const local = getLocalReferences(path, statement);
 
       const { injectedBody, logic } = getInjectedBodyAndLogic({
-        callback,
+        handler,
         local,
         path,
         statement,
@@ -466,7 +466,7 @@ function createHandlers(babel) {
       handleInvalidUsage({ handlers, path });
       handleArrowFunctionExpressionUse(path);
 
-      const [collection, callback] = path.get('arguments');
+      const [collection, handler] = path.get('arguments');
 
       processNestedInlineLoopMacros(collection, handlers);
 
@@ -477,7 +477,7 @@ function createHandlers(babel) {
       const result = path.scope.generateUidIdentifier('result');
 
       const { injectedBody, logic } = getInjectedBodyAndLogic({
-        callback,
+        handler,
         isForEach,
         local,
         path,
@@ -634,7 +634,7 @@ function createHandlers(babel) {
       handleInvalidUsage({ handlers, path });
       handleArrowFunctionExpressionUse(path);
 
-      const [collection, callback, initialValue] = path.get('arguments');
+      const [collection, handler, initialValue] = path.get('arguments');
 
       processNestedInlineLoopMacros(collection, handlers);
 
@@ -642,7 +642,7 @@ function createHandlers(babel) {
       const local = getLocalReferences(path, statement, true);
 
       const { injectedBody, logic } = getInjectedBodyAndLogic({
-        callback,
+        handler,
         isReduce: true,
         local,
         path,

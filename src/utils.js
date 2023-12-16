@@ -82,7 +82,7 @@ function handleArrowFunctionExpressionUse(path) {
 }
 
 function handleInvalidUsage({ handlers, path }) {
-  const [collection, callback] = path.get('arguments');
+  const [collection, handler] = path.get('arguments');
 
   if (collection.isSpreadElement()) {
     throw new MacroError(
@@ -90,7 +90,7 @@ function handleInvalidUsage({ handlers, path }) {
     );
   }
 
-  const importedHandlerName = getImportedHandlerName(callback, handlers);
+  const importedHandlerName = getImportedHandlerName(handler, handlers);
 
   if (importedHandlerName) {
     throw new MacroError(
