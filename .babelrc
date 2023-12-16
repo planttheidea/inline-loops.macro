@@ -1,0 +1,16 @@
+{
+  "plugins": [
+    "babel-plugin-macros",
+    [
+      "@babel/plugin-transform-runtime",
+      {
+        "absoluteRuntime": false,
+        "corejs": false,
+        "helpers": true,
+        "regenerator": false,
+        "useESModules": false
+      }
+    ]
+  ],
+  "presets": ["@babel/preset-env", "@babel/preset-typescript"]
+}

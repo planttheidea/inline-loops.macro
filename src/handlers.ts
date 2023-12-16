@@ -1,7 +1,19 @@
-const { MacroError } = require('babel-plugin-macros');
-const { createTemplates } = require('./templates');
-const { createTraverseConfigs } = require('./traverse');
-const {
+import type { NodePath as Path } from '@babel/core';
+import {
+  ArrayPattern,
+  BlockStatement,
+  CallExpression,
+  Expression,
+  ExpressionStatement,
+  Identifier,
+  ObjectExpression,
+  Statement,
+} from '@babel/types';
+import { MacroError } from 'babel-plugin-macros';
+import { createTemplates } from './templates';
+import { createTraverseConfigs } from './traverse';
+import type { Babel, Handlers, LocalReferences } from './types';
+import {
   getCachedFnArgs,
   getLocalName,
   handleArrowFunctionExpressionUse,
@@ -9,15 +21,15 @@ const {
   processNestedInlineLoopMacros,
   rename,
   replaceOrRemove,
-} = require('./utils');
+} from './utils';
 
-function createHandlers(babel) {
+export function createHandlers(babel: Babel) {
   const { types: t } = babel;
 
   const templates = createTemplates(babel);
   const traverseConfigs = createTraverseConfigs(babel);
 
-  const handlers = {
+  const handlers: Handlers = {
     every: createHandleEverySome('every-left'),
     everyObject: createHandleEverySome('every-object'),
     everyRight: createHandleEverySome('every-right'),
@@ -46,6 +58,15 @@ function createHandlers(babel) {
     someRight: createHandleEverySome('some-right'),
   };
 
+  interface InjectedBodyAndLogicConfig {
+    handler: Path;
+    isForEach?: boolean;
+    isReduce?: boolean;
+    local: LocalReferences;
+    path: Path<CallExpression>;
+    statement: Path<Statement>;
+  }
+
   function getInjectedBodyAndLogic({
     handler,
     isForEach,
@@ -53,8 +74,8 @@ function createHandlers(babel) {
     local,
     path,
     statement,
-  }) {
-    const body = handler.get('body');
+  }: InjectedBodyAndLogicConfig) {
+    const body = handler.get('body') as Path<BlockStatement | Expression>;
     const traverseState = {
       containsThis: false,
       count: 0,
@@ -119,7 +140,10 @@ function createHandlers(babel) {
     if (isForEach) {
       const injectedBody = [
         t.expressionStatement(
-          t.callExpression(handler.node, getCachedFnArgs(local, isReduce)),
+          t.callExpression(
+            handler.node as Expression,
+            getCachedFnArgs(local, isReduce),
+          ),
         ),
       ];
 
@@ -127,17 +151,23 @@ function createHandlers(babel) {
     }
 
     const logic = t.callExpression(
-      handler.node,
+      handler.node as Expression,
       getCachedFnArgs(local, isReduce),
     );
 
     return { injectedBody: [], logic };
   }
 
-  function getLocalReferences(path, statement, isReduce) {
-    const args = path.get('arguments');
+  function getLocalReferences(
+    path: Path<CallExpression>,
+    statement: Path<Statement>,
+    isReduce?: boolean,
+  ): LocalReferences {
+    const [collection, handler] = path.get('arguments');
 
-    const [collection, handler] = args;
+    if (!collection || !handler) {
+      throw new MacroError('Must pass both a collection and a handler');
+    }
 
     let localCollection = collection.node;
 
@@ -152,18 +182,22 @@ function createHandlers(babel) {
       statement.insertBefore(localVariable);
     }
 
-    let accumulated;
-    let value;
-    let key;
-    let scopedCollection;
+    let accumulated: Path<Identifier> | undefined;
+    let value: Path<Identifier | ArrayPattern | ObjectExpression> | undefined;
+    let key: Path<Identifier> | undefined;
+    let scopedCollection: Path<Identifier> | undefined;
 
     let localDestructuredRefName;
 
     if (handler.isFunction()) {
       if (isReduce) {
-        [accumulated, value, key, scopedCollection] = handler.get('params');
+        [accumulated, value, key, scopedCollection] = handler.get(
+          'params',
+        ) as Array<Path<Identifier>>;
       } else {
-        [value, key, scopedCollection] = handler.get('params');
+        [value, key, scopedCollection] = handler.get('params') as Array<
+          Path<Identifier>
+        >;
       }
 
       if (value && (value.isArrayPattern() || value.isObjectPattern())) {
@@ -175,13 +209,15 @@ function createHandlers(babel) {
           VALUE: localDestructuredRefName,
         });
 
-        const body = handler.get('body');
+        const body = handler.get('body') as Path;
 
         if (!body.isBlockStatement()) {
-          body.replaceWith(t.blockStatement([t.returnStatement(body.node)]));
+          body.replaceWith(
+            t.blockStatement([t.returnStatement(body.node as Expression)]),
+          );
         }
 
-        body.unshiftContainer('body', localVariable);
+        (body as Path<BlockStatement>).unshiftContainer('body', localVariable);
         value.replaceWith(localDestructuredRefName);
       }
     }
@@ -205,7 +241,7 @@ function createHandlers(babel) {
     }
 
     if (value) {
-      rename(value, localValue.name);
+      rename(value as Path<Identifier>, localValue.name);
     }
 
     if (key) {
@@ -213,34 +249,38 @@ function createHandlers(babel) {
     }
 
     if (scopedCollection) {
-      rename(scopedCollection, localCollection.name);
+      rename(scopedCollection, (localCollection as Identifier).name);
     }
 
     return {
       accumulated: localAccumulated,
-      collection: localCollection,
+      collection: localCollection as Identifier,
       key: localKey,
       length: localLength,
       value: localValue,
     };
   }
 
-  function createHandleEverySome(type) {
-    return function handleFilter(referencePath) {
+  function createHandleEverySome(type: string) {
+    return function handleFilter(referencePath: Path) {
       const path = referencePath.parentPath;
 
-      if (!path.isCallExpression()) {
+      if (!path?.isCallExpression()) {
         return;
       }
 
-      handleInvalidUsage({ handlers, path });
+      handleInvalidUsage(path, handlers);
       handleArrowFunctionExpressionUse(path);
 
       const [collection, handler] = path.get('arguments');
 
+      if (!collection || !handler) {
+        throw new MacroError('Must pass both a collection and a handler');
+      }
+
       processNestedInlineLoopMacros(collection, handlers);
 
-      const statement = path.getStatementParent();
+      const statement = path.getStatementParent()!;
       const local = getLocalReferences(path, statement);
 
       const { injectedBody, logic } = getInjectedBodyAndLogic({
@@ -340,22 +380,26 @@ function createHandlers(babel) {
     };
   }
 
-  function createHandleFind(type) {
-    return function handleFilter(referencePath) {
+  function createHandleFind(type: string) {
+    return function handleFilter(referencePath: Path) {
       const path = referencePath.parentPath;
 
-      if (!path.isCallExpression()) {
+      if (!path?.isCallExpression()) {
         return;
       }
 
-      handleInvalidUsage({ handlers, path });
+      handleInvalidUsage(path, handlers);
       handleArrowFunctionExpressionUse(path);
 
       const [collection, handler] = path.get('arguments');
 
+      if (!collection || !handler) {
+        throw new MacroError('Must pass both a collection and a handler');
+      }
+
       processNestedInlineLoopMacros(collection, handlers);
 
-      const statement = path.getStatementParent();
+      const statement = path.getStatementParent()!;
       const local = getLocalReferences(path, statement);
 
       const { injectedBody, logic } = getInjectedBodyAndLogic({
@@ -455,22 +499,26 @@ function createHandlers(babel) {
     };
   }
 
-  function createHandleMapFilterForEach(type) {
-    return function handleMap(referencePath) {
+  function createHandleMapFilterForEach(type: string) {
+    return function handleMap(referencePath: Path) {
       const path = referencePath.parentPath;
 
-      if (!path.isCallExpression()) {
+      if (!path?.isCallExpression()) {
         return;
       }
 
-      handleInvalidUsage({ handlers, path });
+      handleInvalidUsage(path, handlers);
       handleArrowFunctionExpressionUse(path);
 
       const [collection, handler] = path.get('arguments');
 
+      if (!collection || !handler) {
+        throw new MacroError('Must pass both a collection and a handler');
+      }
+
       processNestedInlineLoopMacros(collection, handlers);
 
-      const statement = path.getStatementParent();
+      const statement = path.getStatementParent()!;
       const local = getLocalReferences(path, statement);
       const localResults = getLocalName(path, 'results');
       const isForEach = type.includes('for-each');
@@ -612,6 +660,9 @@ function createHandlers(babel) {
             VALUE: local.value,
           });
           break;
+
+        default:
+          throw new MacroError(`Invalid type ${type} provided`);
       }
 
       statement.insertBefore(forLoop);
@@ -623,22 +674,26 @@ function createHandlers(babel) {
     };
   }
 
-  function createHandleReduce(type) {
-    return function handleReduce(referencePath) {
+  function createHandleReduce(type: string) {
+    return function handleReduce(referencePath: Path) {
       const path = referencePath.parentPath;
 
-      if (!path.isCallExpression()) {
+      if (!path?.isCallExpression()) {
         return;
       }
 
-      handleInvalidUsage({ handlers, path });
+      handleInvalidUsage(path, handlers);
       handleArrowFunctionExpressionUse(path);
 
       const [collection, handler, initialValue] = path.get('arguments');
 
+      if (!collection || !handler) {
+        throw new MacroError('Must pass both a collection and a handler');
+      }
+
       processNestedInlineLoopMacros(collection, handlers);
 
-      const statement = path.getStatementParent();
+      const statement = path.getStatementParent()!;
       const local = getLocalReferences(path, statement, true);
 
       const { injectedBody, logic } = getInjectedBodyAndLogic({
@@ -654,10 +709,12 @@ function createHandlers(babel) {
       if (type === 'right') {
         initial = initialValue
           ? initialValue.node
-          : templates.nthLastItem({
-              COLLECTION: local.collection,
-              COUNT: t.numericLiteral(1),
-            }).expression;
+          : (
+              templates.nthLastItem({
+                COLLECTION: local.collection,
+                COUNT: t.numericLiteral(1),
+              }) as ExpressionStatement
+            ).expression;
       } else {
         initial = initialValue
           ? initialValue.node
@@ -713,6 +770,9 @@ function createHandlers(babel) {
           });
           break;
         }
+
+        default:
+          throw new MacroError(`Invalid type ${type} provided`);
       }
 
       statement.insertBefore(forLoop);
@@ -723,5 +783,3 @@ function createHandlers(babel) {
 
   return handlers;
 }
-
-module.exports = { createHandlers };

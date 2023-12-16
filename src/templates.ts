@@ -1,4 +1,6 @@
-function createTemplates({ template }) {
+import type { Babel } from './types';
+
+export function createTemplates({ template }: Babel) {
   const every = template`
     let DETERMINATION = true;
     for (let KEY = 0, LENGTH = COLLECTION.length, VALUE, RESULT; KEY < LENGTH; ++KEY) {
@@ -367,5 +369,3 @@ function createTemplates({ template }) {
     someRight,
   };
 }
-
-module.exports = { createTemplates };

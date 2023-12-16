@@ -1,569 +1,651 @@
 "use strict";
 
 var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
-var _toConsumableArray2 = _interopRequireDefault(require("@babel/runtime/helpers/toConsumableArray"));
-var _require = require('./helpers'),
-  getDefaultResult = _require.getDefaultResult,
-  getIds = _require.getIds,
-  getInjectedValues = _require.getInjectedValues,
-  getLoop = _require.getLoop,
-  getUid = _require.getUid,
-  getResultApplication = _require.getResultApplication,
-  insertBeforeParent = _require.insertBeforeParent,
-  isCachedReference = _require.isCachedReference;
-function handleEvery(_ref) {
-  var t = _ref.t,
-    path = _ref.path,
-    object = _ref.object,
-    handler = _ref.handler,
-    isDecrementing = _ref.isDecrementing,
-    isObject = _ref.isObject;
-  var _getIds = getIds(path.scope),
-    fn = _getIds.fn,
-    iterable = _getIds.iterable,
-    key = _getIds.key,
-    length = _getIds.length,
-    result = _getIds.result,
-    value = _getIds.value;
-  var isHandlerCached = isCachedReference(t, handler);
-  var isIterableCached = isCachedReference(t, object);
-  var fnUsed = isHandlerCached ? handler : fn;
-  var iterableUsed = isIterableCached ? object : iterable;
-  var _getInjectedValues = getInjectedValues(t, path, {
-      fn: fnUsed,
-      getResult: function getResult(resultStatement) {
-        return t.ifStatement(t.unaryExpression('!', resultStatement), t.blockStatement([t.expressionStatement(t.assignmentExpression('=', result, t.booleanLiteral(false))), t.breakStatement()]));
-      },
-      handler: handler,
-      iterable: iterableUsed,
-      key: key,
-      value: value
-    }),
-    body = _getInjectedValues.body,
-    resultStatement = _getInjectedValues.resultStatement;
-  var loop = getLoop({
-    t: t,
-    body: body,
-    iterable: iterableUsed,
-    key: key,
-    length: length,
-    isDecrementing: isDecrementing,
-    isObject: isObject,
-    scope: path.scope,
-    value: value
-  });
-  insertBeforeParent({
-    fn: fn,
-    handler: handler,
-    isObject: isObject,
-    iterable: iterable,
-    loop: loop,
-    object: object,
-    path: path,
-    result: result,
-    resultStatement: resultStatement,
-    resultValue: t.booleanLiteral(true),
-    t: t,
-    value: value
-  });
-  path.parentPath.replaceWith(result);
-}
-function handleFilter(_ref2) {
-  var t = _ref2.t,
-    path = _ref2.path,
-    object = _ref2.object,
-    handler = _ref2.handler,
-    isDecrementing = _ref2.isDecrementing,
-    isObject = _ref2.isObject;
-  var _getIds2 = getIds(path.scope),
-    fn = _getIds2.fn,
-    iterable = _getIds2.iterable,
-    key = _getIds2.key,
-    length = _getIds2.length,
-    result = _getIds2.result,
-    value = _getIds2.value;
-  var isHandlerCached = isCachedReference(t, handler);
-  var isIterableCached = isCachedReference(t, object);
-  var fnUsed = isHandlerCached ? handler : fn;
-  var iterableUsed = isIterableCached ? object : iterable;
-  var _getInjectedValues2 = getInjectedValues(t, path, {
-      fn: fnUsed,
-      getResult: function getResult(resultStatement) {
-        return t.ifStatement(resultStatement, t.expressionStatement(isObject ? t.assignmentExpression('=', t.memberExpression(result, key, true), value) : t.callExpression(t.memberExpression(result, t.identifier('push')), [value])));
-      },
-      handler: handler,
-      iterable: iterableUsed,
-      key: key,
-      value: value
-    }),
-    body = _getInjectedValues2.body,
-    resultStatement = _getInjectedValues2.resultStatement;
-  var loop = getLoop({
-    t: t,
-    body: body,
-    iterable: iterableUsed,
-    key: key,
-    length: length,
-    value: value,
-    isDecrementing: isDecrementing,
-    isObject: isObject,
-    scope: path.scope
-  });
-  insertBeforeParent({
-    fn: fn,
-    handler: handler,
-    isObject: isObject,
-    iterable: iterable,
-    loop: loop,
-    object: object,
-    path: path,
-    result: result,
-    resultStatement: resultStatement,
-    resultValue: getDefaultResult(t, isObject),
-    t: t,
-    value: value
-  });
-  path.parentPath.replaceWith(result);
-}
-function handleFind(_ref3) {
-  var t = _ref3.t,
-    path = _ref3.path,
-    object = _ref3.object,
-    handler = _ref3.handler,
-    isDecrementing = _ref3.isDecrementing,
-    isObject = _ref3.isObject;
-  var _getIds3 = getIds(path.scope),
-    fn = _getIds3.fn,
-    iterable = _getIds3.iterable,
-    key = _getIds3.key,
-    length = _getIds3.length,
-    result = _getIds3.result,
-    value = _getIds3.value;
-  var isHandlerCached = isCachedReference(t, handler);
-  var isIterableCached = isCachedReference(t, object);
-  var fnUsed = isHandlerCached ? handler : fn;
-  var iterableUsed = isIterableCached ? object : iterable;
-  var _getInjectedValues3 = getInjectedValues(t, path, {
-      fn: fnUsed,
-      getResult: function getResult(resultStatement) {
-        return t.ifStatement(resultStatement, t.blockStatement([t.expressionStatement(t.assignmentExpression('=', result, value)), t.breakStatement()]));
-      },
-      handler: handler,
-      iterable: iterableUsed,
-      key: key,
-      value: value
-    }),
-    body = _getInjectedValues3.body,
-    resultStatement = _getInjectedValues3.resultStatement;
-  var loop = getLoop({
-    t: t,
-    body: body,
-    iterable: iterableUsed,
-    key: key,
-    length: length,
-    isDecrementing: isDecrementing,
-    isObject: isObject,
-    scope: path.scope,
-    value: value
-  });
-  insertBeforeParent({
-    fn: fn,
-    handler: handler,
-    isObject: isObject,
-    iterable: iterable,
-    loop: loop,
-    object: object,
-    path: path,
-    result: result,
-    resultStatement: resultStatement,
-    t: t,
-    value: value
-  });
-  path.parentPath.replaceWith(result);
-}
-function handleFindKey(_ref4) {
-  var t = _ref4.t,
-    path = _ref4.path,
-    object = _ref4.object,
-    handler = _ref4.handler,
-    isDecrementing = _ref4.isDecrementing,
-    isObject = _ref4.isObject;
-  var _getIds4 = getIds(path.scope),
-    fn = _getIds4.fn,
-    iterable = _getIds4.iterable,
-    key = _getIds4.key,
-    length = _getIds4.length,
-    result = _getIds4.result,
-    value = _getIds4.value;
-  var isHandlerCached = isCachedReference(t, handler);
-  var isIterableCached = isCachedReference(t, object);
-  var fnUsed = isHandlerCached ? handler : fn;
-  var iterableUsed = isIterableCached ? object : iterable;
-  var _getInjectedValues4 = getInjectedValues(t, path, {
-      fn: fnUsed,
-      getResult: function getResult(resultStatement) {
-        return t.ifStatement(resultStatement, t.blockStatement([t.expressionStatement(t.assignmentExpression('=', result, key)), t.breakStatement()]));
-      },
-      handler: handler,
-      iterable: iterableUsed,
-      key: key,
-      value: value
-    }),
-    body = _getInjectedValues4.body,
-    resultStatement = _getInjectedValues4.resultStatement;
-  var loop = getLoop({
-    t: t,
-    body: body,
-    iterable: iterableUsed,
-    key: key,
-    length: length,
-    isDecrementing: isDecrementing,
-    isObject: isObject,
-    scope: path.scope,
-    value: value
-  });
-  insertBeforeParent({
-    fn: fn,
-    handler: handler,
-    isObject: isObject,
-    iterable: iterable,
-    loop: loop,
-    object: object,
-    path: path,
-    result: result,
-    resultStatement: resultStatement,
-    resultValue: isObject ? undefined : t.numericLiteral(-1),
-    t: t,
-    value: value
-  });
-  path.parentPath.replaceWith(result);
-}
-function handleFlatMap(_ref5) {
-  var t = _ref5.t,
-    path = _ref5.path,
-    object = _ref5.object,
-    handler = _ref5.handler,
-    isDecrementing = _ref5.isDecrementing,
-    isObject = _ref5.isObject;
-  var _getIds5 = getIds(path.scope),
-    fn = _getIds5.fn,
-    iterable = _getIds5.iterable,
-    key = _getIds5.key,
-    length = _getIds5.length,
-    result = _getIds5.result,
-    value = _getIds5.value;
-  var isHandlerCached = isCachedReference(t, handler);
-  var isIterableCached = isCachedReference(t, object);
-  var fnUsed = isHandlerCached ? handler : fn;
-  var iterableUsed = isIterableCached ? object : iterable;
-  var _getInjectedValues5 = getInjectedValues(t, path, {
-      fn: fnUsed,
-      getResult: function getResult(resultStatement) {
-        return t.expressionStatement(t.callExpression(t.memberExpression(t.memberExpression(result, t.identifier('push')), t.identifier('apply')), [result, resultStatement]));
-      },
-      handler: handler,
-      iterable: iterableUsed,
-      key: key,
-      value: value
-    }),
-    body = _getInjectedValues5.body,
-    resultStatement = _getInjectedValues5.resultStatement;
-  var loop = getLoop({
-    t: t,
-    body: body,
-    iterable: iterableUsed,
-    key: key,
-    length: length,
-    isDecrementing: isDecrementing,
-    isObject: isObject,
-    scope: path.scope,
-    value: value
-  });
-  insertBeforeParent({
-    fn: fn,
-    handler: handler,
-    isObject: isObject,
-    iterable: iterable,
-    loop: loop,
-    object: object,
-    path: path,
-    result: result,
-    resultStatement: resultStatement,
-    resultValue: getDefaultResult(t, isObject),
-    t: t,
-    value: value
-  });
-  path.parentPath.replaceWith(result);
-}
-function handleForEach(_ref6) {
-  var t = _ref6.t,
-    path = _ref6.path,
-    object = _ref6.object,
-    handler = _ref6.handler,
-    isDecrementing = _ref6.isDecrementing,
-    isObject = _ref6.isObject;
-  var _getIds6 = getIds(path.scope),
-    fn = _getIds6.fn,
-    iterable = _getIds6.iterable,
-    key = _getIds6.key,
-    length = _getIds6.length,
-    value = _getIds6.value;
-  var isHandlerCached = isCachedReference(t, handler);
-  var isIterableCached = isCachedReference(t, object);
-  var fnUsed = isHandlerCached ? handler : fn;
-  var iterableUsed = isIterableCached ? object : iterable;
-  var _getInjectedValues6 = getInjectedValues(t, path, {
-      fn: fnUsed,
-      getResult: function getResult(resultStatement) {
-        return t.isExpression(resultStatement) ? t.expressionStatement(resultStatement) : resultStatement;
-      },
-      handler: handler,
-      iterable: iterableUsed,
-      key: key,
-      value: value
-    }),
-    body = _getInjectedValues6.body,
-    resultStatement = _getInjectedValues6.resultStatement;
-  var loop = getLoop({
-    t: t,
-    body: body,
-    iterable: iterableUsed,
-    key: key,
-    length: length,
-    isDecrementing: isDecrementing,
-    isObject: isObject,
-    scope: path.scope,
-    value: value
-  });
-  insertBeforeParent({
-    fn: fn,
-    handler: handler,
-    isObject: isObject,
-    iterable: iterable,
-    loop: loop,
-    object: object,
-    path: path,
-    resultStatement: resultStatement,
-    t: t,
-    value: value
-  });
-  path.parentPath.remove();
-}
-function handleMap(_ref7) {
-  var t = _ref7.t,
-    path = _ref7.path,
-    object = _ref7.object,
-    handler = _ref7.handler,
-    isDecrementing = _ref7.isDecrementing,
-    isObject = _ref7.isObject;
-  var _getIds7 = getIds(path.scope),
-    fn = _getIds7.fn,
-    iterable = _getIds7.iterable,
-    key = _getIds7.key,
-    length = _getIds7.length,
-    result = _getIds7.result,
-    value = _getIds7.value;
-  var isHandlerCached = isCachedReference(t, handler);
-  var isIterableCached = isCachedReference(t, object);
-  var fnUsed = isHandlerCached ? handler : fn;
-  var iterableUsed = isIterableCached ? object : iterable;
-  var _getInjectedValues7 = getInjectedValues(t, path, {
-      fn: fnUsed,
-      getResult: function getResult(resultStatement) {
-        return t.expressionStatement(isDecrementing ? t.assignmentExpression('=', t.memberExpression(result, t.memberExpression(result, t.identifier('length')), true), resultStatement) : t.assignmentExpression('=', t.memberExpression(result, key, true), resultStatement));
-      },
-      handler: handler,
-      iterable: iterableUsed,
-      key: key,
-      value: value
-    }),
-    body = _getInjectedValues7.body,
-    resultStatement = _getInjectedValues7.resultStatement;
-  var loop = getLoop({
-    t: t,
-    body: body,
-    iterable: iterableUsed,
-    key: key,
-    length: length,
-    isDecrementing: isDecrementing,
-    isObject: isObject,
-    scope: path.scope,
-    value: value
-  });
-  insertBeforeParent({
-    fn: fn,
-    handler: handler,
-    isObject: isObject,
-    iterable: iterable,
-    loop: loop,
-    object: object,
-    path: path,
-    result: result,
-    resultStatement: resultStatement,
-    resultValue: getDefaultResult(t, isObject),
-    t: t,
-    value: value
-  });
-  path.parentPath.replaceWith(result);
-}
-function handleReduce(_ref8) {
-  var t = _ref8.t,
-    path = _ref8.path,
-    object = _ref8.object,
-    handler = _ref8.handler,
-    initialValue = _ref8.initialValue,
-    isDecrementing = _ref8.isDecrementing,
-    isObject = _ref8.isObject;
-  var _getIds8 = getIds(path.scope),
-    fn = _getIds8.fn,
-    iterable = _getIds8.iterable,
-    key = _getIds8.key,
-    length = _getIds8.length,
-    result = _getIds8.result,
-    value = _getIds8.value;
-  var hasInitialValue = !!initialValue;
-  var isHandlerCached = isCachedReference(t, handler);
-  var isIterableCached = isCachedReference(t, object);
-  var fnUsed = isHandlerCached ? handler : fn;
-  var iterableUsed = isIterableCached ? object : iterable;
-  var injected = [];
-  var hasInitialValueId;
-  if (!hasInitialValue) {
-    if (isObject) {
-      hasInitialValueId = getUid(path.scope, 'hasInitialValue');
-      injected.push(t.variableDeclaration('let', [t.variableDeclarator(hasInitialValueId, t.booleanLiteral(false))]));
-    } else if (isDecrementing) {
-      injected.push(t.variableDeclaration('const', [t.variableDeclarator(length, t.memberExpression(iterableUsed, t.identifier('length')))]));
-      initialValue = t.memberExpression(iterableUsed, t.binaryExpression('-', length, t.numericLiteral(1)), true);
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.createHandlers = createHandlers;
+var _slicedToArray2 = _interopRequireDefault(require("@babel/runtime/helpers/slicedToArray"));
+var _babelPluginMacros = require("babel-plugin-macros");
+var _templates = require("./templates");
+var _traverse = require("./traverse");
+var _utils = require("./utils");
+function createHandlers(babel) {
+  var t = babel.types;
+  var templates = (0, _templates.createTemplates)(babel);
+  var traverseConfigs = (0, _traverse.createTraverseConfigs)(babel);
+  var handlers = {
+    every: createHandleEverySome('every-left'),
+    everyObject: createHandleEverySome('every-object'),
+    everyRight: createHandleEverySome('every-right'),
+    filter: createHandleMapFilterForEach('filter-left'),
+    filterObject: createHandleMapFilterForEach('filter-object'),
+    filterRight: createHandleMapFilterForEach('filter-right'),
+    forEach: createHandleMapFilterForEach('for-each-left'),
+    forEachObject: createHandleMapFilterForEach('for-each-object'),
+    forEachRight: createHandleMapFilterForEach('for-each-right'),
+    find: createHandleFind('find-left'),
+    findIndex: createHandleFind('find-index'),
+    findKey: createHandleFind('find-key'),
+    findLast: createHandleFind('find-last'),
+    findLastIndex: createHandleFind('find-last-index'),
+    findObject: createHandleFind('find-object'),
+    flatMap: createHandleMapFilterForEach('flat-map-left'),
+    flatMapRight: createHandleMapFilterForEach('flat-map-right'),
+    map: createHandleMapFilterForEach('map-left'),
+    mapObject: createHandleMapFilterForEach('map-object'),
+    mapRight: createHandleMapFilterForEach('map-right'),
+    reduce: createHandleReduce('left'),
+    reduceObject: createHandleReduce('object'),
+    reduceRight: createHandleReduce('right'),
+    some: createHandleEverySome('some-left'),
+    someObject: createHandleEverySome('some-object'),
+    someRight: createHandleEverySome('some-right')
+  };
+  function getInjectedBodyAndLogic(_ref) {
+    var handler = _ref.handler,
+      isForEach = _ref.isForEach,
+      isReduce = _ref.isReduce,
+      local = _ref.local,
+      path = _ref.path,
+      statement = _ref.statement;
+    var body = handler.get('body');
+    var traverseState = {
+      containsThis: false,
+      count: 0,
+      isForEach: isForEach,
+      value: null
+    };
+    body.traverse(traverseConfigs.body, traverseState);
+    var callbackContainsThis = traverseState.containsThis,
+      returnCount = traverseState.count,
+      returnValue = traverseState.value;
+    if (body.isBlockStatement()) {
+      if (!callbackContainsThis) {
+        if (returnCount < 2) {
+          body.traverse(traverseConfigs.stripReturn, {
+            isForEach: isForEach
+          });
+        }
+        if (returnCount === 0) {
+          return {
+            injectedBody: body.node.body,
+            logic: t.identifier('undefined')
+          };
+        }
+        if (returnCount === 1) {
+          return {
+            injectedBody: body.node.body,
+            logic: returnValue
+          };
+        }
+      }
+      var localFnName = path.scope.generateUidIdentifier('fn');
+      var localFn = templates.localVariable({
+        LOCAL: localFnName,
+        VALUE: handler.node
+      });
+      statement.insertBefore(localFn);
+      var _logic = t.callExpression(localFnName, (0, _utils.getCachedFnArgs)(local, isReduce));
+      return {
+        injectedBody: [],
+        logic: _logic
+      };
+    }
+    if (handler.isFunction()) {
+      return isForEach ? {
+        injectedBody: body.node,
+        logic: undefined
+      } : {
+        injectedBody: [],
+        logic: body.node
+      };
+    }
+    if (isForEach) {
+      var injectedBody = [t.expressionStatement(t.callExpression(handler.node, (0, _utils.getCachedFnArgs)(local, isReduce)))];
+      return {
+        injectedBody: injectedBody,
+        logic: undefined
+      };
+    }
+    var logic = t.callExpression(handler.node, (0, _utils.getCachedFnArgs)(local, isReduce));
+    return {
+      injectedBody: [],
+      logic: logic
+    };
+  }
+  function getLocalReferences(path, statement, isReduce) {
+    var _path$get = path.get('arguments'),
+      _path$get2 = (0, _slicedToArray2["default"])(_path$get, 2),
+      collection = _path$get2[0],
+      handler = _path$get2[1];
+    if (!collection || !handler) {
+      throw new _babelPluginMacros.MacroError('Must pass both a collection and a handler');
+    }
+    var localCollection = collection.node;
+    if (!collection.isIdentifier()) {
+      localCollection = (0, _utils.getLocalName)(path, 'collection');
+      var localVariable = templates.localVariable({
+        LOCAL: localCollection,
+        VALUE: collection.node
+      });
+      statement.insertBefore(localVariable);
+    }
+    var accumulated;
+    var value;
+    var key;
+    var scopedCollection;
+    var localDestructuredRefName;
+    if (handler.isFunction()) {
+      if (isReduce) {
+        var _ref2 = handler.get('params');
+        var _ref3 = (0, _slicedToArray2["default"])(_ref2, 4);
+        accumulated = _ref3[0];
+        value = _ref3[1];
+        key = _ref3[2];
+        scopedCollection = _ref3[3];
+      } else {
+        var _ref4 = handler.get('params');
+        var _ref5 = (0, _slicedToArray2["default"])(_ref4, 3);
+        value = _ref5[0];
+        key = _ref5[1];
+        scopedCollection = _ref5[2];
+      }
+      if (value && (value.isArrayPattern() || value.isObjectPattern())) {
+        localDestructuredRefName = path.scope.generateUidIdentifier('destructured');
+        var _localVariable = templates.localVariable({
+          LOCAL: value.node,
+          VALUE: localDestructuredRefName
+        });
+        var body = handler.get('body');
+        if (!body.isBlockStatement()) {
+          body.replaceWith(t.blockStatement([t.returnStatement(body.node)]));
+        }
+        body.unshiftContainer('body', _localVariable);
+        value.replaceWith(localDestructuredRefName);
+      }
+    }
+    var localAccumulated = accumulated ? (0, _utils.getLocalName)(accumulated) : (0, _utils.getLocalName)(path, 'accumulated');
+    var localKey = key ? (0, _utils.getLocalName)(key) : (0, _utils.getLocalName)(path, 'key');
+    var localLength = (0, _utils.getLocalName)(path, 'length');
+    var localValue;
+    if (localDestructuredRefName) {
+      localValue = localDestructuredRefName;
     } else {
-      initialValue = t.memberExpression(iterableUsed, t.numericLiteral(0), true);
+      localValue = value ? (0, _utils.getLocalName)(value) : (0, _utils.getLocalName)(path, 'value');
     }
-  }
-  if (isObject) {
-    injected.push(t.variableDeclaration('let', [t.variableDeclarator(value)]));
-  }
-  var valueAssignment = t.expressionStatement(t.assignmentExpression('=', value, t.memberExpression(iterableUsed, key, true)));
-  var resultApplication = getResultApplication(t, handler, fnUsed, value, key, iterableUsed, path, result);
-  var resultStatement = resultApplication.pop();
-  var resultAssignment = t.assignmentExpression('=', result, resultStatement);
-  var block;
-  if (!hasInitialValue && isObject) {
-    var mainBlock = [valueAssignment].concat((0, _toConsumableArray2["default"])(resultApplication));
-    if (resultAssignment.left.name !== resultAssignment.right.name) {
-      mainBlock.push(t.expressionStatement(resultAssignment));
+    if (accumulated) {
+      (0, _utils.rename)(accumulated, localAccumulated.name);
     }
-    var ifHasInitialValue = t.ifStatement(hasInitialValueId, t.blockStatement(mainBlock), t.blockStatement([t.expressionStatement(t.assignmentExpression('=', hasInitialValueId, t.booleanLiteral(true))), t.expressionStatement(t.assignmentExpression('=', result, t.memberExpression(iterableUsed, key, true)))]));
-    block = [ifHasInitialValue];
-  } else {
-    block = [valueAssignment].concat((0, _toConsumableArray2["default"])(resultApplication));
-    if (resultAssignment.left.name !== resultAssignment.right.name) {
-      block.push(t.expressionStatement(resultAssignment));
+    if (value) {
+      (0, _utils.rename)(value, localValue.name);
     }
-  }
-  var loop = getLoop({
-    t: t,
-    body: t.blockStatement(block),
-    iterable: iterableUsed,
-    key: key,
-    length: length,
-    isDecrementing: isDecrementing,
-    isObject: isObject,
-    scope: path.scope,
-    value: value
-  });
-  if (!hasInitialValue && !isObject) {
-    var keyValue = loop.init.declarations.find(function (_ref9) {
-      var id = _ref9.id;
-      return id.name === key.name;
-    });
-    if (isDecrementing) {
-      keyValue.init.left = length;
-      keyValue.init.right = t.numericLiteral(2);
-    } else {
-      keyValue.init = t.numericLiteral(1);
+    if (key) {
+      (0, _utils.rename)(key, localKey.name);
     }
+    if (scopedCollection) {
+      (0, _utils.rename)(scopedCollection, localCollection.name);
+    }
+    return {
+      accumulated: localAccumulated,
+      collection: localCollection,
+      key: localKey,
+      length: localLength,
+      value: localValue
+    };
   }
-  var insertBefore = [];
-  if (iterableUsed === iterable) {
-    var iterableVar = t.variableDeclaration('const', [t.variableDeclarator(iterable, object)]);
-    insertBefore.push(iterableVar);
+  function createHandleEverySome(type) {
+    return function handleFilter(referencePath) {
+      var path = referencePath.parentPath;
+      if (!(path !== null && path !== void 0 && path.isCallExpression())) {
+        return;
+      }
+      (0, _utils.handleInvalidUsage)(path, handlers);
+      (0, _utils.handleArrowFunctionExpressionUse)(path);
+      var _path$get3 = path.get('arguments'),
+        _path$get4 = (0, _slicedToArray2["default"])(_path$get3, 2),
+        collection = _path$get4[0],
+        handler = _path$get4[1];
+      if (!collection || !handler) {
+        throw new _babelPluginMacros.MacroError('Must pass both a collection and a handler');
+      }
+      (0, _utils.processNestedInlineLoopMacros)(collection, handlers);
+      var statement = path.getStatementParent();
+      var local = getLocalReferences(path, statement);
+      var _getInjectedBodyAndLo = getInjectedBodyAndLogic({
+          handler: handler,
+          local: local,
+          path: path,
+          statement: statement
+        }),
+        injectedBody = _getInjectedBodyAndLo.injectedBody,
+        logic = _getInjectedBodyAndLo.logic;
+      var result = path.scope.generateUidIdentifier('result');
+      var determination = path.scope.generateUidIdentifier('determination');
+      var forLoop;
+      switch (type) {
+        case 'every-left':
+          forLoop = templates.every({
+            BODY: injectedBody,
+            RESULT: result,
+            COLLECTION: local.collection,
+            DETERMINATION: determination,
+            KEY: local.key,
+            LENGTH: local.length,
+            LOGIC: logic,
+            VALUE: local.value
+          });
+          break;
+        case 'some-left':
+          forLoop = templates.some({
+            BODY: injectedBody,
+            RESULT: result,
+            COLLECTION: local.collection,
+            DETERMINATION: determination,
+            KEY: local.key,
+            LENGTH: local.length,
+            LOGIC: logic,
+            VALUE: local.value
+          });
+          break;
+        case 'every-right':
+          forLoop = templates.everyRight({
+            BODY: injectedBody,
+            RESULT: result,
+            COLLECTION: local.collection,
+            DETERMINATION: determination,
+            KEY: local.key,
+            LOGIC: logic,
+            VALUE: local.value
+          });
+          break;
+        case 'some-right':
+          forLoop = templates.someRight({
+            BODY: injectedBody,
+            RESULT: result,
+            COLLECTION: local.collection,
+            DETERMINATION: determination,
+            KEY: local.key,
+            LOGIC: logic,
+            VALUE: local.value
+          });
+          break;
+        case 'every-object':
+          forLoop = templates.everyObject({
+            BODY: injectedBody,
+            RESULT: result,
+            COLLECTION: local.collection,
+            DETERMINATION: determination,
+            KEY: local.key,
+            LOGIC: logic,
+            VALUE: local.value
+          });
+          break;
+        case 'some-object':
+          forLoop = templates.someObject({
+            BODY: injectedBody,
+            RESULT: result,
+            COLLECTION: local.collection,
+            DETERMINATION: determination,
+            KEY: local.key,
+            LOGIC: logic,
+            VALUE: local.value
+          });
+          break;
+        default:
+          throw new _babelPluginMacros.MacroError("Invalid type ".concat(type, " provided"));
+      }
+      statement.insertBefore(forLoop);
+      (0, _utils.replaceOrRemove)(path, determination);
+    };
   }
-  insertBefore.push.apply(insertBefore, injected);
-  if (fnUsed === fn && resultStatement.__inlineLoopsMacroFallback) {
-    var handlerVar = t.variableDeclaration('const', [t.variableDeclarator(fn, handler)]);
-    insertBefore.push(handlerVar);
+  function createHandleFind(type) {
+    return function handleFilter(referencePath) {
+      var path = referencePath.parentPath;
+      if (!(path !== null && path !== void 0 && path.isCallExpression())) {
+        return;
+      }
+      (0, _utils.handleInvalidUsage)(path, handlers);
+      (0, _utils.handleArrowFunctionExpressionUse)(path);
+      var _path$get5 = path.get('arguments'),
+        _path$get6 = (0, _slicedToArray2["default"])(_path$get5, 2),
+        collection = _path$get6[0],
+        handler = _path$get6[1];
+      if (!collection || !handler) {
+        throw new _babelPluginMacros.MacroError('Must pass both a collection and a handler');
+      }
+      (0, _utils.processNestedInlineLoopMacros)(collection, handlers);
+      var statement = path.getStatementParent();
+      var local = getLocalReferences(path, statement);
+      var _getInjectedBodyAndLo2 = getInjectedBodyAndLogic({
+          handler: handler,
+          local: local,
+          path: path,
+          statement: statement
+        }),
+        injectedBody = _getInjectedBodyAndLo2.injectedBody,
+        logic = _getInjectedBodyAndLo2.logic;
+      var result = path.scope.generateUidIdentifier('result');
+      var match = path.scope.generateUidIdentifier('match');
+      var forLoop;
+      switch (type) {
+        case 'find-left':
+          forLoop = templates.find({
+            BODY: injectedBody,
+            RESULT: result,
+            COLLECTION: local.collection,
+            MATCH: match,
+            KEY: local.key,
+            LENGTH: local.length,
+            LOGIC: logic,
+            VALUE: local.value
+          });
+          break;
+        case 'find-index':
+          forLoop = templates.findIndex({
+            BODY: injectedBody,
+            RESULT: result,
+            COLLECTION: local.collection,
+            MATCH: match,
+            KEY: local.key,
+            LENGTH: local.length,
+            LOGIC: logic,
+            VALUE: local.value
+          });
+          break;
+        case 'find-last':
+          forLoop = templates.findLast({
+            BODY: injectedBody,
+            RESULT: result,
+            COLLECTION: local.collection,
+            MATCH: match,
+            KEY: local.key,
+            LOGIC: logic,
+            VALUE: local.value
+          });
+          break;
+        case 'find-last-index':
+          forLoop = templates.findLastIndex({
+            BODY: injectedBody,
+            RESULT: result,
+            COLLECTION: local.collection,
+            MATCH: match,
+            KEY: local.key,
+            LOGIC: logic,
+            VALUE: local.value
+          });
+          break;
+        case 'find-object':
+          forLoop = templates.findObject({
+            BODY: injectedBody,
+            RESULT: result,
+            COLLECTION: local.collection,
+            MATCH: match,
+            KEY: local.key,
+            LOGIC: logic,
+            VALUE: local.value
+          });
+          break;
+        case 'find-key':
+          forLoop = templates.findKey({
+            BODY: injectedBody,
+            RESULT: result,
+            COLLECTION: local.collection,
+            MATCH: match,
+            KEY: local.key,
+            LOGIC: logic,
+            VALUE: local.value
+          });
+          break;
+        default:
+          throw new _babelPluginMacros.MacroError("Invalid type ".concat(type, " provided"));
+      }
+      statement.insertBefore(forLoop);
+      (0, _utils.replaceOrRemove)(path, match);
+    };
   }
-  var resultVar = t.variableDeclaration('let', [t.variableDeclarator(result, initialValue)]);
-  insertBefore.push(resultVar);
-  insertBefore.push(loop);
-  path.getStatementParent().insertBefore(insertBefore);
-  path.parentPath.replaceWith(result);
+  function createHandleMapFilterForEach(type) {
+    return function handleMap(referencePath) {
+      var path = referencePath.parentPath;
+      if (!(path !== null && path !== void 0 && path.isCallExpression())) {
+        return;
+      }
+      (0, _utils.handleInvalidUsage)(path, handlers);
+      (0, _utils.handleArrowFunctionExpressionUse)(path);
+      var _path$get7 = path.get('arguments'),
+        _path$get8 = (0, _slicedToArray2["default"])(_path$get7, 2),
+        collection = _path$get8[0],
+        handler = _path$get8[1];
+      if (!collection || !handler) {
+        throw new _babelPluginMacros.MacroError('Must pass both a collection and a handler');
+      }
+      (0, _utils.processNestedInlineLoopMacros)(collection, handlers);
+      var statement = path.getStatementParent();
+      var local = getLocalReferences(path, statement);
+      var localResults = (0, _utils.getLocalName)(path, 'results');
+      var isForEach = type.includes('for-each');
+      var result = path.scope.generateUidIdentifier('result');
+      var _getInjectedBodyAndLo3 = getInjectedBodyAndLogic({
+          handler: handler,
+          isForEach: isForEach,
+          local: local,
+          path: path,
+          statement: statement
+        }),
+        injectedBody = _getInjectedBodyAndLo3.injectedBody,
+        logic = _getInjectedBodyAndLo3.logic;
+      var forLoop;
+      switch (type) {
+        case 'map-left':
+          forLoop = templates.map({
+            BODY: injectedBody,
+            COLLECTION: local.collection,
+            KEY: local.key,
+            LENGTH: local.length,
+            LOGIC: logic,
+            RESULTS: localResults,
+            VALUE: local.value
+          });
+          break;
+        case 'filter-left':
+          forLoop = templates.filter({
+            BODY: injectedBody,
+            COLLECTION: local.collection,
+            KEY: local.key,
+            LENGTH: local.length,
+            LOGIC: logic,
+            RESULT: result,
+            RESULTS: localResults,
+            VALUE: local.value
+          });
+          break;
+        case 'flat-map-left':
+          forLoop = templates.flatMap({
+            BODY: injectedBody,
+            COLLECTION: local.collection,
+            KEY: local.key,
+            LENGTH: local.length,
+            LOGIC: logic,
+            RESULT: result,
+            RESULTS: localResults,
+            VALUE: local.value
+          });
+          break;
+        case 'for-each-left':
+          forLoop = templates.forEach({
+            BODY: injectedBody,
+            COLLECTION: local.collection,
+            KEY: local.key,
+            LENGTH: local.length,
+            VALUE: local.value
+          });
+          break;
+        case 'map-right':
+          forLoop = templates.mapRight({
+            BODY: injectedBody,
+            COLLECTION: local.collection,
+            KEY: local.key,
+            LENGTH: local.length,
+            LOGIC: logic,
+            RESULTS: localResults,
+            VALUE: local.value
+          });
+          break;
+        case 'filter-right':
+          forLoop = templates.filterRight({
+            BODY: injectedBody,
+            COLLECTION: local.collection,
+            KEY: local.key,
+            LOGIC: logic,
+            RESULT: result,
+            RESULTS: localResults,
+            VALUE: local.value
+          });
+          break;
+        case 'flat-map-right':
+          forLoop = templates.flatMapRight({
+            BODY: injectedBody,
+            COLLECTION: local.collection,
+            KEY: local.key,
+            LOGIC: logic,
+            RESULT: result,
+            RESULTS: localResults,
+            VALUE: local.value
+          });
+          break;
+        case 'for-each-right':
+          forLoop = templates.forEachRight({
+            BODY: injectedBody,
+            COLLECTION: local.collection,
+            KEY: local.key,
+            VALUE: local.value
+          });
+          break;
+        case 'map-object':
+          forLoop = templates.mapObject({
+            BODY: injectedBody,
+            COLLECTION: local.collection,
+            KEY: local.key,
+            LOGIC: logic,
+            RESULT: result,
+            RESULTS: localResults,
+            VALUE: local.value
+          });
+          break;
+        case 'filter-object':
+          forLoop = templates.filterObject({
+            BODY: injectedBody,
+            COLLECTION: local.collection,
+            KEY: local.key,
+            LOGIC: logic,
+            RESULT: result,
+            RESULTS: localResults,
+            VALUE: local.value
+          });
+          break;
+        case 'for-each-object':
+          forLoop = templates.forEachObject({
+            BODY: injectedBody,
+            COLLECTION: local.collection,
+            KEY: local.key,
+            VALUE: local.value
+          });
+          break;
+        default:
+          throw new _babelPluginMacros.MacroError("Invalid type ".concat(type, " provided"));
+      }
+      statement.insertBefore(forLoop);
+      (0, _utils.replaceOrRemove)(path, isForEach ? t.identifier('undefined') : localResults);
+    };
+  }
+  function createHandleReduce(type) {
+    return function handleReduce(referencePath) {
+      var path = referencePath.parentPath;
+      if (!(path !== null && path !== void 0 && path.isCallExpression())) {
+        return;
+      }
+      (0, _utils.handleInvalidUsage)(path, handlers);
+      (0, _utils.handleArrowFunctionExpressionUse)(path);
+      var _path$get9 = path.get('arguments'),
+        _path$get10 = (0, _slicedToArray2["default"])(_path$get9, 3),
+        collection = _path$get10[0],
+        handler = _path$get10[1],
+        initialValue = _path$get10[2];
+      if (!collection || !handler) {
+        throw new _babelPluginMacros.MacroError('Must pass both a collection and a handler');
+      }
+      (0, _utils.processNestedInlineLoopMacros)(collection, handlers);
+      var statement = path.getStatementParent();
+      var local = getLocalReferences(path, statement, true);
+      var _getInjectedBodyAndLo4 = getInjectedBodyAndLogic({
+          handler: handler,
+          isReduce: true,
+          local: local,
+          path: path,
+          statement: statement
+        }),
+        injectedBody = _getInjectedBodyAndLo4.injectedBody,
+        logic = _getInjectedBodyAndLo4.logic;
+      var initial;
+      if (type === 'right') {
+        initial = initialValue ? initialValue.node : templates.nthLastItem({
+          COLLECTION: local.collection,
+          COUNT: t.numericLiteral(1)
+        }).expression;
+      } else {
+        initial = initialValue ? initialValue.node : t.memberExpression(local.collection, t.numericLiteral(0), true);
+      }
+      var start = t.numericLiteral(initialValue ? 0 : 1);
+      var forLoop;
+      switch (type) {
+        case 'left':
+          forLoop = templates.reduce({
+            ACCUMULATED: local.accumulated,
+            BODY: injectedBody,
+            COLLECTION: local.collection,
+            KEY: local.key,
+            INITIAL: initial,
+            LENGTH: local.length,
+            LOGIC: logic,
+            START: start,
+            VALUE: local.value
+          });
+          break;
+        case 'right':
+          forLoop = templates.reduceRight({
+            ACCUMULATED: local.accumulated,
+            BODY: injectedBody,
+            COLLECTION: local.collection,
+            KEY: local.key,
+            INITIAL: initial,
+            LOGIC: logic,
+            START: start,
+            VALUE: local.value
+          });
+          break;
+        case 'object':
+          {
+            var skip = path.scope.generateUidIdentifier('skip');
+            var shouldSkip = t.booleanLiteral(!initialValue);
+            forLoop = templates.reduceObject({
+              ACCUMULATED: local.accumulated,
+              BODY: injectedBody,
+              COLLECTION: local.collection,
+              KEY: local.key,
+              INITIAL: initialValue ? initial : t.identifier('undefined'),
+              LOGIC: logic,
+              SKIP: skip,
+              SHOULD_SKIP: shouldSkip,
+              VALUE: local.value
+            });
+            break;
+          }
+        default:
+          throw new _babelPluginMacros.MacroError("Invalid type ".concat(type, " provided"));
+      }
+      statement.insertBefore(forLoop);
+      (0, _utils.replaceOrRemove)(path, local.accumulated);
+    };
+  }
+  return handlers;
 }
-function handleSome(_ref10) {
-  var t = _ref10.t,
-    path = _ref10.path,
-    object = _ref10.object,
-    handler = _ref10.handler,
-    isDecrementing = _ref10.isDecrementing,
-    isObject = _ref10.isObject;
-  var _getIds9 = getIds(path.scope),
-    fn = _getIds9.fn,
-    iterable = _getIds9.iterable,
-    key = _getIds9.key,
-    length = _getIds9.length,
-    result = _getIds9.result,
-    value = _getIds9.value;
-  var isHandlerCached = isCachedReference(t, handler);
-  var isIterableCached = isCachedReference(t, object);
-  var fnUsed = isHandlerCached ? handler : fn;
-  var iterableUsed = isIterableCached ? object : iterable;
-  var _getInjectedValues8 = getInjectedValues(t, path, {
-      fn: fnUsed,
-      getResult: function getResult(resultStatement) {
-        return t.ifStatement(resultStatement, t.blockStatement([t.expressionStatement(t.assignmentExpression('=', result, t.booleanLiteral(true))), t.breakStatement()]));
-      },
-      handler: handler,
-      iterable: iterableUsed,
-      key: key,
-      value: value
-    }),
-    body = _getInjectedValues8.body,
-    resultStatement = _getInjectedValues8.resultStatement;
-  var loop = getLoop({
-    t: t,
-    body: body,
-    iterable: iterableUsed,
-    key: key,
-    length: length,
-    isDecrementing: isDecrementing,
-    isObject: isObject,
-    scope: path.scope,
-    value: value
-  });
-  insertBeforeParent({
-    fn: fn,
-    handler: handler,
-    isObject: isObject,
-    iterable: iterable,
-    loop: loop,
-    object: object,
-    path: path,
-    result: result,
-    resultStatement: resultStatement,
-    resultValue: t.booleanLiteral(false),
-    t: t,
-    value: value
-  });
-  path.parentPath.replaceWith(result);
-}
-module.exports = {
-  handleEvery: handleEvery,
-  handleFilter: handleFilter,
-  handleFind: handleFind,
-  handleFindKey: handleFindKey,
-  handleFlatMap: handleFlatMap,
-  handleForEach: handleForEach,
-  handleMap: handleMap,
-  handleReduce: handleReduce,
-  handleSome: handleSome
-};

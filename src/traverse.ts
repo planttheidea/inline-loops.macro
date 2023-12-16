@@ -1,29 +1,49 @@
-const { rename } = require('./utils');
+import type { NodePath as Path } from '@babel/core';
+import {
+  ArrayPattern,
+  Expression,
+  ObjectPattern,
+  ReturnStatement,
+  ThisExpression,
+  VariableDeclarator,
+} from '@babel/types';
+import type { Babel } from './types';
+import { rename } from './utils';
 
-function createTraverseConfigs({ types: t }) {
+interface BodyState {
+  containsThis: boolean;
+  count: number;
+  value: Expression | null | undefined;
+}
+
+interface StripReturnState {
+  isForEach?: boolean;
+}
+
+export function createTraverseConfigs({ types: t }: Babel) {
   const body = {
-    ArrayPattern(arrayPatternPath) {
+    ArrayPattern(arrayPatternPath: Path<ArrayPattern>) {
       arrayPatternPath.get('elements').forEach((element) => {
         if (element.isIdentifier()) {
           rename(element);
         }
       });
     },
-    ObjectPattern(objectPatternPath) {
+    ObjectPattern(objectPatternPath: Path<ObjectPattern>) {
       objectPatternPath.get('properties').forEach((property) => {
         const value = property.get('value');
 
-        if (value.isIdentifier()) {
+        if (!Array.isArray(value) && value.isIdentifier()) {
           rename(value);
         }
       });
     },
-    ReturnStatement(returnPath, returnState) {
-      const statementParent = returnPath.parentPath.getStatementParent();
+    ReturnStatement(returnPath: Path<ReturnStatement>, returnState: BodyState) {
+      const statementParent = returnPath.parentPath?.getStatementParent();
 
       if (
-        statementParent.isIfStatement() ||
-        statementParent.isSwitchStatement()
+        statementParent?.isIfStatement() ||
+        statementParent?.isSwitchStatement()
       ) {
         // If conditional returns exist, bail out inlining return statement.
         returnState.value = null;
@@ -36,18 +56,23 @@ function createTraverseConfigs({ types: t }) {
         : returnPath.get('argument').node;
       returnState.count++;
     },
-    ThisExpression(thisPath, thisState) {
+    ThisExpression(thisPath: Path<ThisExpression>, thisState: BodyState) {
       thisState.containsThis = true;
     },
-    VariableDeclarator(variablePath) {
+    VariableDeclarator(variablePath: Path<VariableDeclarator>) {
       const id = variablePath.get('id');
 
-      rename(id);
+      if (id.isIdentifier()) {
+        rename(id);
+      }
     },
   };
 
   const stripReturn = {
-    ReturnStatement(returnPath, returnState = {}) {
+    ReturnStatement(
+      returnPath: Path<ReturnStatement>,
+      returnState: StripReturnState = {},
+    ) {
       const arg = returnPath.get('argument');
 
       if (returnState.isForEach) {
@@ -68,5 +93,3 @@ function createTraverseConfigs({ types: t }) {
 
   return { body, stripReturn };
 }
-
-module.exports = { createTraverseConfigs };
