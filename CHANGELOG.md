@@ -9,7 +9,7 @@
 
 ## Enhancements
 
-- Support for conditional usage in ternaries / logical expressions
+- Support for conditional and lazy scenarios (ternaries, logical expressions, default parameter assignments, etc.)
 - Better TS typing
 - Better inline handling of complex logic
 

@@ -198,6 +198,22 @@ export function replaceOrRemove(
   }
 }
 
+export function isPossiblyDynamic(path: Path) {
+  if (path.isPattern()) {
+    return true;
+  }
+
+  if (
+    path.isBinaryExpression() ||
+    path.isCallExpression() ||
+    path.isTemplateLiteral()
+  ) {
+    return isPossiblyDynamic(path.parentPath);
+  }
+
+  return path.isExpression();
+}
+
 export function shouldWrapInClosure(
   path: Path<CallExpression>,
   local: LocalReferences,
@@ -209,11 +225,12 @@ export function shouldWrapInClosure(
   }
 
   const functionParent = path.getFunctionParent();
-  const grandparentPath = parentPath.parentPath;
 
-  if (!functionParent || !grandparentPath) {
-    return false;
+  if (!functionParent) {
+    return isPossiblyDynamic(parentPath);
   }
+
+  const grandparentPath = parentPath.parentPath;
 
   if (parentPath.isPattern() || local.contents.length > 1) {
     return true;
@@ -225,13 +242,11 @@ export function shouldWrapInClosure(
     return contents.flat().some((content) => content.isVariableDeclaration());
   }
 
-  if (!parentPath.isExpression()) {
+  if (!grandparentPath || !parentPath.isExpression()) {
     return false;
   }
 
-  const maybeNestedConditional =
-    grandparentPath.isPattern() ||
-    (grandparentPath.isExpression() && !grandparentPath.isBinaryExpression());
+  const maybeNestedConditional = isPossiblyDynamic(grandparentPath);
 
   if (parentPath.isLogicalExpression()) {
     return (

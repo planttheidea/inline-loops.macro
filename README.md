@@ -11,6 +11,7 @@ Iteration helpers that inline to native loops for performance
   - [Methods](#methods)
   - [How it works](#how-it-works)
     - [Aggressive inlining](#aggressive-inlining)
+    - [Conditional / lazy scenarios](#conditional--lazy-scenarios)
     - [Bailout scenarios](#bailout-scenarios)
   - [Gotchas](#gotchas)
     - [`*Object` methods do not perform `hasOwnProperty` check](#object-methods-do-not-perform-hasownproperty-check)
@@ -78,10 +79,8 @@ function contrivedExample(array) {
 Internally Babel will transform these calls to their respective loop-driven alternatives. Example
 
 ```js
-// this
 const foo = map(array, fn);
-
-// becomes this
+// transforms to
 const _length = array.length;
 const _results = Array(_length);
 for (let _key = 0, _value; _key < _length; ++_key) {
@@ -98,10 +97,8 @@ If you are passing uncached values as the array or the handler, it will store th
 One extra performance boost is that `inline-loops` will try to inline the callback operations when possible. For example:
 
 ```js
-// this
 const doubled = map(array, (value) => value * 2);
-
-// becomes this
+// transforms to
 const _length = array.length;
 const _results = Array(_length);
 for (let _key = 0, _value; _key < _length; ++_key) {
@@ -114,12 +111,10 @@ const doubled = _results;
 Notice that there is no reference to the original function, because it used the return directly. This even works with nested calls!
 
 ```js
-// this
 const isAllTuples = every(array, (tuple) =>
   every(tuple, (value) => Array.isArray(value) && value.length === 2),
 );
-
-// becomes this
+// transforms to
 let _determination = true;
 for (
   let _key = 0, _length = array.length, _tuple, _result;
@@ -148,6 +143,51 @@ for (
 }
 const isAllTuples = _determination;
 ```
+
+### Conditional / lazy scenarios
+
+There are times where you want to perform the operation lazily, and there is support for this as well:
+
+```js
+foo === 'bar' ? array : map(array, (v) => v * 2);
+// transforms to
+foo === 'bar'
+  ? array
+  : (() => {
+      const _length = array.length;
+      const _results = Array(_length);
+      for (let _key = 0, _v; _key < _length; ++_key) {
+        _v = array[_key];
+        _results[_key] = _v * 2;
+      }
+      return _results;
+    })();
+```
+
+The wrapping in the IIFE (Immediately-Invoked Function Expression) allows for the lazy execution based on the condition, but if that condition is met then it eagerly executes and returns the value. This will work just as easily for default parameters:
+
+```js
+function getStuff(array, doubled = map(array, (v) => v * 2)) {
+  return doubled;
+}
+// transforms to
+function getStuff(
+  array,
+  doubled = (() => {
+    const _length = array.length;
+    const _results = Array(_length);
+    for (let _key = 0, _v; _key < _length; ++_key) {
+      _v = array[_key];
+      _results[_key] = _v * 2;
+    }
+    return _results;
+  })(),
+) {
+  return doubled;
+}
+```
+
+Because there is a small cost to parse, analyze, and execute the function compared to just have the logic in the same closure, the macro will only wrap the logic in an IIFE if such conditional or lazy execution is required.
 
 ### Bailout scenarios
 
@@ -188,7 +228,7 @@ The object methods will do operations in `for-in` loop, but will not guard via a
 // this
 const doubled = mapObject(object, (value) => value * 2);
 
-// becomes this
+// transforms to this
 let _result = {};
 
 let _value;
