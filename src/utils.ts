@@ -2,6 +2,7 @@ import type { NodePath as Path } from '@babel/core';
 import {
   CallExpression,
   Expression,
+  ExpressionStatement,
   Identifier,
   ObjectProperty,
   StringLiteral,
@@ -128,35 +129,6 @@ export function handleInvalidUsage(
   }
 }
 
-export function isLazyUsage(path: Path<CallExpression>): boolean {
-  const parentPath = path.parentPath;
-
-  if (parentPath.isPattern()) {
-    return true;
-  }
-
-  if (!parentPath.isExpression()) {
-    return false;
-  }
-
-  const grandparentPath = parentPath.parentPath;
-  const maybeNestedConditional =
-    grandparentPath.isPattern() ||
-    (grandparentPath.isExpression() && !grandparentPath.isBinaryExpression());
-
-  if (parentPath.isLogicalExpression()) {
-    return (
-      !maybeNestedConditional && parentPath.get('right').node === path.node
-    );
-  }
-
-  if (parentPath.isConditionalExpression()) {
-    return !maybeNestedConditional && parentPath.get('test').node !== path.node;
-  }
-
-  return maybeNestedConditional;
-}
-
 export function isMacroHandlerName(
   handlers: Handlers,
   name: string | undefined,
@@ -193,23 +165,14 @@ export function replaceOrRemove(
   templates: ReturnType<typeof createTemplates>,
   replacement: Expression,
 ) {
-  const functionParent = path.getFunctionParent();
-  const contents = functionParent?.get('body')?.get('body');
-
-  const shouldWrapInIife =
-    functionParent &&
-    ((Array.isArray(contents) && contents.length > 1) ||
-      local.contents.length > 1 ||
-      isLazyUsage(path));
-
-  if (shouldWrapInIife) {
+  if (shouldWrapInClosure(path, local)) {
     if (!t.isIdentifier(replacement, { name: 'undefined' })) {
       local.contents.push(t.returnStatement(replacement));
     }
 
     const iife = templates.iife({
       BODY: local.contents.flat(),
-    }) as { expression: Expression };
+    }) as ExpressionStatement;
 
     path.replaceWith(iife.expression);
   } else {
@@ -233,4 +196,52 @@ export function replaceOrRemove(
       path.replaceWith(replacement);
     }
   }
+}
+
+export function shouldWrapInClosure(
+  path: Path<CallExpression>,
+  local: LocalReferences,
+): boolean {
+  const parentPath = path.parentPath;
+
+  if (!parentPath) {
+    return false;
+  }
+
+  const functionParent = path.getFunctionParent();
+  const grandparentPath = parentPath.parentPath;
+
+  if (!functionParent || !grandparentPath) {
+    return false;
+  }
+
+  if (parentPath.isPattern() || local.contents.length > 1) {
+    return true;
+  }
+
+  const contents = functionParent?.get('body')?.get('body');
+
+  if (Array.isArray(contents) && contents.length > 1) {
+    return contents.flat().some((content) => content.isVariableDeclaration());
+  }
+
+  if (!parentPath.isExpression()) {
+    return false;
+  }
+
+  const maybeNestedConditional =
+    grandparentPath.isPattern() ||
+    (grandparentPath.isExpression() && !grandparentPath.isBinaryExpression());
+
+  if (parentPath.isLogicalExpression()) {
+    return (
+      !maybeNestedConditional && parentPath.get('right').node === path.node
+    );
+  }
+
+  if (parentPath.isConditionalExpression()) {
+    return !maybeNestedConditional && parentPath.get('test').node !== path.node;
+  }
+
+  return maybeNestedConditional;
 }
