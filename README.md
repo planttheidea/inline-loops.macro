@@ -15,7 +15,7 @@ Iteration helpers that inline to native loops for performance
     - [Bailout scenarios](#bailout-scenarios)
   - [Gotchas](#gotchas)
     - [`*Object` methods do not perform `hasOwnProperty` check](#object-methods-do-not-perform-hasownproperty-check)
-    - [`find*` methods](#find-methods)
+    - [`find*` methods differ in naming convention](#find-methods-differ-in-naming-convention)
   - [Development](#development)
 
 ## Summary
@@ -198,23 +198,34 @@ Inevitably not everything can be inlined, so there are known bailout scenarios:
 - When the `return` statement is not top-level (same reason as with multiple `return`s)
 - The `this` keyword is used (closure must be maintained to guarantee correct value)
 
-That means if you are cranking every last ounce of performance out of this macro, you may want to get cozy with ternaries.
+If there is a bailout of an anonymous callback function, that function is stored in the same scope and used in the loop:
 
 ```js
-import { map } from 'inline-loops.macro';
-
-// this will bail out to storing the function and calling it in the loop
-const deopted = map(array, (value) => {
-  if (value % 2 === 0) {
-    return 'even';
+const result = map([1, 2, 3], (value) => {
+  if (value === 2) {
+    return 82;
   }
 
-  return 'odd';
+  return value;
 });
-
-// this will inline the operation and avoid function calls
-const inlined = map(array, (value) => (value % 2 === 0 ? 'even' : 'odd'));
+// transforms to
+const _collection = [1, 2, 3];
+const _fn = (_value) => {
+  if (_value === 2) {
+    return 82;
+  }
+  return _value;
+};
+const _length = _collection.length;
+const _results = Array(_length);
+for (let _key = 0, _value; _key < _length; ++_key) {
+  _value = _collection[_key];
+  _results[_key] = _fn(_value, _key, _collection);
+}
+const result = _results;
 ```
+
+Note that in bailout scenarios that are used in a closure, the transform will wrap itself in an IIFE to avoid memory leaks from retaining the injected variables.
 
 ## Gotchas
 
@@ -250,7 +261,7 @@ const filtered = filterObject(object, (_, key) => Object.hasOwn(object, key));
 const doubled = mapObject(filtered, (value) => value * 2);
 ```
 
-### `find*` methods
+### `find*` methods differ in naming convention
 
 Most of the operations follow the same naming conventions:
 
@@ -267,7 +278,7 @@ The exception to this is the collection of `find`-related methods:
 - `findLastIndex`
 - `findKey`
 
-The reason for `findLast` / `findLastIndex` instead of `findRight` / `findIndexRight` is because unlike all the other right-direction methods, those are part of the ES spec. Additionally, the reason for `findIndex` vs `findKey` is semantic, as objects have keys and arrays have indices.
+The reason for `findLast` / `findLastIndex` instead of `findRight` / `findIndexRight` is because unlike all the other right-direction methods, those methods are part of the ES spec ([`findLast`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/findLast) / [`findLastIndex`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/findLastIndex)). The reason that`findKey` is used for object values instead of something like `findIndexObject` is because semantically objects have keys instead of indices.
 
 ## Development
 
