@@ -128,16 +128,33 @@ export function handleInvalidUsage(
   }
 }
 
-export function isConditionalUsage(path: Path<CallExpression>): boolean {
+export function isLazyUsage(path: Path<CallExpression>): boolean {
   const parentPath = path.parentPath;
 
-  return (
-    parentPath.isAwaitExpression() ||
-    parentPath.isBinaryExpression() ||
-    parentPath.isConditionalExpression() ||
-    parentPath.isLogicalExpression() ||
-    parentPath.isUnaryExpression()
-  );
+  if (parentPath.isPattern()) {
+    return true;
+  }
+
+  if (!parentPath.isExpression()) {
+    return false;
+  }
+
+  const grandparentPath = parentPath.parentPath;
+  const maybeNestedConditional =
+    grandparentPath.isPattern() ||
+    (grandparentPath.isExpression() && !grandparentPath.isBinaryExpression());
+
+  if (parentPath.isLogicalExpression()) {
+    return (
+      !maybeNestedConditional && parentPath.get('right').node === path.node
+    );
+  }
+
+  if (parentPath.isConditionalExpression()) {
+    return !maybeNestedConditional && parentPath.get('test').node !== path.node;
+  }
+
+  return maybeNestedConditional;
 }
 
 export function isMacroHandlerName(
@@ -183,7 +200,7 @@ export function replaceOrRemove(
     functionParent &&
     ((Array.isArray(contents) && contents.length > 1) ||
       local.contents.length > 1 ||
-      isConditionalUsage(path));
+      isLazyUsage(path));
 
   if (shouldWrapInIife) {
     if (!t.isIdentifier(replacement, { name: 'undefined' })) {
