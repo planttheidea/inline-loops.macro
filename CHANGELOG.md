@@ -1,5 +1,9 @@
 ## CHANGELOG
 
+# 2.0.3
+
+- [#36](https://github.com/planttheidea/inline-loops.macro/pull/36) - Allow readonly collections, and fix `reduce*` method types for callback
+
 # 2.0.2
 
 - [#33](https://github.com/planttheidea/inline-loops.macro/pull/33) - Prevent `forEach*` methods from hoisting early returns
