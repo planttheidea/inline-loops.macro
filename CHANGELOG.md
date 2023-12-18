@@ -1,5 +1,9 @@
 ## CHANGELOG
 
+# 2.0.1
+
+- [#32](https://github.com/planttheidea/inline-loops.macro/pull/32) - Fix `forEach*` methods not including the hoisted function call
+
 # 2.0.0
 
 ## Breaking change
