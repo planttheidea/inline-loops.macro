@@ -3,7 +3,7 @@ import { log } from './log';
 
 function logItems(items) {
   forEachRight(items, (item) => {
-    if (!this.position) {
+    if (!item.position) {
       return;
     }
 

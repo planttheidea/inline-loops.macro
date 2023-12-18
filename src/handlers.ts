@@ -91,6 +91,15 @@ export function createHandlers(babel: MacroParams['babel']) {
 
     if (body.isBlockStatement()) {
       if (!callbackContainsThis) {
+        if (isForEach) {
+          body.traverse(traverseConfigs.stripReturn, { isForEach });
+
+          return {
+            injectedBody: body.node.body,
+            returned: t.identifier('undefined'),
+          };
+        }
+
         if (returnCount < 2) {
           body.traverse(traverseConfigs.stripReturn, { isForEach });
         }
