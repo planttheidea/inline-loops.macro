@@ -1,5 +1,11 @@
 ## CHANGELOG
 
+# 2.0.2
+
+- [#33](https://github.com/planttheidea/inline-loops.macro/pull/33) - Prevent `forEach*` methods from hoisting early returns
+- [#34](https://github.com/planttheidea/inline-loops.macro/pull/34) - Simplify and fix `findIndex` / `findKey` / `findLastIndex` types
+- [#35](https://github.com/planttheidea/inline-loops.macro/pull/35) - Reuse member expressions as the local collection
+
 # 2.0.1
 
 - [#32](https://github.com/planttheidea/inline-loops.macro/pull/32) - Fix `forEach*` methods not including the hoisted function call
