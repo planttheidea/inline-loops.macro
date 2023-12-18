@@ -5,10 +5,10 @@ type ArrayHandler<Item, Result> = (
 ) => Result;
 
 type ArrayReduceHandler<Item, Result> = (
-  accumulator?: Result,
-  value?: Item,
-  index?: number,
-  array?: Item[],
+  accumulator: Result,
+  value: Item,
+  index: number,
+  array: Item[],
 ) => Result;
 
 type ObjectHandler<Item, Result> = (
