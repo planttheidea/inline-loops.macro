@@ -120,7 +120,12 @@ export function createHandlers(babel: MacroParams['babel']) {
         getCachedFnArgs(local, isReduce),
       );
 
-      return { injectedBody: [], returned };
+      return isForEach
+        ? {
+            injectedBody: [t.expressionStatement(returned)],
+            returned: undefined,
+          }
+        : { injectedBody: [], returned };
     }
 
     if (handler.isFunction()) {
