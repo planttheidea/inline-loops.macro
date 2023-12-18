@@ -240,8 +240,7 @@ export function createTemplates({ template }: MacroParams['babel']) {
 
   const mapObject = template`
     const RESULTS = {};
-    let VALUE,
-        RESULT;
+    let VALUE;
     for (const KEY in COLLECTION) {
       VALUE = COLLECTION[KEY];
       BODY
