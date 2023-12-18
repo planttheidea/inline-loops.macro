@@ -12,7 +12,9 @@ const TRANSFORMED_FILES = fs.readdirSync(TEST_FILES).reduce((tests, file) => {
   const fn = file.replace('.js', '');
 
   if (fn.startsWith('error-')) {
-    test(`if ${fn.replace('error-', '').replace('-', ' ')} will throw an error`, () => {
+    test(`if ${fn
+      .replace('error-', '')
+      .replace('-', ' ')} will throw an error`, () => {
       expect(() => transformFileSync(filename, TRANSFORM_OPTIONS)).toThrow();
     });
 
@@ -21,10 +23,6 @@ const TRANSFORMED_FILES = fs.readdirSync(TEST_FILES).reduce((tests, file) => {
 
   const transformed = transformFileSync(filename, TRANSFORM_OPTIONS).code;
 
-  // if (fn === 'complex-inliner') {
-  //   console.log(transformed);
-  // }
-
   tests[fn] = eval(transformed);
 
   return tests;
@@ -32,12 +30,6 @@ const TRANSFORMED_FILES = fs.readdirSync(TEST_FILES).reduce((tests, file) => {
 
 describe('runtime tests', () => {
   for (const fn in TRANSFORMED_FILES) {
-    if (fn === 'errors') {
-      console.log('foo');
-
-      continue;
-    }
-
     const file = TRANSFORMED_FILES[fn];
 
     describe(fn, () => {

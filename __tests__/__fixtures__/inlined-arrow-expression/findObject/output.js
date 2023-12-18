@@ -1,14 +1,10 @@
-let _result;
-
-let _value;
-
-for (let _key in object) {
+let _match, _value, _result;
+for (const _key in object) {
   _value = object[_key];
-
-  if (_value % 2 === 0) {
-    _result = _value;
+  _result = _value % 2 === 0;
+  if (_result) {
+    _match = _value;
     break;
   }
 }
-
-const firstEven = _result;
+const firstEven = _match;

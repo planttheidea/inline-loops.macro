@@ -1,12 +1,10 @@
-let _result = true;
-
-for (let _key = array.length - 1, _value; _key >= 0; --_key) {
+let _determination = true;
+for (let _key = array.length, _value, _result; --_key >= 0; ) {
   _value = array[_key];
-
-  if (!(_value % 2 === 0)) {
-    _result = false;
+  _result = _value % 2 === 0;
+  if (!_result) {
+    _determination = false;
     break;
   }
 }
-
-const areAllEven = _result;
+const areAllEven = _determination;

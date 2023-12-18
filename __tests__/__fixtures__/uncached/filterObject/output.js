@@ -1,19 +1,17 @@
-const _iterable = {
+const _collection = {
   one: 1,
   two: 2,
   three: 3,
-  four: 4
+  four: 4,
 };
-let _result = {};
-
-let _value;
-
-for (let _key in _iterable) {
-  _value = _iterable[_key];
-
+const _results = {};
+let _result, _value;
+for (const _key in _collection) {
+  _value = _collection[_key];
   const _isValueEven = _value % 2 === 0;
-
-  if (_isValueEven) _result[_key] = _value;
+  _result = _isValueEven;
+  if (_result) {
+    _results[_key] = _value;
+  }
 }
-
-const onlyEven = _result;
+const onlyEven = _results;

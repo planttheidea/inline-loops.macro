@@ -11,10 +11,11 @@ Iteration helpers that inline to native loops for performance
   - [Methods](#methods)
   - [How it works](#how-it-works)
     - [Aggressive inlining](#aggressive-inlining)
+    - [Conditional / lazy scenarios](#conditional--lazy-scenarios)
     - [Bailout scenarios](#bailout-scenarios)
   - [Gotchas](#gotchas)
     - [`*Object` methods do not perform `hasOwnProperty` check](#object-methods-do-not-perform-hasownproperty-check)
-    - [`findIndex` vs `findKey`](#findindex-vs-findkey)
+    - [`find*` methods differ in naming convention](#find-methods-differ-in-naming-convention)
   - [Development](#development)
 
 ## Summary
@@ -27,7 +28,7 @@ You can use it for everything, only for hotpaths, as a replacement for `lodash` 
 
 ## Usage
 
-```javascript
+```js
 import { map, reduce, someObject } from 'inline-loops.macro';
 
 function contrivedExample(array) {
@@ -52,10 +53,10 @@ function contrivedExample(array) {
   - `filterRight` => same as `filter`, but iterating in reverse
   - `filterObject` => same as `filter` but iterating over objects intead of arrays
 - `find` ([MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/find))
-  - `findRight` => same as `find`, but iterating in reverse
+  - `findLast` => same as `find`, but iterating in reverse ([MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/findLast))
   - `findObject` => same as `find` but iterating over objects intead of arrays
 - `findIndex` ([MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/findIndex))
-  - `findIndexRight` => same as `findIndex`, but iterating in reverse
+  - `findLastIndex` => same as `findIndex`, but iterating in reverse ([MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/findLastIndex))
   - `findKey` => same as `findIndex` but iterating over objects intead of arrays
 - `flatMap` ([MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/flatMap))
   - `flatMapRight` => same as `flatMap`, but iterating in reverse
@@ -67,7 +68,7 @@ function contrivedExample(array) {
   - `mapRight` => same as `map`, but iterating in reverse
   - `mapObject` => same as `map` but iterating over objects intead of arrays
 - `reduce` ([MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/reduce))
-  - `reduceRight` => same as `reduce`, but iterating in reverse
+  - `reduceRight` => same as `reduce`, but iterating in reverse ([MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/reduceRight))
   - `reduceObject` => same as `reduce` but iterating over objects intead of arrays
 - `some` ([MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/some))
   - `someRight` => same as `some`, but iterating in reverse
@@ -77,19 +78,16 @@ function contrivedExample(array) {
 
 Internally Babel will transform these calls to their respective loop-driven alternatives. Example
 
-```javascript
-// this
+```js
 const foo = map(array, fn);
-
-// becomes this
-let _result = [];
-
-for (let _key = 0, _length = array.length, _value; _key < _length; ++_key) {
+// transforms to
+const _length = array.length;
+const _results = Array(_length);
+for (let _key = 0, _value; _key < _length; ++_key) {
   _value = array[_key];
-  _result.push(fn(_value, _key, array));
+  _results[_key] = fn(_value, _key, array);
 }
-
-const foo = _result;
+const foo = _results;
 ```
 
 If you are passing uncached values as the array or the handler, it will store those values as local variables and execute the same loop based on those variables.
@@ -98,52 +96,98 @@ If you are passing uncached values as the array or the handler, it will store th
 
 One extra performance boost is that `inline-loops` will try to inline the callback operations when possible. For example:
 
-```javascript
-// this
-const doubled = map(array, value => value * 2);
-
-// becomes this
-let _result = [];
-
-for (let _key = 0, _length = array.length, _value; _key < _length; ++_key) {
+```js
+const doubled = map(array, (value) => value * 2);
+// transforms to
+const _length = array.length;
+const _results = Array(_length);
+for (let _key = 0, _value; _key < _length; ++_key) {
   _value = array[_key];
-  _result.push(_value * 2);
+  _results[_key] = _value * 2;
 }
-
-const doubled = _result;
+const doubled = _results;
 ```
 
 Notice that there is no reference to the original function, because it used the return directly. This even works with nested calls!
 
-```javascript
-// this
-const isAllTuples = every(array, tuple => every(tuple, value => Array.isArray(value) && value.length === 2));
-
-// becomes this
-let _result = true;
-
-for (let _key = 0, _length = array.length, _value; _key < _length; ++_key) {
-  _value = array[_key];
-
-  let _result2 = true;
-
-  for (let _key2 = 0, _length2 = _value.length, _value2; _key2 < _length2; ++_key2) {
-    _value2 = _value[_key2];
-
-    if (!(Array.isArray(_value2) && _value2.length === 2)) {
-      _result2 = false;
+```js
+const isAllTuples = every(array, (tuple) =>
+  every(tuple, (value) => Array.isArray(value) && value.length === 2),
+);
+// transforms to
+let _determination = true;
+for (
+  let _key = 0, _length = array.length, _tuple, _result;
+  _key < _length;
+  ++_key
+) {
+  _tuple = array[_key];
+  let _determination2 = true;
+  for (
+    let _key2 = 0, _length2 = _tuple.length, _value, _result2;
+    _key2 < _length2;
+    ++_key2
+  ) {
+    _value = _tuple[_key2];
+    _result2 = Array.isArray(_value) && _value.length === 2;
+    if (!_result2) {
+      _determination2 = false;
       break;
     }
   }
-
-  if (!_result2) {
-    _result = false;
+  _result = _determination2;
+  if (!_result) {
+    _determination = false;
     break;
   }
 }
-
-const isAllTuples = _result;
+const isAllTuples = _determination;
 ```
+
+### Conditional / lazy scenarios
+
+There are times where you want to perform the operation lazily, and there is support for this as well:
+
+```js
+foo === 'bar' ? array : map(array, (v) => v * 2);
+// transforms to
+foo === 'bar'
+  ? array
+  : (() => {
+      const _length = array.length;
+      const _results = Array(_length);
+      for (let _key = 0, _v; _key < _length; ++_key) {
+        _v = array[_key];
+        _results[_key] = _v * 2;
+      }
+      return _results;
+    })();
+```
+
+The wrapping in the IIFE (Immediately-Invoked Function Expression) allows for the lazy execution based on the condition, but if that condition is met then it eagerly executes and returns the value. This will work just as easily for default parameters:
+
+```js
+function getStuff(array, doubled = map(array, (v) => v * 2)) {
+  return doubled;
+}
+// transforms to
+function getStuff(
+  array,
+  doubled = (() => {
+    const _length = array.length;
+    const _results = Array(_length);
+    for (let _key = 0, _v; _key < _length; ++_key) {
+      _v = array[_key];
+      _results[_key] = _v * 2;
+    }
+    return _results;
+  })(),
+) {
+  return doubled;
+}
+```
+
+Because there is a small cost to parse, analyze, and execute the function compared to just have the logic in the same closure, the macro will only wrap the logic in an IIFE if such conditional or lazy execution is required.
 
 ### Bailout scenarios
 
@@ -152,90 +196,50 @@ Inevitably not everything can be inlined, so there are known bailout scenarios:
 - When using a cached function reference (we can only inline functions that are statically declared in the macro scope)
 - When there are multiple `return` statements (as there is no scope to return from, the conversion of the logic would be highly complex)
 - When the `return` statement is not top-level (same reason as with multiple `return`s)
+- The `this` keyword is used (closure must be maintained to guarantee correct value)
 
-That means if you are cranking every last ounce of performance out of this macro, you want to get cozy with ternaries.
+If there is a bailout of an anonymous callback function, that function is stored in the same scope and used in the loop:
 
 ```js
-import { map } from 'inline-loops.macro';
-
-// this will bail out to storing the function and calling it in the loop
-const deopted = map(array, value => {
-  if (value % 2 === 0) {
-    return 'even';
+const result = map([1, 2, 3], (value) => {
+  if (value === 2) {
+    return 82;
   }
 
-  return 'odd';
+  return value;
 });
-
-// this will inline the operation and avoid function calls
-const inlined = map(array, value => (value % 2 === 0 ? 'even' : 'odd'));
+// transforms to
+const _collection = [1, 2, 3];
+const _fn = (_value) => {
+  if (_value === 2) {
+    return 82;
+  }
+  return _value;
+};
+const _length = _collection.length;
+const _results = Array(_length);
+for (let _key = 0, _value; _key < _length; ++_key) {
+  _value = _collection[_key];
+  _results[_key] = _fn(_value, _key, _collection);
+}
+const result = _results;
 ```
+
+Note that in bailout scenarios that are used in a closure, the transform will wrap itself in an IIFE to avoid memory leaks from retaining the injected variables.
 
 ## Gotchas
 
 Some aspects of implementing this macro that you should be aware of:
 
-### Conditionals do not delay execution
-
-If you do something like this with standard JS:
-
-```js
-return isFoo ? array.map(v => v * 2) : array;
-```
-
-The `array` is only mapped over if `isFoo` is true. However, because we are inlining these calls into `for` loops in the scope they operate in, this conditional calling does not apply with this macro.
-
-```js
-// this
-return isFoo ? map(array, v => v * 2) : array;
-
-// turns into this
-let _result = [];
-
-for (let _key = 0, _length = array.length, _value; _key < _length; ++_key) {
-  _value = array[_key];
-  _result[_key] = _value * 2;
-}
-
-return isFoo ? _result : array;
-```
-
-Notice the mapping occurs whether the condition is met or not. If you want to ensure this conditionality is maintained, you should use an `if` block instead:
-
-```js
-// this
-if (isFoo) {
-  return map(array, v => v * 2);
-}
-
-return array;
-
-// turns into this
-if (isFoo) {
-  let _result = [];
-
-  for (let _key = 0, _length = array.length, _value; _key < _length; ++_key) {
-    _value = array[_key];
-    _result[_key] = _value * 2;
-  }
-
-  return _result;
-}
-
-return array;
-```
-
-This will ensure the potentially expensive computation only occurs when necessary.
-
 ### `*Object` methods do not perform `hasOwnProperty` check
 
 The object methods will do operations in `for-in` loop, but will not guard via a `hasOwnProperty` check. For example:
 
-```javascript
+```js
 // this
-const doubled = mapObject(object, value => value * 2);
+const doubled = mapObject(object, (value) => value * 2);
 
-// becomes this
+// transforms to this
 let _result = {};
 
 let _value;
@@ -250,28 +254,14 @@ const doubled = _result;
 
 This works in a vast majority of cases, as the need for `hasOwnProperty` checks are often an edge case; it only matters when using objects created via a custom constructor, iterating over static properties on functions, or other non-standard operations. `hasOwnProperty` is a slowdown, but can be especially expensive in legacy browsers or non-JIT environments.
 
-If you need to incorporate this, you can do it one of two ways:
+If you need to incorporate this, you can just filter prior to the operation:
 
-**Add filtering (iterates twice, but arguably cleaner semantics)**
-
-```javascript
-const raw = mapObject(object, (value, key) => (object.hasOwnProperty(key) ? value * 2 : null));
-const doubled = filterObject(raw, value => value !== null);
+```js
+const filtered = filterObject(object, (_, key) => Object.hasOwn(object, key));
+const doubled = mapObject(filtered, (value) => value * 2);
 ```
 
-**Use reduce instead (iterates only once, but a little harder to grok)**
-
-```javascript
-const doubled = reduceObject(object, (_doubled, value, key) => {
-  if (object.hasOwnProperty(key)) {
-    _doubled[key] = value * 2;
-  }
-
-  return _doubled;
-});
-```
-
-### `findIndex` vs `findKey`
+### `find*` methods differ in naming convention
 
 Most of the operations follow the same naming conventions:
 
@@ -279,19 +269,28 @@ Most of the operations follow the same naming conventions:
 - `{method}Right` (decrementing array)
 - `{method}Object` (object)
 
-The exception to this is `findIndex` / `findIndexRight` (which are specific to arrays) and `findKey` (which is specific to objects). The rationale should be obvious (arrays only have indices, objects only have keys), but because it is the only exception to the rule I wanted to call it out.
+The exception to this is the collection of `find`-related methods:
+
+- `find`
+- `findLast`
+- `findObject`
+- `findIndex`
+- `findLastIndex`
+- `findKey`
+
+The reason for `findLast` / `findLastIndex` instead of `findRight` / `findIndexRight` is because unlike all the other right-direction methods, those methods are part of the ES spec ([`findLast`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/findLast) / [`findLastIndex`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/findLastIndex)). The reason that`findKey` is used for object values instead of something like `findIndexObject` is because semantically objects have keys instead of indices.
 
 ## Development
 
 Standard stuff, clone the repo and `npm install` dependencies. The npm scripts available:
 
 - `build` => runs babel to transform the macro for legacy NodeJS support
-- `copy:types` => copies `index.d.ts` to `build`
-- `dist` => runs `build` and `copy:types`
+- `clean`=> remove any files from `dist`
 - `lint` => runs ESLint against all files in the `src` folder
 - `lint:fix` => runs `lint`, fixing any errors if possible
-- `prepublishOnly` => run `lint`, `test`, `test:coverage`, and `dist`
-- `release` => release new version (expects globally-installed `release-it`)
-- `release:beta` => release new beta version (expects globally-installed `release-it`)
+- `prepublishOnly` => run `lint`, `typecheck`, `test`, `clean`, `and `dist`
+- `release` => release new version
+- `release:beta` => release new beta version
 - `test` => run jest tests
 - `test:watch` => run `test`, but with persistent watcher
+- `typecheck` => run `tsc` against the codebase

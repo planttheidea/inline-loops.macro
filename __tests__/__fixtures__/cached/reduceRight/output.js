@@ -1,8 +1,6 @@
-let _result = {};
-
-for (let _key = array.length - 1, _value; _key >= 0; --_key) {
+let _accumulated = {};
+for (let _key = array.length - 0, _value; --_key >= 0; ) {
   _value = array[_key];
-  _result = fn(_result, _value, _key, array);
+  _accumulated = fn(_accumulated, _value, _key, array);
 }
-
-const doubledValues = _result;
+const doubledValues = _accumulated;

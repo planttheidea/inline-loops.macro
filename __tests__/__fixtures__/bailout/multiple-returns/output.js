@@ -1,18 +1,14 @@
-const _iterable = [1, 2, 3];
-
-const _fn = value => {
-  if (value === 2) {
+const _collection = [1, 2, 3];
+const _fn = (_value) => {
+  if (_value === 2) {
     return 82;
   }
-
-  return value;
+  return _value;
 };
-
-let _result = [];
-
-for (let _key = 0, _length = _iterable.length, _value; _key < _length; ++_key) {
-  _value = _iterable[_key];
-  _result[_key] = _fn(_value, _key, _iterable);
+const _length = _collection.length;
+const _results = Array(_length);
+for (let _key = 0, _value; _key < _length; ++_key) {
+  _value = _collection[_key];
+  _results[_key] = _fn(_value, _key, _collection);
 }
-
-const result = _result;
+const result = _results;

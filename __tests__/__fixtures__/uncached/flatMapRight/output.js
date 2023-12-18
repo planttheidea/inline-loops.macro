@@ -1,11 +1,12 @@
-const _iterable = [['foo', 'bar'], ['bar', 'baz']];
-let _result = [];
-
-for (let _key = _iterable.length - 1, _value; _key >= 0; --_key) {
-  _value = _iterable[_key];
-  const [_first] = _value;
-
-  _result.push.apply(_result, [_first]);
+const _collection = [
+  ['foo', 'bar'],
+  ['bar', 'baz'],
+];
+let _results = [];
+for (let _key = _collection.length, _entry, _result; --_key >= 0; ) {
+  _entry = _collection[_key];
+  const [_first] = _entry;
+  _result = [_first];
+  _results = _results.concat(_result);
 }
-
-const flattened = _result;
+const flattened = _results;

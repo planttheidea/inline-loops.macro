@@ -1,15 +1,16 @@
-const _iterable = [1, 2, 3, 4];
-let _result = false;
-
-for (let _key = 0, _length = _iterable.length, _value; _key < _length; ++_key) {
-  _value = _iterable[_key];
-
+const _collection = [1, 2, 3, 4];
+let _determination = false;
+for (
+  let _key = 0, _length = _collection.length, _value, _result;
+  _key < _length;
+  ++_key
+) {
+  _value = _collection[_key];
   const _isValueEven = _value % 2 === 0;
-
-  if (_isValueEven) {
-    _result = true;
+  _result = _isValueEven;
+  if (_result) {
+    _determination = true;
     break;
   }
 }
-
-const areAnyEven = _result;
+const areAnyEven = _determination;

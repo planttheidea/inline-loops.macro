@@ -1,8 +1,8 @@
-let _result = [];
-
-for (let _key = array.length - 1, _value; _key >= 0; --_key) {
+const _length = array.length;
+let _key = _length;
+const _results = Array(_length);
+for (let _value; --_key >= 0; ) {
   _value = array[_key];
-  _result[_result.length] = _value * 2;
+  _results[_length - _key - 1] = _value * 2;
 }
-
-const doubledValues = _result;
+const doubledValues = _results;
