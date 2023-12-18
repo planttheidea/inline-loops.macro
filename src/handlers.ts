@@ -169,7 +169,7 @@ export function createHandlers(babel: MacroParams['babel']) {
 
     let localCollection = collection.node;
 
-    if (!collection.isIdentifier()) {
+    if (!collection.isIdentifier() && !collection.isMemberExpression()) {
       localCollection = getLocalName(path, 'collection');
 
       const localVariable = templates.localVariable({
