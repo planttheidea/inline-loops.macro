@@ -2,7 +2,7 @@ import { log } from './log';
 function logItems(items) {
   (() => {
     const _fn = (_item) => {
-      if (!_item.position) {
+      if (!this.position) {
         return;
       }
       log(_item);
