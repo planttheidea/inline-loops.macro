@@ -1,6 +1,6 @@
 import { deepEqual } from 'fast-equals';
 const _results = {};
-let _value, _result;
+let _value;
 for (const _key in object) {
   _value = object[_key];
   _results[_key] = cachedFn(_value, _key, object);

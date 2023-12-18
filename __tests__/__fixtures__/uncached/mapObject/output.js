@@ -5,7 +5,7 @@ const _collection = {
   four: 4,
 };
 const _results = {};
-let _value, _result;
+let _value;
 for (const _key in _collection) {
   _value = _collection[_key];
   const _doubled = _value * 2;

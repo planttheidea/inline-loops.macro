@@ -98,12 +98,12 @@ export function createHandlers(babel: MacroParams['babel']) {
         if (returnCount === 0) {
           return {
             injectedBody: body.node.body,
-            logic: t.identifier('undefined'),
+            returned: t.identifier('undefined'),
           };
         }
 
         if (returnCount === 1) {
-          return { injectedBody: body.node.body, logic: returnValue };
+          return { injectedBody: body.node.body, returned: returnValue };
         }
       }
 
@@ -115,18 +115,18 @@ export function createHandlers(babel: MacroParams['babel']) {
 
       local.contents.push(localFn);
 
-      const logic = t.callExpression(
+      const returned = t.callExpression(
         localFnName,
         getCachedFnArgs(local, isReduce),
       );
 
-      return { injectedBody: [], logic };
+      return { injectedBody: [], returned };
     }
 
     if (handler.isFunction()) {
       return isForEach
-        ? { injectedBody: body.node, logic: undefined }
-        : { injectedBody: [], logic: body.node };
+        ? { injectedBody: body.node, returned: undefined }
+        : { injectedBody: [], returned: body.node };
     }
 
     if (isForEach) {
@@ -139,15 +139,15 @@ export function createHandlers(babel: MacroParams['babel']) {
         ),
       ];
 
-      return { injectedBody, logic: undefined };
+      return { injectedBody, returned: undefined };
     }
 
-    const logic = t.callExpression(
+    const returned = t.callExpression(
       handler.node as Expression,
       getCachedFnArgs(local, isReduce),
     );
 
-    return { injectedBody: [], logic };
+    return { injectedBody: [], returned };
   }
 
   function getLocalReferences(
@@ -276,7 +276,7 @@ export function createHandlers(babel: MacroParams['babel']) {
 
       const local = getLocalReferences(path);
 
-      const { injectedBody, logic } = getInjectedBodyAndLogic({
+      const { injectedBody, returned } = getInjectedBodyAndLogic({
         handler,
         local,
         path,
@@ -296,7 +296,7 @@ export function createHandlers(babel: MacroParams['babel']) {
             DETERMINATION: determination,
             KEY: local.key,
             LENGTH: local.length,
-            LOGIC: logic,
+            RETURNED: returned,
             VALUE: local.value,
           });
           break;
@@ -309,7 +309,7 @@ export function createHandlers(babel: MacroParams['babel']) {
             DETERMINATION: determination,
             KEY: local.key,
             LENGTH: local.length,
-            LOGIC: logic,
+            RETURNED: returned,
             VALUE: local.value,
           });
           break;
@@ -321,7 +321,7 @@ export function createHandlers(babel: MacroParams['babel']) {
             COLLECTION: local.collection,
             DETERMINATION: determination,
             KEY: local.key,
-            LOGIC: logic,
+            RETURNED: returned,
             VALUE: local.value,
           });
           break;
@@ -333,7 +333,7 @@ export function createHandlers(babel: MacroParams['babel']) {
             COLLECTION: local.collection,
             DETERMINATION: determination,
             KEY: local.key,
-            LOGIC: logic,
+            RETURNED: returned,
             VALUE: local.value,
           });
           break;
@@ -345,7 +345,7 @@ export function createHandlers(babel: MacroParams['babel']) {
             COLLECTION: local.collection,
             DETERMINATION: determination,
             KEY: local.key,
-            LOGIC: logic,
+            RETURNED: returned,
             VALUE: local.value,
           });
           break;
@@ -357,7 +357,7 @@ export function createHandlers(babel: MacroParams['babel']) {
             COLLECTION: local.collection,
             DETERMINATION: determination,
             KEY: local.key,
-            LOGIC: logic,
+            RETURNED: returned,
             VALUE: local.value,
           });
           break;
@@ -393,7 +393,7 @@ export function createHandlers(babel: MacroParams['babel']) {
 
       const local = getLocalReferences(path);
 
-      const { injectedBody, logic } = getInjectedBodyAndLogic({
+      const { injectedBody, returned } = getInjectedBodyAndLogic({
         handler,
         local,
         path,
@@ -413,7 +413,7 @@ export function createHandlers(babel: MacroParams['babel']) {
             MATCH: match,
             KEY: local.key,
             LENGTH: local.length,
-            LOGIC: logic,
+            RETURNED: returned,
             VALUE: local.value,
           });
           break;
@@ -426,7 +426,7 @@ export function createHandlers(babel: MacroParams['babel']) {
             MATCH: match,
             KEY: local.key,
             LENGTH: local.length,
-            LOGIC: logic,
+            RETURNED: returned,
             VALUE: local.value,
           });
           break;
@@ -438,7 +438,7 @@ export function createHandlers(babel: MacroParams['babel']) {
             COLLECTION: local.collection,
             MATCH: match,
             KEY: local.key,
-            LOGIC: logic,
+            RETURNED: returned,
             VALUE: local.value,
           });
           break;
@@ -450,7 +450,7 @@ export function createHandlers(babel: MacroParams['babel']) {
             COLLECTION: local.collection,
             MATCH: match,
             KEY: local.key,
-            LOGIC: logic,
+            RETURNED: returned,
             VALUE: local.value,
           });
           break;
@@ -462,7 +462,7 @@ export function createHandlers(babel: MacroParams['babel']) {
             COLLECTION: local.collection,
             MATCH: match,
             KEY: local.key,
-            LOGIC: logic,
+            RETURNED: returned,
             VALUE: local.value,
           });
           break;
@@ -474,7 +474,7 @@ export function createHandlers(babel: MacroParams['babel']) {
             COLLECTION: local.collection,
             MATCH: match,
             KEY: local.key,
-            LOGIC: logic,
+            RETURNED: returned,
             VALUE: local.value,
           });
           break;
@@ -513,7 +513,7 @@ export function createHandlers(babel: MacroParams['babel']) {
       const isForEach = type.includes('for-each');
       const result = path.scope.generateUidIdentifier('result');
 
-      const { injectedBody, logic } = getInjectedBodyAndLogic({
+      const { injectedBody, returned } = getInjectedBodyAndLogic({
         handler,
         isForEach,
         local,
@@ -529,7 +529,7 @@ export function createHandlers(babel: MacroParams['babel']) {
             COLLECTION: local.collection,
             KEY: local.key,
             LENGTH: local.length,
-            LOGIC: logic,
+            RETURNED: returned,
             RESULTS: localResults,
             VALUE: local.value,
           });
@@ -541,7 +541,7 @@ export function createHandlers(babel: MacroParams['babel']) {
             COLLECTION: local.collection,
             KEY: local.key,
             LENGTH: local.length,
-            LOGIC: logic,
+            RETURNED: returned,
             RESULT: result,
             RESULTS: localResults,
             VALUE: local.value,
@@ -554,7 +554,7 @@ export function createHandlers(babel: MacroParams['babel']) {
             COLLECTION: local.collection,
             KEY: local.key,
             LENGTH: local.length,
-            LOGIC: logic,
+            RETURNED: returned,
             RESULT: result,
             RESULTS: localResults,
             VALUE: local.value,
@@ -577,7 +577,7 @@ export function createHandlers(babel: MacroParams['babel']) {
             COLLECTION: local.collection,
             KEY: local.key,
             LENGTH: local.length,
-            LOGIC: logic,
+            RETURNED: returned,
             RESULTS: localResults,
             VALUE: local.value,
           });
@@ -588,7 +588,7 @@ export function createHandlers(babel: MacroParams['babel']) {
             BODY: injectedBody,
             COLLECTION: local.collection,
             KEY: local.key,
-            LOGIC: logic,
+            RETURNED: returned,
             RESULT: result,
             RESULTS: localResults,
             VALUE: local.value,
@@ -600,7 +600,7 @@ export function createHandlers(babel: MacroParams['babel']) {
             BODY: injectedBody,
             COLLECTION: local.collection,
             KEY: local.key,
-            LOGIC: logic,
+            RETURNED: returned,
             RESULT: result,
             RESULTS: localResults,
             VALUE: local.value,
@@ -621,8 +621,7 @@ export function createHandlers(babel: MacroParams['babel']) {
             BODY: injectedBody,
             COLLECTION: local.collection,
             KEY: local.key,
-            LOGIC: logic,
-            RESULT: result,
+            RETURNED: returned,
             RESULTS: localResults,
             VALUE: local.value,
           });
@@ -633,7 +632,7 @@ export function createHandlers(babel: MacroParams['babel']) {
             BODY: injectedBody,
             COLLECTION: local.collection,
             KEY: local.key,
-            LOGIC: logic,
+            RETURNED: returned,
             RESULT: result,
             RESULTS: localResults,
             VALUE: local.value,
@@ -686,7 +685,7 @@ export function createHandlers(babel: MacroParams['babel']) {
 
       const local = getLocalReferences(path, true);
 
-      const { injectedBody, logic } = getInjectedBodyAndLogic({
+      const { injectedBody, returned } = getInjectedBodyAndLogic({
         handler,
         isReduce: true,
         local,
@@ -723,7 +722,7 @@ export function createHandlers(babel: MacroParams['babel']) {
             KEY: local.key,
             INITIAL: initial,
             LENGTH: local.length,
-            LOGIC: logic,
+            RETURNED: returned,
             START: start,
             VALUE: local.value,
           });
@@ -736,7 +735,7 @@ export function createHandlers(babel: MacroParams['babel']) {
             COLLECTION: local.collection,
             KEY: local.key,
             INITIAL: initial,
-            LOGIC: logic,
+            RETURNED: returned,
             START: start,
             VALUE: local.value,
           });
@@ -752,7 +751,7 @@ export function createHandlers(babel: MacroParams['babel']) {
             COLLECTION: local.collection,
             KEY: local.key,
             INITIAL: initialValue ? initial : t.identifier('undefined'),
-            LOGIC: logic,
+            RETURNED: returned,
             SKIP: skip,
             SHOULD_SKIP: shouldSkip,
             VALUE: local.value,

@@ -6,7 +6,7 @@ export function createTemplates({ template }: MacroParams['babel']) {
     for (let KEY = 0, LENGTH = COLLECTION.length, VALUE, RESULT; KEY < LENGTH; ++KEY) {
       VALUE = COLLECTION[KEY];
       BODY
-      RESULT = LOGIC;
+      RESULT = RETURNED;
 
       if (!RESULT) {
         DETERMINATION = false;
@@ -22,7 +22,7 @@ export function createTemplates({ template }: MacroParams['babel']) {
     for (const KEY in COLLECTION) {
       VALUE = COLLECTION[KEY];
       BODY
-      RESULT = LOGIC;
+      RESULT = RETURNED;
 
       if (!RESULT) {
         DETERMINATION = false;
@@ -36,7 +36,7 @@ export function createTemplates({ template }: MacroParams['babel']) {
     for (let KEY = COLLECTION.length, VALUE, RESULT; --KEY >= 0;) {
       VALUE = COLLECTION[KEY];
       BODY
-      RESULT = LOGIC;
+      RESULT = RETURNED;
 
       if (!RESULT) {
         DETERMINATION = false;
@@ -50,7 +50,7 @@ export function createTemplates({ template }: MacroParams['babel']) {
     for (let KEY = 0, LENGTH = COLLECTION.length, VALUE, RESULT; KEY < LENGTH; ++KEY) {
       VALUE = COLLECTION[KEY];
       BODY
-      RESULT = LOGIC;
+      RESULT = RETURNED;
 
       if (RESULT) {
         RESULTS.push(VALUE);
@@ -65,7 +65,7 @@ export function createTemplates({ template }: MacroParams['babel']) {
     for (const KEY in COLLECTION) {
       VALUE = COLLECTION[KEY];
       BODY
-      RESULT = LOGIC;
+      RESULT = RETURNED;
 
       if (RESULT) {
         RESULTS[KEY] = VALUE;
@@ -80,7 +80,7 @@ export function createTemplates({ template }: MacroParams['babel']) {
     for (let KEY = COLLECTION.length, VALUE, RESULT; --KEY >= 0;) {
       VALUE = COLLECTION[KEY];
       BODY
-      RESULT = LOGIC;
+      RESULT = RETURNED;
 
       if (RESULT) {
         RESULTS.push(VALUE);
@@ -93,7 +93,7 @@ export function createTemplates({ template }: MacroParams['babel']) {
     for (let KEY = 0, LENGTH = COLLECTION.length, VALUE, RESULT; KEY < LENGTH; ++KEY) {
       VALUE = COLLECTION[KEY];
       BODY
-      RESULT = LOGIC;
+      RESULT = RETURNED;
 
       if (RESULT) {
         MATCH = VALUE;
@@ -109,7 +109,7 @@ export function createTemplates({ template }: MacroParams['babel']) {
     for (const KEY in COLLECTION) {
       VALUE = COLLECTION[KEY];
       BODY
-      RESULT = LOGIC;
+      RESULT = RETURNED;
 
       if (RESULT) {
         MATCH = VALUE;
@@ -123,7 +123,7 @@ export function createTemplates({ template }: MacroParams['babel']) {
     for (let KEY = COLLECTION.length, VALUE, RESULT; --KEY >= 0;) {
       VALUE = COLLECTION[KEY];
       BODY
-      RESULT = LOGIC;
+      RESULT = RETURNED;
 
       if (RESULT) {
         MATCH = VALUE;
@@ -137,7 +137,7 @@ export function createTemplates({ template }: MacroParams['babel']) {
     for (let KEY = 0, LENGTH = COLLECTION.length, VALUE, RESULT; KEY < LENGTH; ++KEY) {
       VALUE = COLLECTION[KEY];
       BODY
-      RESULT = LOGIC;
+      RESULT = RETURNED;
 
       if (RESULT) {
         MATCH = KEY;
@@ -153,7 +153,7 @@ export function createTemplates({ template }: MacroParams['babel']) {
     for (const KEY in COLLECTION) {
       VALUE = COLLECTION[KEY];
       BODY
-      RESULT = LOGIC;
+      RESULT = RETURNED;
 
       if (RESULT) {
         MATCH = KEY;
@@ -167,7 +167,7 @@ export function createTemplates({ template }: MacroParams['babel']) {
     for (let KEY = COLLECTION.length, VALUE, RESULT; --KEY >= 0;) {
       VALUE = COLLECTION[KEY];
       BODY
-      RESULT = LOGIC;
+      RESULT = RETURNED;
 
       if (RESULT) {
         MATCH = KEY;
@@ -181,7 +181,7 @@ export function createTemplates({ template }: MacroParams['babel']) {
     for (let KEY = 0, LENGTH = COLLECTION.length, VALUE, RESULT; KEY < LENGTH; ++KEY) {
       VALUE = COLLECTION[KEY];
       BODY
-      RESULT = LOGIC;
+      RESULT = RETURNED;
       RESULTS = RESULTS.concat(RESULT);
     }
 `;
@@ -191,7 +191,7 @@ export function createTemplates({ template }: MacroParams['babel']) {
     for (let KEY = COLLECTION.length, VALUE, RESULT; --KEY >= 0;) {
       VALUE = COLLECTION[KEY];
       BODY
-      RESULT = LOGIC;
+      RESULT = RETURNED;
       RESULTS = RESULTS.concat(RESULT);
     }
 `;
@@ -234,7 +234,7 @@ export function createTemplates({ template }: MacroParams['babel']) {
 	for (let KEY = 0, VALUE; KEY < LENGTH; ++KEY) {
       VALUE = COLLECTION[KEY];
       BODY
-      RESULTS[KEY] = LOGIC;
+      RESULTS[KEY] = RETURNED;
     }
 `;
 
@@ -244,7 +244,7 @@ export function createTemplates({ template }: MacroParams['babel']) {
     for (const KEY in COLLECTION) {
       VALUE = COLLECTION[KEY];
       BODY
-      RESULTS[KEY] = LOGIC;
+      RESULTS[KEY] = RETURNED;
     }
 `;
 
@@ -255,7 +255,7 @@ export function createTemplates({ template }: MacroParams['babel']) {
     for (let VALUE; --KEY >= 0;) {
       VALUE = COLLECTION[KEY];
       BODY
-      RESULTS[LENGTH - KEY - 1] = LOGIC;
+      RESULTS[LENGTH - KEY - 1] = RETURNED;
     }
 `;
 
@@ -268,7 +268,7 @@ export function createTemplates({ template }: MacroParams['babel']) {
     for (let KEY = START, LENGTH = COLLECTION.length, VALUE; KEY < LENGTH; ++KEY) {
       VALUE = COLLECTION[KEY];
       BODY
-      ACCUMULATED = LOGIC;
+      ACCUMULATED = RETURNED;
     }
 `;
 
@@ -286,7 +286,7 @@ export function createTemplates({ template }: MacroParams['babel']) {
       }
 
       BODY
-      ACCUMULATED = LOGIC;
+      ACCUMULATED = RETURNED;
     }
 `;
 
@@ -295,7 +295,7 @@ export function createTemplates({ template }: MacroParams['babel']) {
     for (let KEY = COLLECTION.length - START, VALUE; --KEY >= START;) {
       VALUE = COLLECTION[KEY];
       BODY
-      ACCUMULATED = LOGIC;
+      ACCUMULATED = RETURNED;
     }
 `;
 
@@ -304,7 +304,7 @@ export function createTemplates({ template }: MacroParams['babel']) {
     for (let KEY = 0, LENGTH = COLLECTION.length, VALUE, RESULT; KEY < LENGTH; ++KEY) {
       VALUE = COLLECTION[KEY];
       BODY
-      RESULT = LOGIC;
+      RESULT = RETURNED;
 
       if (RESULT) {
         DETERMINATION = true;
@@ -320,7 +320,7 @@ export function createTemplates({ template }: MacroParams['babel']) {
     for (const KEY in COLLECTION) {
       VALUE = COLLECTION[KEY];
       BODY
-      RESULT = LOGIC;
+      RESULT = RETURNED;
 
       if (RESULT) {
         DETERMINATION = true;
@@ -334,7 +334,7 @@ export function createTemplates({ template }: MacroParams['babel']) {
     for (let KEY = COLLECTION.length, VALUE, RESULT; --KEY >= 0;) {
       VALUE = COLLECTION[KEY];
       BODY
-      RESULT = LOGIC;
+      RESULT = RETURNED;
 
       if (RESULT) {
         DETERMINATION = true;
