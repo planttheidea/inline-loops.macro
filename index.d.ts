@@ -63,24 +63,18 @@ declare function findLast<Item>(
   handler: ArrayHandler<Item, unknown>,
 ): Item | undefined;
 
-declare function findIndex<Item, Collection extends Item[]>(
-  collection: Collection,
+declare function findIndex<Item>(
+  collection: Item[],
   handler: ArrayHandler<Item, unknown>,
-): keyof Collection | -1;
-declare function findKey<
-  Item,
-  Collection extends Record<number | string, Item>,
->(
-  collection: Collection,
+): number;
+declare function findKey<Item>(
+  collection: Record<number | string, Item>,
   handler: ObjectHandler<Item, unknown>,
-): keyof Collection | void;
-declare function findLastIndex<
-  Item,
-  Collection extends Record<number | string, Item>,
->(
-  collection: Collection,
+): string | void;
+declare function findLastIndex<Item>(
+  collection: Item[],
   handler: ArrayHandler<Item, unknown>,
-): keyof Collection | -1;
+): number;
 
 declare function forEach<Item>(
   collection: Item[],
