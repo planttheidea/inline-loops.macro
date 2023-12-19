@@ -1,5 +1,9 @@
 ## CHANGELOG
 
+# 2.0.4
+
+- [#37](https://github.com/planttheidea/inline-loops.macro/pull/37/files) - Smarter IIFE wrapper determination logic
+
 # 2.0.3
 
 - [#36](https://github.com/planttheidea/inline-loops.macro/pull/36) - Allow readonly collections, and fix `reduce*` method types for callback
