@@ -230,9 +230,11 @@ export function shouldWrapInClosure(
   }
 
   if (
+    parentPath.isArrayExpression() ||
     parentPath.isAwaitExpression() ||
     parentPath.isBinaryExpression() ||
-    parentPath.isArrayExpression() ||
+    parentPath.isJSXElement() ||
+    parentPath.isJSXExpressionContainer() ||
     parentPath.isObjectExpression() ||
     parentPath.isObjectProperty() ||
     parentPath.isUnaryExpression()
