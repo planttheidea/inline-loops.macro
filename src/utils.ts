@@ -165,7 +165,7 @@ export function replaceOrRemove(
   templates: ReturnType<typeof createTemplates>,
   replacement: Expression,
 ) {
-  if (shouldWrapInClosure(path, local)) {
+  if (shouldWrapInClosure(path)) {
     if (!t.isIdentifier(replacement, { name: 'undefined' })) {
       local.contents.push(t.returnStatement(replacement));
     }
@@ -214,49 +214,65 @@ export function isPossiblyDynamic(path: Path) {
   return path.isExpression();
 }
 
-export function shouldWrapInClosure(
-  path: Path<CallExpression>,
-  local: LocalReferences,
-): boolean {
+export function shouldWrapInClosure(path: Path): boolean {
   const parentPath = path.parentPath;
 
   if (!parentPath) {
     return false;
   }
 
-  const functionParent = path.getFunctionParent();
-
-  if (!functionParent) {
-    return isPossiblyDynamic(parentPath);
-  }
-
-  const grandparentPath = parentPath.parentPath;
-
-  if (parentPath.isPattern() || local.contents.length > 1) {
+  if (parentPath.isAssignmentPattern()) {
     return true;
   }
 
-  const contents = functionParent?.get('body')?.get('body');
-
-  if (Array.isArray(contents) && contents.length > 1) {
-    return contents.flat().some((content) => content.isVariableDeclaration());
+  if (
+    parentPath.isArrayExpression() ||
+    parentPath.isAwaitExpression() ||
+    parentPath.isBinaryExpression() ||
+    parentPath.isJSXElement() ||
+    parentPath.isJSXExpressionContainer() ||
+    parentPath.isObjectExpression() ||
+    parentPath.isObjectProperty() ||
+    parentPath.isUnaryExpression()
+  ) {
+    return shouldWrapInClosure(parentPath);
   }
-
-  if (!grandparentPath || !parentPath.isExpression()) {
-    return false;
-  }
-
-  const maybeNestedConditional = isPossiblyDynamic(grandparentPath);
 
   if (parentPath.isLogicalExpression()) {
     return (
-      !maybeNestedConditional && parentPath.get('right').node === path.node
+      !path.isCallExpression() ||
+      parentPath.get('right').node === path.node ||
+      shouldWrapInClosure(parentPath)
     );
   }
 
   if (parentPath.isConditionalExpression()) {
-    return !maybeNestedConditional && parentPath.get('test').node !== path.node;
+    return (
+      !path.isCallExpression() ||
+      parentPath.get('test').node !== path.node ||
+      shouldWrapInClosure(parentPath)
+    );
   }
 
-  return maybeNestedConditional;
+  const functionParent = path.getFunctionParent();
+
+  if (
+    !functionParent ||
+    parentPath.node === functionParent.node ||
+    parentPath.parent === functionParent.node
+  ) {
+    return false;
+  }
+
+  if (
+    (parentPath.isReturnStatement() || parentPath.isExpressionStatement()) &&
+    parentPath.parentPath.isBlockStatement() &&
+    parentPath.parentPath.parent === functionParent.node
+  ) {
+    const body = functionParent.get('body.body');
+
+    return !Array.isArray(body) || body.length > 1;
+  }
+
+  return true;
 }
