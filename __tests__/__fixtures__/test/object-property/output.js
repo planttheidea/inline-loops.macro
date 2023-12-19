@@ -1,6 +1,7 @@
-function getStuff(array, foo) {
-  if (foo === 'bar') {
-    return (() => {
+function getStuff(array) {
+  return {
+    array,
+    doubled: (() => {
       const _length = array.length;
       const _results = Array(_length);
       for (let _key = 0, _v; _key < _length; ++_key) {
@@ -8,7 +9,6 @@ function getStuff(array, foo) {
         _results[_key] = _v * 2;
       }
       return _results;
-    })();
-  }
-  return array;
+    })(),
+  };
 }
