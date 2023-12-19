@@ -230,6 +230,7 @@ export function shouldWrapInClosure(
   }
 
   if (
+    parentPath.isAwaitExpression() ||
     parentPath.isBinaryExpression() ||
     parentPath.isArrayExpression() ||
     parentPath.isObjectExpression() ||
