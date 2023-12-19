@@ -166,7 +166,6 @@ export function replaceOrRemove(
   replacement: Expression,
 ) {
   if (shouldWrapInClosure(path)) {
-    // if (shouldWrapInClosure(path, local)) {
     if (!t.isIdentifier(replacement, { name: 'undefined' })) {
       local.contents.push(t.returnStatement(replacement));
     }
@@ -215,10 +214,7 @@ export function isPossiblyDynamic(path: Path) {
   return path.isExpression();
 }
 
-export function shouldWrapInClosure(
-  path: Path,
-  // local: LocalReferences,
-): boolean {
+export function shouldWrapInClosure(path: Path): boolean {
   const parentPath = path.parentPath;
 
   if (!parentPath) {
